@@ -206,7 +206,8 @@
       "eway.threshold_intra": "E-way bill limit within the state (₹)",
       "eway.threshold_inter": "E-way bill limit to other states (₹)",
       "credit.default_days": "Default credit days for new customers",
-      "credit.interest_pa": "Interest on overdue (% per year)"
+      "credit.interest_pa": "Interest on overdue (% per year)",
+      "gst.composition_rate": "Composition tax rate % (traders: 1)"
     },
     "values": {
       "regular": "Regular (tax invoice)",

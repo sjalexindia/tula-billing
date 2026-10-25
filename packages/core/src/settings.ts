@@ -50,6 +50,8 @@ export const SETTINGS = {
   // ---- GST
   'gst.scheme': { kind: { type: 'enum', values: ['regular', 'composition', 'unregistered'] }, default: 'regular', group: 'gst' },
   'gst.gstin': { kind: { type: 'gstin' }, default: '', group: 'gst' },
+  /** composition tax rate on turnover (traders: 1%), used for CMP-08 */
+  'gst.composition_rate': { kind: { type: 'percent', max: 6 }, default: '1', group: 'gst' },
 
   // ---- Invoice
   'invoice.default_lang': { kind: { type: 'lang' }, default: 'en', group: 'invoice' },

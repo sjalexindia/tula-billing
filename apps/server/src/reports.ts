@@ -1,5 +1,5 @@
-import { todayIST, toPaise } from '@tula/core';
-import type { Db } from '@tula/db';
+import { todayIST, toPaise, withDefaults } from '@tula/core';
+import { getSettings, type Db } from '@tula/db';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { cashBook, dayBook } from './reports/books';
@@ -51,7 +51,8 @@ export function registerReports(app: FastifyInstance, db: Db, _deviceId: string)
   route('gstr3b', MonthQuery, (q) => { const p = monthPeriod(q); return gstr3b(db, p.from, p.to); });
   route('cmp08', PeriodQuery.extend({ rate: z.string().optional() }), (q) => {
     const p = quarterOf(q.from ?? todayIST());
-    return cmp08(db, p.from, p.to, toPaise(q.rate ?? '1'));
+    // the rate comes from Settings (gst.composition_rate); ?rate= overrides it for a what-if
+    return getSettings(db).then((s) => cmp08(db, p.from, p.to, toPaise(q.rate ?? withDefaults(s)['gst.composition_rate'])));
   });
 
   app.get('/api/reports/rate-groups', async (req) => {
