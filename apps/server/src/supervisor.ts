@@ -59,6 +59,7 @@ export class Supervisor extends EventEmitter {
   private restartTimer: NodeJS.Timeout | null = null;
   private healthTimer: NodeJS.Timeout | null = null;
   private launching = false;
+  private killing: ChildProcess | null = null;
   restarts = 0;
 
   constructor(opts: SupervisorOptions) {
@@ -117,7 +118,7 @@ export class Supervisor extends EventEmitter {
 
   private async checkHealth(): Promise<void> {
     const child = this.child;
-    if (!this.o.healthUrl || !child || this.checking || this.stopping) return;
+    if (!this.o.healthUrl || !child || this.checking || this.stopping || this.killing === child) return;
     this.checking = true;
     let ok = false;
     try {
@@ -125,7 +126,7 @@ export class Supervisor extends EventEmitter {
       ok = res.ok;
     } catch { ok = false; }
     this.checking = false;
-    if (this.child !== child) return;
+    if (this.child !== child || this.stopping || this.killing === child) return;
     if (ok) { this.healthFails = 0; this.answered = true; return; }
     if (!this.answered && Date.now() - this.startedAt < this.o.startupGraceMs) return;
     this.healthFails++;
@@ -140,6 +141,7 @@ export class Supervisor extends EventEmitter {
 
   /** Ask politely, then force after stopTimeoutMs (a frozen process cannot handle SIGTERM). */
   private kill(child: ChildProcess) {
+    this.killing = child;
     try { child.kill('SIGTERM'); } catch { /* gone */ }
     const t = setTimeout(() => {
       if (child.exitCode === null && child.signalCode === null) {
@@ -229,6 +231,8 @@ async function main() {
     env: process.env,
     dbFile,
     healthUrl: `http://127.0.0.1:${port}/api/health`,
+    // for testing only; the defaults (every 30 s, 3 failures) suit the shop
+    ...(process.env.TULA_HEALTH_INTERVAL_MS ? { healthIntervalMs: Number(process.env.TULA_HEALTH_INTERVAL_MS) } : {}),
     log: say,
     output: (c) => { logs.write(c); if (tty) process.stdout.write(c); },
   });
