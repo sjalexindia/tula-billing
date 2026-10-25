@@ -171,7 +171,11 @@
   .doc-title, .st-due { text-align: left; }
   .doc-title .kv { margin-left: 0; }
   .st-lines { font-size: 11px; }
-  .st-lines td { overflow-wrap: anywhere; }
-  .st-lines .nowrap { white-space: normal; }
+  .st-lines { font-size: 10px; }
+  .st-lines th, .st-lines td { padding: 4px 2px; }
+  .st-lines td:nth-child(2) { overflow-wrap: anywhere; }
+  .st-lines td.r, .st-lines tfoot td { white-space: nowrap; }
+  .st-lines td:first-child { white-space: normal; width: 52px; }
+  .statement-doc { padding: 3mm; }
   .m-label { display: inline; color: var(--steel); font-weight: 400; }
 }
