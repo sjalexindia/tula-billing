@@ -40,11 +40,26 @@ export async function getLocal(ex: Exec, keys: readonly string[]): Promise<Recor
   return Object.fromEntries(rows.map((r) => [r.key, r.value]));
 }
 
-/** sync_state is local-only (never synced), so plain SQL is the right way to write it. */
+/**
+ * sync_state is local-only (never synced), so plain SQL is the right way to write it.
+ * A bill being saved at that moment holds the write lock on another connection in this same process;
+ * SQLite's own busy wait cannot help there (it would block the very event loop that finishes the bill),
+ * so a busy write is retried asynchronously for a few seconds.
+ */
 export async function setLocal(ex: Exec, values: Record<string, string | null>): Promise<void> {
   for (const [key, value] of Object.entries(values)) {
-    if (value === null) await ex.execute({ sql: 'DELETE FROM sync_state WHERE key = ?', args: [key] });
-    else await ex.execute({ sql: 'INSERT INTO sync_state (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', args: [key, value] });
+    const stmt = value === null
+      ? { sql: 'DELETE FROM sync_state WHERE key = ?', args: [key] }
+      : { sql: 'INSERT INTO sync_state (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', args: [key, value] };
+    for (let attempt = 0; ; attempt++) {
+      try {
+        await ex.execute(stmt);
+        break;
+      } catch (e) {
+        if (attempt >= 50 || !/SQLITE_BUSY|database is locked/i.test(errMessage(e))) throw e;
+        await new Promise((r) => setTimeout(r, 100));
+      }
+    }
   }
 }
 
