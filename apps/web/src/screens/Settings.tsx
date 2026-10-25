@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api, type SettingsSchema } from '../api';
 import { useApp } from '../App';
+import { UsersPanel } from './Users';
 
 /** Generated from the settings registry, so new settings appear without new screen code. */
 export function SettingsScreen() {
@@ -42,6 +43,7 @@ export function SettingsScreen() {
   };
 
   return (
+    <div className="stack">
     <form className="page settings" onSubmit={(e) => { e.preventDefault(); void save(); }}>
       <div className="page-head"><h1>{t('settings.title')}</h1></div>
       {groups.map((g) => (
@@ -96,5 +98,7 @@ export function SettingsScreen() {
         <button type="submit" className="btn primary" disabled={saving || !Object.keys(changed).length}>{t('settings.save')}</button>
       </div>
     </form>
+    <UsersPanel />
+    </div>
   );
 }

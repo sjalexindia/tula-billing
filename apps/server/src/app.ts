@@ -94,11 +94,15 @@ export async function buildApp(db: Db, opts: { webDist?: string; logger?: boolea
     return catalog(db, q.date ?? todayIST());
   });
 
-  app.get('/api/parties', async () => all(db, `
+  /** Active parties for billing; ?all=1 includes inactive ones for the Customers screen. */
+  app.get('/api/parties', async (req) => {
+    const all_ = z.object({ all: z.string().optional() }).parse(req.query).all === '1';
+    return all(db, `
     SELECT p.id, p.party_type, p.name_en, p.name_ta, p.mobile, p.gstin, p.state_code, p.credit_limit_paise, p.credit_days,
-           p.lang, p.is_walk_in, COALESCE(b.balance_paise, 0) AS balance_paise
+           p.lang, p.is_walk_in, p.active, COALESCE(b.balance_paise, 0) AS balance_paise
     FROM parties p LEFT JOIN v_party_balance b ON b.party_id = p.id
-    WHERE p.deleted = 0 AND p.active = 1 ORDER BY p.is_walk_in DESC, p.name_en`));
+    WHERE p.deleted = 0 ${all_ ? '' : 'AND p.active = 1'} ORDER BY p.is_walk_in DESC, p.name_en`);
+  });
 
   // ---------- Daily rates (any number of rate groups, defined as data) ----------
   app.get('/api/rates', async () => all(db, `

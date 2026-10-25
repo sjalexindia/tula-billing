@@ -7,7 +7,7 @@ export interface CatalogItem {
 }
 export interface Party {
   id: string; party_type: string; name_en: string; name_ta: string | null; mobile: string | null; gstin: string | null;
-  state_code: string; credit_limit_paise: number; credit_days: number; balance_paise: number; lang: string | null; is_walk_in: number;
+  state_code: string; credit_limit_paise: number; credit_days: number; balance_paise: number; lang: string | null; is_walk_in: number; active?: number;
 }
 export interface RateGroup {
   code: string; name_en: string; name_ta: string | null; show_on_topbar: number; unit_code: string | null; unit_en: string | null; unit_ta: string | null;
@@ -35,6 +35,43 @@ export class ApiError extends Error {
   constructor(message: string, public status: number, public code?: string) { super(message); }
 }
 
+/** Called whenever the server says the session is gone, so the app can show the sign-in screen. */
+let onSignedOut: () => void = () => {};
+export const setSignedOutHandler = (fn: () => void) => { onSignedOut = fn; };
+
+export type Role = 'owner' | 'billing' | 'viewer';
+export interface Me { id: string; name: string; role: Role; lang: string | null; mustChangePin: boolean }
+export interface UserRow { id: string; name: string; role: Role; lang: string | null; active: number; pin_set: number }
+export interface Category { id: string; name_en: string; name_ta: string | null; is_service: number; sort_order: number }
+export interface Unit { id: string; code: string; name_en: string; name_ta: string | null; gst_uqc: string | null }
+export interface RateGroupRow { id: string; code: string; name_en: string; name_ta: string | null; show_on_topbar: number; unit: string | null }
+export interface ProductRow {
+  id: string; sku: string; name_en: string; name_ta: string | null; brand: string | null; hsn: string | null; gst_bp: number; active: number;
+  track_stock: number; rate_mode: 'fixed' | 'daily'; rate_group: string | null; rate_extra_paise: number; sale_rate_paise: number;
+  base_unit: string; category_en: string; category_ta: string | null; stock_milli: number;
+}
+export interface ProductDetail extends ProductRow {
+  category_id: string; min_stock_milli: number; attrs: Record<string, unknown>;
+  units: Array<{ unit: string; factor_milli: number; on_bill: number; is_theoretical: number }>;
+}
+export interface ProductInput {
+  sku: string; name_en: string; name_ta?: string | null; categoryId: string; brand?: string | null; hsn?: string | null; gst: string;
+  baseUnit: string; trackStock: boolean; minStock?: string; rateMode: 'fixed' | 'daily'; rateGroup?: string | null; rateExtra?: string;
+  saleRate?: string; active: boolean; units: Array<{ unit: string; factor: string; onBill: boolean; theoretical: boolean }>;
+}
+export interface PartyDetail {
+  id: string; party_type: 'customer' | 'supplier' | 'both'; name_en: string; name_ta: string | null; mobile: string | null; address: string | null;
+  gstin: string | null; state_code: string; credit_limit_paise: number; credit_days: number; lang: string | null; active: number; is_walk_in: number;
+  opening_balance_paise: number; balance_paise: number;
+  rates: Array<{ product_id: string; sku: string; name_en: string; name_ta: string | null; rate_paise: number | null; adjust_paise: number | null }>;
+}
+export interface PartyInput {
+  partyType: 'customer' | 'supplier' | 'both'; name_en: string; name_ta?: string | null; mobile?: string | null; address?: string | null;
+  gstin?: string | null; stateCode?: string | null; creditLimit?: string; creditDays?: number | null; lang?: string | null;
+  openingBalance?: string; active: boolean;
+}
+export interface OpeningRow { product_id: string; sku: string; name_en: string; name_ta: string | null; base_unit: string; qty_milli: number; cost_paise: number | null }
+
 async function req<T>(method: string, url: string, body?: unknown, allow409 = false): Promise<T> {
   let res: Response;
   try {
@@ -43,6 +80,7 @@ async function req<T>(method: string, url: string, body?: unknown, allow409 = fa
     throw new ApiError('network', 0, 'NETWORK');
   }
   const data = await res.json().catch(() => null);
+  if (res.status === 401 && !url.startsWith('/api/auth/login')) onSignedOut();
   if (!res.ok && !(allow409 && res.status === 409 && (data as { saved?: boolean })?.saved === false)) {
     const d = data as { message?: string; error?: string } | null;
     throw new ApiError(d?.message ?? res.statusText, res.status, d?.error);
@@ -51,11 +89,33 @@ async function req<T>(method: string, url: string, body?: unknown, allow409 = fa
 }
 
 export const api = {
+  publicInfo: () => req<{ name_en: string; name_ta: string; languages: string[]; defaultLang: string }>('GET', '/api/public'),
+  loginUsers: () => req<Array<{ id: string; name: string; role: Role; lang: string | null }>>('GET', '/api/auth/users'),
+  login: (userId: string, pin: string) => req<{ user: Me }>('POST', '/api/auth/login', { userId, pin }),
+  logout: () => req('POST', '/api/auth/logout', {}),
+  me: () => req<{ user: Me }>('GET', '/api/auth/me'),
+  changePin: (currentPin: string, newPin: string) => req('POST', '/api/auth/pin', { currentPin, newPin }),
+  users: () => req<UserRow[]>('GET', '/api/users'),
+  addUser: (u: { name: string; role: Role; pin: string; lang?: string | null }) => req<{ id: string }>('POST', '/api/users', u),
+  updateUser: (id: string, u: Partial<{ name: string; role: Role; pin: string; active: boolean; lang: string | null }>) => req('PUT', `/api/users/${id}`, u),
+  categories: () => req<Category[]>('GET', '/api/categories'),
+  addCategory: (c: { name_en: string; name_ta?: string | null; isService: boolean }) => req<{ id: string }>('POST', '/api/categories', c),
+  units: () => req<Unit[]>('GET', '/api/units'),
+  rateGroups: () => req<RateGroupRow[]>('GET', '/api/rate-groups'),
+  products: () => req<ProductRow[]>('GET', '/api/products'),
+  product: (id: string) => req<ProductDetail>('GET', `/api/products/${id}`),
+  saveProduct: (p: ProductInput, id?: string) => (id ? req<{ ok: boolean }>('PUT', `/api/products/${id}`, p) : req<{ id: string }>('POST', '/api/products', p)),
+  party: (id: string) => req<PartyDetail>('GET', `/api/parties/${id}`),
+  saveParty: (p: PartyInput, id?: string) => (id ? req<{ ok: boolean }>('PUT', `/api/parties/${id}`, p) : req<{ id: string }>('POST', '/api/parties', p)),
+  savePartyRates: (id: string, rates: Array<{ productId: string; rate?: string; adjust?: string }>) => req('PUT', `/api/parties/${id}/rates`, { rates }),
+  opening: () => req<OpeningRow[]>('GET', '/api/stock/opening'),
+  saveOpening: (lines: Array<{ productId: string; qty: string; cost: string }>) => req<{ items: number }>('PUT', '/api/stock/opening', { lines }),
   settings: () => req<SettingsState>('GET', '/api/settings'),
   settingsSchema: () => req<SettingsSchema>('GET', '/api/settings/schema'),
   saveSettings: (values: Record<string, string>) => req<SettingsState>('PUT', '/api/settings', values),
   catalog: () => req<CatalogItem[]>('GET', '/api/catalog'),
   parties: () => req<Party[]>('GET', '/api/parties'),
+  partiesAll: () => req<Party[]>('GET', '/api/parties?all=1'),
   rates: () => req<RateGroup[]>('GET', '/api/rates'),
   setRate: (group: string, rate: string) => req('PUT', `/api/rates/${group}`, { rate }),
   preview: (b: BillInput) => req<Preview>('POST', '/api/bills/preview', b),

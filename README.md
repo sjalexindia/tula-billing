@@ -7,13 +7,14 @@ Runs on the shop's own computer without internet, syncs to phones, backs up to G
 *Tula (तुला / துலாம்) means the weighing scale, and a balanced book.*
 
 ## Status
-**Milestone 0 done** (scaffold and spike). Billing works end to end on a local SQLite database, and every business detail is configurable. See [docs/02-milestone-0.md](docs/02-milestone-0.md).
+**Milestone 1 done.** PIN sign-in with roles, items, customers with special rates, opening stock and balances, on top of Milestone 0's billing. Every business detail is configurable. See [docs/04-milestone-1.md](docs/04-milestone-1.md).
 
 | Doc | What it covers |
 |---|---|
 | [docs/01-release-1-spec.md](docs/01-release-1-spec.md) | Goals, roles, use cases, business rules, architecture, screens, release plan |
 | [docs/02-milestone-0.md](docs/02-milestone-0.md) | What M0 delivered, decisions, what's next |
-| [docs/03-configuration.md](docs/03-configuration.md) | Settings, presets, environment variables, adding a language |
+| [docs/03-configuration.md](docs/03-configuration.md) | Settings, presets, business profiles, environment variables, adding a language |
+| [docs/04-milestone-1.md](docs/04-milestone-1.md) | Sign-in and roles, items, customers, opening figures |
 | [packages/db/migrations/0001_init.sql](packages/db/migrations/0001_init.sql) | SQLite schema |
 
 ## Run it
@@ -25,7 +26,7 @@ npm run build -w apps/web          # build the web app once
 npm start -w apps/server           # http://localhost:5000
 ```
 
-The first run creates `data/tula.db` with an owner user, base units and a walk-in customer, then asks for the business details in **Settings** before the first bill.
+The first run creates `data/tula.db` with an owner user, base units and a walk-in customer. Sign in as **Owner** with PIN **1234**; you'll be asked to choose your own PIN, then to fill in the business details in **Settings** before the first bill.
 
 To start with a ready catalogue and sample data instead:
 

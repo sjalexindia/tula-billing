@@ -139,6 +139,7 @@ export function NewBill({ ratesVersion }: { ratesVersion: number }) {
           <datalist id="customers">
             {parties.map((p) => <option key={p.id} value={nameIn(ui, p.name_en, p.name_ta)}>{p.mobile ?? ''}</option>)}
           </datalist>
+          {!party && customerText.trim().length > 1 && <QuickCustomer name={customerText.trim()} onAdded={(p) => { setParties((ps) => [...ps, p]); setCustomerText(p.name_en); }} />}
           {party && !party.is_walk_in && (
             <p className="hint">
               {t('bill.outstanding')}: <b className={party.balance_paise > 0 ? 'owed' : ''}>{formatRs(party.balance_paise)}</b>
@@ -209,7 +210,8 @@ export function NewBill({ ratesVersion }: { ratesVersion: number }) {
                   onChange={(v) => update(l.key, { rate: v })} />
                 <Num id={`disc-${l.key}`} label={`${t('bill.discount')} ₹`} value={l.discount} onChange={(v) => update(l.key, { discount: v })} />
                 <div className="line-amount">
-                  <span className="amount">{calc ? formatRs(calc.taxable) : '—'}</span>
+                  {/* With GST-inclusive rates the line shows what the customer pays; otherwise the taxable value. */}
+                  <span className="amount">{calc ? formatRs(calc.inclusive ? calc.total : calc.taxable) : '—'}</span>
                   {calc && units.length > 0 && !exact && (
                     <span className="hint">{t(calculated ? 'bill.calculated' : 'bill.measured', { qty: formatQty(calc.baseQtyMilli, { trimZeros: true }), unit: baseName })}</span>
                   )}
@@ -280,6 +282,35 @@ function Num(props: { id: string; label: string; value: string; onChange: (v: st
       <label htmlFor={props.id}>{props.label}</label>
       <input id={props.id} inputMode="decimal" autoComplete="off" value={props.value} placeholder={props.placeholder}
         onChange={(e) => props.onChange(e.target.value.replace(/[^\d.]/g, ''))} />
+    </div>
+  );
+}
+
+/** Add a customer on the spot when the typed name isn't found. Credit terms stay with the owner. */
+function QuickCustomer({ name, onAdded }: { name: string; onAdded: (p: Party) => void }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [mobile, setMobile] = useState('');
+  const [gstin, setGstin] = useState('');
+  const [error, setError] = useState('');
+  if (!open) return <button type="button" className="link" onClick={() => setOpen(true)}>{t('bill.newCustomer')}: {name}</button>;
+  const add = async () => {
+    try {
+      const r = await api.saveParty({ partyType: 'customer', name_en: name, mobile: mobile || null, gstin: gstin || null, active: true });
+      const all_ = await api.parties();
+      const p = all_.find((x) => x.id === (r as { id: string }).id);
+      if (p) onAdded(p);
+      setOpen(false);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
+  return (
+    <div className="quick-customer">
+      <input aria-label={t('parties.mobile')} placeholder={t('parties.mobile')} inputMode="tel" value={mobile} onChange={(e) => setMobile(e.target.value)} />
+      <input aria-label={t('parties.gstin')} placeholder={t('parties.gstin')} className="mono" maxLength={15} value={gstin} onChange={(e) => setGstin(e.target.value.toUpperCase())} />
+      <button type="button" className="btn small primary" onClick={() => void add()}>{t('common.add')}</button>
+      {error && <span className="field-error">{error}</span>}
     </div>
   );
 }
