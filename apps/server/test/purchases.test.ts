@@ -422,3 +422,23 @@ describe('who can do what', () => {
     expect(await all(db, "SELECT id FROM purchase_docs WHERE status = 'cancelled'")).toHaveLength(0);
   });
 });
+
+describe('supplier payments vs customer refunds', () => {
+  it('keeps customer refunds out of the supplier payment list and its cancel', async () => {
+    const { bootSignedIn } = await import('./helpers');
+    const b = await bootSignedIn({ preset: 'building-materials', demo: true });
+    const walkIn = (await b.call('/api/parties')).json().find((p: { is_walk_in: number }) => p.is_walk_in);
+    const wire = (await b.call('/api/catalog')).json().find((p: { sku: string }) => p.sku === 'BW-20');
+    const bill = (await b.call({ method: 'POST', url: '/api/bills', payload: { partyId: walkIn.id, lines: [{ productId: wire.id, entry: { KG: '10' } }], payment: { mode: 'cash', amount: '885' } } })).json();
+    const line = (await b.call(`/api/bills/${bill.id}/returnable`)).json();
+    const lines = (line.lines ?? line).map((l: { lineId?: string; id?: string }) => ({ lineId: l.lineId ?? l.id, qty: '2' }));
+    const ret = await b.call({ method: 'POST', url: `/api/bills/${bill.id}/return`, payload: { lines, reason: 'damaged', refund: { mode: 'cash', amount: '100' } } });
+    expect(ret.statusCode).toBe(201);
+    const today = new Date(Date.now() + 330 * 60000).toISOString().slice(0, 10);
+    const list = (await b.call(`/api/supplier-payments?from=2000-01-01&to=${today}`)).json();
+    expect(list.rows).toHaveLength(0);
+    const refund = (await b.db.execute("SELECT id FROM money_docs WHERE doc_type = 'PAY'")).rows[0]!;
+    const cancel = await b.call({ method: 'POST', url: `/api/supplier-payments/${refund.id}/cancel`, payload: { reason: 'x' } });
+    expect(cancel.statusCode).toBe(404);
+  });
+});

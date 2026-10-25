@@ -255,7 +255,7 @@ async function cancelReceipt(db: Db, ctx: Ctx, id: string, reason: string) {
     if (pos.unallocatedPaise + Math.max(0, -pos.openingPaise) - pos.refundsPaise - r.unallocatedPaise < 0) {
       throw new UserError('Part of this money was already refunded to the customer, so the receipt cannot be cancelled', 'REFUNDED', 409);
     }
-    await update(tx, 'money_docs', ctx.deviceId, id, { status: 'cancelled', notes: reason });
+    await update(tx, 'money_docs', ctx.deviceId, id, { status: 'cancelled', cancel_reason: reason, cancelled_at: new Date().toISOString(), cancelled_by: ctx.userId });
     const entries = await softDelete(tx, 'ledger_entries', ctx.deviceId, "source_type = 'RCPT' AND source_id = ?", [id]);
     const allocs = await softDelete(tx, 'money_allocations', ctx.deviceId, 'money_doc_id = ?', [id]);
     await audit(tx, ctx.deviceId, ctx.userId, 'money_docs', id, 'cancel', { docNo: m.doc_no, entries, allocations: allocs }, reason);

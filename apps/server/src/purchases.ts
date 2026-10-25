@@ -866,7 +866,9 @@ export function registerPurchases(app: FastifyInstance, db: Db, deviceId: string
         COALESCE((SELECT SUM(a.amount_paise) FROM money_allocations a WHERE a.money_doc_id = m.id AND a.deleted = 0), 0) AS allocated_paise,
         (SELECT group_concat(d.doc_no, ', ') FROM money_allocations a JOIN purchase_docs d ON d.id = a.purchase_doc_id WHERE a.money_doc_id = m.id AND a.deleted = 0) AS bills
       FROM money_docs m JOIN parties p ON p.id = m.party_id
-      WHERE m.doc_type = 'PAY' AND m.deleted = 0 AND m.doc_date BETWEEN ? AND ? ORDER BY m.doc_date DESC, m.doc_no DESC`, [from, to]);
+      -- customer refunds (credit notes) are also PAY documents; they belong to the sales side
+      WHERE m.doc_type = 'PAY' AND m.deleted = 0 AND NOT EXISTS (SELECT 1 FROM money_allocations ra WHERE ra.money_doc_id = m.id AND ra.sales_doc_id IS NOT NULL)
+        AND m.doc_date BETWEEN ? AND ? ORDER BY m.doc_date DESC, m.doc_no DESC`, [from, to]);
     return { from, to, rows };
   });
 
@@ -876,12 +878,12 @@ export function registerPurchases(app: FastifyInstance, db: Db, deviceId: string
     if (!b.reason) throw new UserError('Say why the payment is being cancelled', 'NO_REASON');
     const ctx = ctxOf(req);
     return inTx(db, async (tx) => {
-      const m = await one<{ doc_no: string; status: string }>(tx, "SELECT doc_no, status FROM money_docs WHERE id = ? AND doc_type = 'PAY' AND deleted = 0", [id]);
+      const m = await one<{ doc_no: string; status: string }>(tx, "SELECT doc_no, status FROM money_docs m WHERE id = ? AND doc_type = 'PAY' AND deleted = 0 AND NOT EXISTS (SELECT 1 FROM money_allocations ra WHERE ra.money_doc_id = m.id AND ra.sales_doc_id IS NOT NULL)", [id]);
       if (!m) throw new UserError('Payment not found', 'NOT_FOUND', 404);
       if (m.status === 'cancelled') throw new UserError(`${m.doc_no} is already cancelled`, 'ALREADY_CANCELLED');
       await softDelete(tx, 'ledger_entries', deviceId, "source_type = 'PAY' AND source_id = ?", [id]);
       await softDelete(tx, 'money_allocations', deviceId, 'money_doc_id = ?', [id]);
-      await update(tx, 'money_docs', deviceId, id, { status: 'cancelled' });
+      await update(tx, 'money_docs', deviceId, id, { status: 'cancelled', cancel_reason: b.reason, cancelled_at: nowIso(), cancelled_by: ctx.userId });
       // money_docs has no cancel columns; the reason, who and when are in the audit log.
       await audit(tx, ctx, 'money_docs', id, 'cancel', { docNo: m.doc_no }, b.reason);
       return { ok: true };
