@@ -80,7 +80,8 @@
     var u;
     try { u = new URL(s); } catch (e) { return null; }
     if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
-    if (!u.hostname || /\s/.test(u.hostname)) return null;
+    if (!/^[a-z0-9.-]+$/i.test(u.hostname) || /^[.-]|[.-]$/.test(u.hostname)) return null;
+    if (/\s|%20/.test(s)) return null;
     var explicitPort = /^[a-z]+:\/\/[^/?#]*:\d+/i.test(s);
     var port = u.port || (u.protocol === 'http:' && !explicitPort ? DEFAULT_PORT : '');
     return u.protocol + '//' + u.hostname + (port ? ':' + port : '');

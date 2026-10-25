@@ -63,7 +63,7 @@
       "mainSeries": "Main",
       "thisOne": "This computer",
       "lost": "Lost",
-      "added": "Added {{when}}",
+      "added": "Added: {{when}}",
       "rename": "Rename",
       "newName": "New name for this computer",
       "markLost": "Mark as lost",
