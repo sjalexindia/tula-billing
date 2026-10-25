@@ -53,7 +53,7 @@ export function uuidv7(now = Date.now()): string {
 export const nowIso = () => new Date().toISOString();
 
 /** Tables that never sync (local bookkeeping). */
-const LOCAL_ONLY = new Set(['sync_outbox', 'sync_state', 'schema_migrations']);
+const LOCAL_ONLY = new Set(['sync_outbox', 'sync_state', 'schema_migrations', 'sessions']);
 
 /**
  * Insert a row into a synced table, filling id / timestamps / device_id,
@@ -112,4 +112,33 @@ export async function all<T = Row>(ex: Exec, sql: string, args: InValue[] = []):
 
 export async function one<T = Row>(ex: Exec, sql: string, args: InValue[] = []): Promise<T | undefined> {
   return (await all<T>(ex, sql, args))[0];
+}
+
+/**
+ * Update columns of one synced row, stamping updated_at / device_id, and queue the full row for sync.
+ * Returns false if the row doesn't exist.
+ */
+export async function update(ex: Exec, table: string, deviceId: string, id: string, patch: Row): Promise<boolean> {
+  const cols = Object.keys(patch).filter((c) => patch[c] !== undefined);
+  const ts = nowIso();
+  const r = await ex.execute({
+    sql: `UPDATE ${table} SET ${[...cols.map((c) => `${c} = ?`), 'updated_at = ?', 'device_id = ?'].join(', ')} WHERE id = ?`,
+    args: [...cols.map((c) => toArg(patch[c])), ts, deviceId, id],
+  });
+  if (!r.rowsAffected) return false;
+  if (!LOCAL_ONLY.has(table)) {
+    const row = await one(ex, `SELECT * FROM ${table} WHERE id = ?`, [id]);
+    await ex.execute({
+      sql: 'INSERT INTO sync_outbox (table_name, row_id, op, payload_json, created_at) VALUES (?,?,?,?,?)',
+      args: [table, id, 'upsert', JSON.stringify(row), ts],
+    });
+  }
+  return true;
+}
+
+/** Soft-delete matching rows (deleted = 1) so the deletion syncs too. Returns how many. */
+export async function softDelete(ex: Exec, table: string, deviceId: string, where: string, args: InValue[]): Promise<number> {
+  const rows = await all<{ id: string }>(ex, `SELECT id FROM ${table} WHERE deleted = 0 AND (${where})`, args);
+  for (const r of rows) await update(ex, table, deviceId, r.id, { deleted: 1 });
+  return rows.length;
 }

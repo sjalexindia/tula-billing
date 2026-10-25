@@ -2,11 +2,11 @@ import {
   financialYear, roundDiv, steelRodWeightMilli, toMilli, toPaise, todayIST, validateSetting,
 } from '@tula/core';
 import { insert, one, setSetting, uuidv7, type Db, type Exec } from '@tula/db';
-import { randomBytes, scryptSync } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { accountId, ensureSystemAccounts, partyAccountId, post } from './accounts';
+import { hashPin } from './auth';
 
 export const PRESETS_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'presets');
 
@@ -59,10 +59,6 @@ export function loadPreset(id: string): Preset {
   return JSON.parse(readFileSync(join(PRESETS_DIR, `${id}.json`), 'utf8')) as Preset;
 }
 
-export function hashPin(pin: string): string {
-  const salt = randomBytes(16);
-  return `scrypt$${salt.toString('hex')}$${scryptSync(pin, salt, 32).toString('hex')}`;
-}
 
 export interface SetupOptions {
   /** preset to load, e.g. "building-materials" or "blank" */

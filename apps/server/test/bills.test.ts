@@ -1,11 +1,10 @@
-import { insert, one, openDb, type Db } from '@tula/db';
-import type { FastifyInstance } from 'fastify';
+import { insert, one, type Db } from '@tula/db';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { buildApp } from '../src/app';
 import { setup } from '../src/setup';
+import { bootSignedIn, type Call } from './helpers';
 
 let db: Db;
-let app: FastifyInstance;
+let app: { inject: Call };
 type Item = { id: string; sku: string; ratePaise: number; stockMilli: number | null; units: Array<{ code: string; factorMilli: number }> };
 let catalog: Item[];
 let parties: Array<{ id: string; name_en: string; balance_paise: number; is_walk_in: number }>;
@@ -14,9 +13,9 @@ const walkIn = () => parties.find((p) => p.is_walk_in)!;
 const builder = () => parties.find((p) => p.name_en === 'Sample Builders')!;
 
 async function boot(opts: Parameters<typeof setup>[1]) {
-  db = await openDb(':memory:');
-  await setup(db, opts);
-  app = await buildApp(db);
+  const b = await bootSignedIn(opts);
+  db = b.db;
+  app = { inject: b.call };
   catalog = (await app.inject('/api/catalog')).json();
   parties = (await app.inject('/api/parties')).json();
 }
@@ -218,11 +217,11 @@ describe('business profile', () => {
     const { applyProfile, readProfile } = await import('../src/setup');
     const { fileURLToPath } = await import('node:url');
     const profile = readProfile(fileURLToPath(new URL('../../../docs/examples/business-profile.example.json', import.meta.url)));
-    db = await openDb(':memory:');
-    await setup(db, { preset: profile.preset });
+    const b = await bootSignedIn({ preset: profile.preset });
+    db = b.db;
+    app = { inject: b.call };
     const r = await applyProfile(db, profile);
     expect(r.productsPatched).toBe(7);
-    app = await buildApp(db);
     const s = (await app.inject('/api/settings')).json();
     expect(s.missingForBilling).toEqual([]);
     expect(s.values['invoice.label_mode']).toBe('bilingual');

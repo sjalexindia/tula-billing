@@ -4,20 +4,21 @@ import {
 } from '@tula/core';
 import { all, getSettings, insert, nowIso, one, setSetting, type Db } from '@tula/db';
 import fastifyStatic from '@fastify/static';
-import Fastify, { type FastifyInstance } from 'fastify';
+import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 import { existsSync } from 'node:fs';
 import { z, ZodError } from 'zod';
 import { applyNumberingSettings, createBill, getBill, listBills, priceBill } from './bills';
+import { registerAuth } from './auth';
 import { catalog } from './catalog';
+import { registerMasters } from './masters';
 import { localDeviceId, UserError, type Ctx } from './context';
 
 export async function buildApp(db: Db, opts: { webDist?: string; logger?: boolean } = {}): Promise<FastifyInstance> {
   const app = Fastify({ logger: opts.logger ?? false });
   const deviceId = await localDeviceId(db);
 
-  // Release 1 M0: single owner user. M1 replaces this with PIN login + roles.
-  const owner = await one<{ id: string }>(db, "SELECT id FROM users WHERE role = 'owner' AND deleted = 0 ORDER BY created_at LIMIT 1");
-  const ctx: Ctx = { deviceId, userId: owner!.id };
+  /** Who is acting, for audit and created_by: the signed-in user on this device. */
+  const ctxOf = (req: FastifyRequest): Ctx => ({ deviceId, userId: req.user!.id });
 
   app.setErrorHandler((err, _req, reply) => {
     if (err instanceof UserError) return reply.status(err.status).send({ error: err.code, message: err.message });
@@ -30,6 +31,18 @@ export async function buildApp(db: Db, opts: { webDist?: string; logger?: boolea
   const settings = async () => withDefaults(await getSettings(db));
 
   app.get('/api/health', async () => ({ ok: true, today: todayIST() }));
+
+  /** What the sign-in screen needs before anyone is signed in. */
+  app.get('/api/public', async () => {
+    const s = await settings();
+    return {
+      name_en: s['business.name_en'], name_ta: s['business.name_ta'], languages: s['app.languages'].split(','),
+      defaultLang: s['app.default_lang'],
+    };
+  });
+
+  registerAuth(app, db, deviceId);
+  registerMasters(app, db, deviceId);
 
   // ---------- Settings ----------
   /** Current values (with defaults), plus what is still missing before billing. */
@@ -65,7 +78,7 @@ export async function buildApp(db: Db, opts: { webDist?: string; logger?: boolea
         if (!isSettingKey(k)) continue;
         await setSetting(tx, deviceId, k, v);
       }
-      await insert(tx, 'audit_log', deviceId, { at: nowIso(), user_id: ctx.userId, entity: 'settings', entity_id: Object.keys(clean).join(','), action: 'update', after_json: clean });
+      await insert(tx, 'audit_log', deviceId, { at: nowIso(), user_id: req.user!.id, entity: 'settings', entity_id: Object.keys(clean).join(','), action: 'update', after_json: clean });
       await tx.commit();
     } catch (e) {
       if (!tx.closed) await tx.rollback();
@@ -111,7 +124,7 @@ export async function buildApp(db: Db, opts: { webDist?: string; logger?: boolea
       } else {
         await insert(tx, 'daily_rates', deviceId, { rate_group: group, rate_date: date, rate_paise: ratePaise });
       }
-      await insert(tx, 'audit_log', deviceId, { at: nowIso(), user_id: ctx.userId, entity: 'daily_rates', entity_id: `${group}:${date}`, action: 'update', after_json: { ratePaise } });
+      await insert(tx, 'audit_log', deviceId, { at: nowIso(), user_id: req.user!.id, entity: 'daily_rates', entity_id: `${group}:${date}`, action: 'update', after_json: { ratePaise } });
       await tx.commit();
     } catch (e) {
       if (!tx.closed) await tx.rollback();
@@ -131,7 +144,7 @@ export async function buildApp(db: Db, opts: { webDist?: string; logger?: boolea
   });
 
   app.post('/api/bills', async (req, reply) => {
-    const r = await createBill(db, ctx, req.body as never);
+    const r = await createBill(db, ctxOf(req), req.body as never);
     return reply.status(r.saved ? 201 : 409).send(r);
   });
 
