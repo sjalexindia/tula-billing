@@ -1,0 +1,26 @@
+:root { --ink: #1e2a33; --steel: #5b6b78; --rule: #d2d8dd; --paper: #eef1f3; --mark: #e8a317; --danger: #b42318; --radius: 8px; color-scheme: light; }
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body { background: var(--paper); color: var(--ink); font: 16px/1.5 'Noto Sans', 'Noto Sans Tamil', system-ui, sans-serif; padding: max(16px, env(safe-area-inset-top)) 16px 24px; }
+.card { max-width: 440px; margin: 0 auto; background: #fff; border: 1px solid var(--rule); border-radius: var(--radius); padding: 20px; }
+header { display: flex; gap: 14px; align-items: center; margin-bottom: 16px; }
+header img { border-radius: 12px; }
+h1 { margin: 0; font-size: 24px; }
+.lang-switch { margin: 4px 0 0; display: inline-flex; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; }
+.lang-switch button { font: inherit; font-size: 14px; border: 0; background: #fff; padding: 4px 12px; color: var(--ink); }
+.lang-switch button[aria-pressed='true'] { background: var(--ink); color: #fff; font-weight: 600; }
+label { display: block; font-weight: 600; font-size: 14px; color: var(--steel); margin: 12px 0 4px; }
+input { width: 100%; font: inherit; font-size: 18px; padding: 12px; border: 1px solid var(--rule); border-radius: var(--radius); }
+input:focus { outline: 2px solid #1f6fb2; border-color: #1f6fb2; }
+.hint { color: var(--steel); font-size: 14px; margin: 6px 0 0; }
+.error { color: var(--danger); font-weight: 600; margin: 10px 0 0; }
+.error-title { color: var(--danger); }
+.big { font-size: 19px; font-weight: 600; margin: 8px 0; }
+.addr { font-family: ui-monospace, monospace; background: var(--paper); padding: 8px 10px; border-radius: var(--radius); overflow-wrap: anywhere; }
+.btn { display: block; width: 100%; text-align: center; text-decoration: none; font: inherit; font-size: 18px; padding: 13px; margin-top: 14px; border: 1px solid var(--rule); border-radius: var(--radius); background: #fff; color: var(--ink); }
+.btn.primary { background: var(--mark); border-color: var(--mark); font-weight: 600; }
+.btn:disabled { opacity: 0.5; }
+details { margin-top: 18px; color: var(--steel); }
+summary { cursor: pointer; font-weight: 600; }
+ol, ul { padding-left: 22px; }
+li { margin: 4px 0; }
