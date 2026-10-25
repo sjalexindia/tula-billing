@@ -72,7 +72,7 @@ export interface PartyInput {
 }
 export interface OpeningRow { product_id: string; sku: string; name_en: string; name_ta: string | null; base_unit: string; qty_milli: number; cost_paise: number | null }
 
-async function req<T>(method: string, url: string, body?: unknown, allow409 = false): Promise<T> {
+export async function req<T>(method: string, url: string, body?: unknown, allow409 = false): Promise<T> {
   let res: Response;
   try {
     res = await fetch(url, { method, headers: body ? { 'content-type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined });

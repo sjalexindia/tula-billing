@@ -9,7 +9,25 @@
     "settings": "Settings",
     "items": "Items",
     "customers": "Customers",
-    "opening": "Opening stock"
+    "opening": "Opening stock",
+    "receipts": "Receipts",
+    "outstanding": "Outstanding",
+    "statement": "Statement",
+    "purchases": "Purchases",
+    "payments": "Supplier payments",
+    "expenses": "Expenses",
+    "adjustments": "Stock corrections",
+    "reports": "Reports",
+    "backup": "Backup",
+    "devices": "Devices & sync",
+    "groups": {
+      "billing": "Billing",
+      "purchases": "Purchases",
+      "stock": "Stock",
+      "reports": "Reports",
+      "masters": "Items & customers",
+      "settings": "Settings"
+    }
   },
   "lang": {
     "en": "English",
@@ -244,7 +262,8 @@
     "no": "No",
     "remove": "Remove",
     "none": "—",
-    "name": "Name"
+    "name": "Name",
+    "comingSoon": "This screen is being built."
   },
   "items": {
     "title": "Items",

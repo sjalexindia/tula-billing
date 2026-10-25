@@ -221,12 +221,5 @@ function ItemEditor({ id }: { id?: string }) {
   );
 }
 
-export function Field({ id, label, children, wide, hint }: { id: string; label: string; children: React.ReactNode; wide?: boolean; hint?: string }) {
-  return (
-    <div className={`field${wide ? ' wide' : ''}`}>
-      <label htmlFor={id}>{label}</label>
-      {children}
-      {hint && <span className="hint">{hint}</span>}
-    </div>
-  );
-}
+import { Field } from '../components/Field';
+export { Field };

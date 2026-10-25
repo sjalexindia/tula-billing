@@ -11,6 +11,11 @@ import { applyNumberingSettings, createBill, getBill, listBills, priceBill } fro
 import { registerAuth } from './auth';
 import { catalog } from './catalog';
 import { registerMasters } from './masters';
+import { registerOps } from './ops';
+import { registerPurchases } from './purchases';
+import { registerReports } from './reports';
+import { registerSalesOps } from './sales-ops';
+import { registerSync } from './sync';
 import { localDeviceId, UserError, type Ctx } from './context';
 
 export async function buildApp(db: Db, opts: { webDist?: string; logger?: boolean } = {}): Promise<FastifyInstance> {
@@ -43,6 +48,11 @@ export async function buildApp(db: Db, opts: { webDist?: string; logger?: boolea
 
   registerAuth(app, db, deviceId);
   registerMasters(app, db, deviceId);
+  registerSalesOps(app, db, deviceId);
+  registerPurchases(app, db, deviceId);
+  registerReports(app, db, deviceId);
+  registerOps(app, db, deviceId);
+  registerSync(app, db, deviceId);
 
   // ---------- Settings ----------
   /** Current values (with defaults), plus what is still missing before billing. */

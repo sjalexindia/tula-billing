@@ -335,3 +335,9 @@ td.owed, .page-sum.owed { color: var(--danger); }
   .topbar .tabs { order: 10; flex-basis: 100%; }
   .topbar .rates { margin-left: auto; }
 }
+
+/* Second-level menu for the screens in the current group */
+.subtabs { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 20px 0; max-width: 1360px; margin: 0 auto; border-bottom: 1px solid var(--rule); }
+.subtabs a { text-decoration: none; padding: 8px 14px; color: var(--ink-soft); font-weight: 600; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.subtabs a:hover { color: var(--ink); }
+.subtabs a[aria-current='page'] { color: var(--ink); border-bottom-color: var(--mark); }

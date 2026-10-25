@@ -83,6 +83,7 @@ async function userForToken(db: Db, token: string): Promise<SessionUser | null> 
 const BILLING_WRITES: Array<[string, RegExp]> = [
   ['POST', /^\/api\/bills(\/preview)?$/],
   ['POST', /^\/api\/parties$/],
+  ['POST', /^\/api\/receipts(\/preview)?$/],
 ];
 const ANY_ROLE_WRITES: Array<[string, RegExp]> = [
   ['POST', /^\/api\/auth\/(logout|pin)$/],

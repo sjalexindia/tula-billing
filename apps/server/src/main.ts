@@ -3,7 +3,9 @@ import { mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildApp } from './app';
+import { startOpsJobs } from './ops';
 import { applyProfile, readProfile, setup } from './setup';
+import { maybeJoin, startSync } from './sync';
 
 /**
  * Configuration comes from environment variables; business data comes from Settings in the app.
@@ -24,12 +26,22 @@ mkdirSync(dirname(dbFile), { recursive: true });
 const db = await openDb(`file:${dbFile}`);
 const profile = env.TULA_PROFILE ? readProfile(resolve(env.TULA_PROFILE)) : null;
 const preset = profile?.preset ?? env.TULA_PRESET ?? 'blank';
-const s = await setup(db, { preset, demo: env.TULA_DEMO === '1' });
+const joined = await maybeJoin(db);
+const s = joined ? { skipped: true as const } : await setup(db, { preset, demo: env.TULA_DEMO === '1' });
 if (!s.skipped) {
-  console.log(`First run: set up with preset "${preset}"${env.TULA_DEMO === '1' ? ' + demo data' : ''}. Owner user created with PIN 1234 (PIN login arrives in Milestone 1).`);
+  console.log(`First run: set up with preset "${preset}"${env.TULA_DEMO === '1' ? ' + demo data' : ''}. Sign in as Owner with PIN 1234, then choose your own PIN.`);
   if (profile) console.log('Applied business profile:', await applyProfile(db, profile));
 }
 
 const app = await buildApp(db, { webDist: join(here, '..', '..', 'web', 'dist'), logger: true });
 await app.listen({ port, host });
+const stopJobs = [startOpsJobs(db, { dbFile }), startSync(db)];
+for (const sig of ['SIGINT', 'SIGTERM'] as const) {
+  process.once(sig, async () => {
+    stopJobs.forEach((stop) => stop());
+    await app.close();
+    db.close();
+    process.exit(0);
+  });
+}
 console.log(`Tula is running: http://localhost:${port}  (database: ${dbFile})`);

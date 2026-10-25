@@ -15,7 +15,8 @@ Runs on the shop's own computer without internet, syncs to phones, backs up to G
 | [docs/02-milestone-0.md](docs/02-milestone-0.md) | What M0 delivered, decisions, what's next |
 | [docs/03-configuration.md](docs/03-configuration.md) | Settings, presets, business profiles, environment variables, adding a language |
 | [docs/04-milestone-1.md](docs/04-milestone-1.md) | Sign-in and roles, items, customers, opening figures |
-| [packages/db/migrations/0001_init.sql](packages/db/migrations/0001_init.sql) | SQLite schema |
+| [docs/05-engineering-guide.md](docs/05-engineering-guide.md) | How Tula is built: numbers, data rules, accounting conventions, API, web, tests |
+| [packages/db/migrations/](packages/db/migrations/) | SQLite schema |
 
 ## Run it
 Needs Node.js 20 or later.

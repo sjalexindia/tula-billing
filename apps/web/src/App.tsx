@@ -3,35 +3,17 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import { useTranslation } from 'react-i18next';
 import { api, ApiError, setSignedOutHandler, type Me, type RateGroup, type Role, type SettingsState } from './api';
 import { hasSavedLang, isLang, nameIn, setLang, type Lang } from './i18n';
+import { GROUP_ORDER, NAV } from './nav';
 import { ChangePin, SignIn } from './screens/Auth';
-import { Bills } from './screens/Bills';
-import { Customers } from './screens/Customers';
 import { Invoice } from './screens/Invoice';
-import { Items } from './screens/Items';
-import { NewBill } from './screens/NewBill';
-import { OpeningStock } from './screens/OpeningStock';
-import { SettingsScreen } from './screens/Settings';
-import { Stock } from './screens/Stock';
 
-type RouteName = 'new' | 'bills' | 'stock' | 'items' | 'customers' | 'opening' | 'settings' | 'print';
-interface Route { name: RouteName; id?: string }
+interface Route { name: string; id?: string }
 
+/** #/route/id ; the bill screen is the empty route. "print" is the full-page invoice view. */
 function parseHash(): Route {
-  const [a, b] = location.hash.replace(/^#\/?/, '').split('/');
-  const names: RouteName[] = ['bills', 'stock', 'items', 'customers', 'opening', 'settings', 'print'];
-  return names.includes(a as RouteName) ? { name: a as RouteName, id: b || undefined } : { name: 'new' };
+  const [a = '', b] = location.hash.replace(/^#\/?/, '').split('/');
+  return { name: a, id: b || undefined };
 }
-
-/** Which screens each role sees. Viewers read; billing staff bill; the owner does everything. */
-const NAV: Array<{ route: RouteName; href: string; label: string; roles: Role[] }> = [
-  { route: 'new', href: '#/', label: 'nav.newBill', roles: ['owner', 'billing'] },
-  { route: 'bills', href: '#/bills', label: 'nav.bills', roles: ['owner', 'billing', 'viewer'] },
-  { route: 'stock', href: '#/stock', label: 'nav.stock', roles: ['owner', 'billing', 'viewer'] },
-  { route: 'items', href: '#/items', label: 'nav.items', roles: ['owner', 'billing', 'viewer'] },
-  { route: 'customers', href: '#/customers', label: 'nav.customers', roles: ['owner', 'billing', 'viewer'] },
-  { route: 'opening', href: '#/opening', label: 'nav.opening', roles: ['owner'] },
-  { route: 'settings', href: '#/settings', label: 'nav.settings', roles: ['owner'] },
-];
 
 interface AppState {
   settings: SettingsState | null;
@@ -92,14 +74,18 @@ export function App() {
   const ctx: AppState = { settings, reloadSettings, langs, me: me ?? null, isOwner: me?.role === 'owner' };
 
   if (me === undefined) return null;
-  if (me === null) return <SignIn onSignedIn={(u) => { setMe(u); location.hash = u.role === 'owner' || u.role === 'billing' ? '#/' : '#/bills'; }} networkError={error} />;
+  if (me === null) return <SignIn onSignedIn={(u) => { setMe(u); location.hash = '#/'; }} networkError={error} />;
   if (me.mustChangePin || changingPin) {
     return <ChangePin forced={me.mustChangePin} onDone={() => { setChangingPin(false); setMe({ ...me, mustChangePin: false }); }} onCancel={() => setChangingPin(false)} />;
   }
   if (route.name === 'print' && route.id) return <AppCtx.Provider value={ctx}><Invoice id={route.id} /></AppCtx.Provider>;
 
   const allowed = NAV.filter((n) => n.roles.includes(me.role));
-  const current = allowed.some((n) => n.route === route.name) ? route.name : allowed[0]!.route;
+  const currentItem = allowed.find((n) => n.route === route.name) ?? allowed[0]!;
+  const current = currentItem.route;
+  const groups = GROUP_ORDER.filter((g) => allowed.some((n) => n.group === g && !n.hidden));
+  const inGroup = allowed.filter((n) => n.group === currentItem.group && !n.hidden);
+  const Screen = currentItem.screen;
   const v = settings?.values ?? {};
   const businessName = nameIn(i18n.language, v['business.name_en'] ?? '', v['business.name_ta']) || t('app.title');
   const setupNeeded = !!settings?.missingForBilling.length;
@@ -116,9 +102,10 @@ export function App() {
         <header className="topbar">
           <div className="brand"><span className="brand-name">{businessName}</span></div>
           <nav className="tabs" aria-label="Main">
-            {allowed.map((n) => (
-              <a key={n.route} href={n.href} aria-current={current === n.route ? 'page' : undefined}>{t(n.label)}</a>
-            ))}
+            {groups.map((g) => {
+              const first = allowed.find((n) => n.group === g && !n.hidden)!;
+              return <a key={g} href={`#/${first.route}`} aria-current={currentItem.group === g ? 'page' : undefined}>{t(`nav.groups.${g}`)}</a>;
+            })}
           </nav>
           <RatesBar key={ratesVersion} canEdit={me.role === 'owner'} onChanged={() => setRatesVersion((n) => n + 1)} />
           {langs.length > 1 && (
@@ -147,14 +134,13 @@ export function App() {
             {t('errors.setup')} {me.role === 'owner' && <a href="#/settings">{t('errors.setupLink')}</a>}
           </p>
         )}
+        {inGroup.length > 1 && (
+          <nav className="subtabs" aria-label={t(`nav.groups.${currentItem.group}`)}>
+            {inGroup.map((n) => <a key={n.route} href={`#/${n.route}`} aria-current={n.route === current ? 'page' : undefined}>{t(n.label)}</a>)}
+          </nav>
+        )}
         <main className="main">
-          {current === 'new' && <NewBill ratesVersion={ratesVersion} />}
-          {current === 'bills' && <Bills />}
-          {current === 'stock' && <Stock />}
-          {current === 'items' && <Items id={route.name === 'items' ? route.id : undefined} />}
-          {current === 'customers' && <Customers id={route.name === 'customers' ? route.id : undefined} />}
-          {current === 'opening' && <OpeningStock />}
-          {current === 'settings' && <SettingsScreen />}
+          <Screen key={`${current}/${route.id ?? ''}`} id={route.name === current ? route.id : undefined} ratesVersion={ratesVersion} />
         </main>
       </div>
     </AppCtx.Provider>

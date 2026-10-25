@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
@@ -17,6 +18,8 @@
     "vite": "^8.3.5"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
     "@fontsource/noto-sans": "^5.3.0",
     "@fontsource/noto-sans-tamil": "^5.3.0",
     "@tula/core": "^0.1.0",
