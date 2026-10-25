@@ -1,0 +1,347 @@
+{
+  "reports": {
+    "title": "Reports",
+    "allReports": "All reports",
+    "downloadExcel": "Download Excel",
+    "print": "Print",
+    "period": "Period",
+    "presets": {
+      "today": "Today",
+      "month": "This month",
+      "lastMonth": "Last month",
+      "fy": "This FY",
+      "custom": "Choose dates",
+      "quarter": "This quarter",
+      "lastQuarter": "Last quarter"
+    },
+    "from": "From",
+    "to": "To",
+    "asOf": "Stock as on",
+    "slowDays": "Slow moving after (days)",
+    "month": "Month",
+    "quarterMonth": "Any month in the quarter",
+    "rateGroup": "Rate group",
+    "groupBy": "Show by",
+    "by": {
+      "day": "Day",
+      "month": "Month"
+    },
+    "loading": "Loading…",
+    "badRange": "The start date is after the end date",
+    "noRows": "Nothing in this period",
+    "total": "Total",
+    "openingBalance": "Opening balance",
+    "check": "Please check",
+    "groups": {
+      "daily": "Daily",
+      "sales": "Sales & purchases",
+      "stock": "Stock",
+      "profit": "Profit",
+      "gst": "GST"
+    },
+    "list": {
+      "day-book": {
+        "title": "Day book",
+        "desc": "Every bill, return, receipt, payment, purchase and expense"
+      },
+      "cash-book": {
+        "title": "Cash & bank book",
+        "desc": "Cash, UPI and bank: opening, entries, closing"
+      },
+      "sales-register": {
+        "title": "Sales register",
+        "desc": "Bill-wise sales with GST; returns as minus"
+      },
+      "purchase-register": {
+        "title": "Purchase register",
+        "desc": "Purchase bills with GST and input credit"
+      },
+      "rate-group": {
+        "title": "Steel sales and rates",
+        "desc": "Kg sold per size and rate got vs the day's rate"
+      },
+      "stock-summary": {
+        "title": "Stock summary",
+        "desc": "Stock, average cost and value; low and slow moving"
+      },
+      "profit-loss": {
+        "title": "Profit & loss",
+        "desc": "Sales, cost, expenses and net profit; month by month"
+      },
+      "profit-bill": {
+        "title": "Profit by bill",
+        "desc": "Profit and margin on each bill"
+      },
+      "profit-customer": {
+        "title": "Profit by customer",
+        "desc": "Which customers bring the most profit"
+      },
+      "profit-item": {
+        "title": "Profit by item",
+        "desc": "Which items bring the most profit"
+      },
+      "gstr1": {
+        "title": "GSTR-1",
+        "desc": "Outward supplies for the month, ready for the CA"
+      },
+      "gstr3b": {
+        "title": "GSTR-3B",
+        "desc": "Tax on sales, input credit and tax to pay"
+      },
+      "cmp08": {
+        "title": "CMP-08",
+        "desc": "Composition tax for the quarter"
+      }
+    },
+    "summary": {
+      "netSales": "Net sales",
+      "gross": "Gross profit",
+      "expenses": "Expenses",
+      "net": "Net profit",
+      "margin": "Margin",
+      "sales": "Sales",
+      "profit": "Profit",
+      "value": "Stock value",
+      "low": "Low or out",
+      "slow": "Slow moving",
+      "taxable": "Taxable value",
+      "tax": "GST",
+      "outTaxable": "Taxable sales",
+      "cash": "Tax to pay in cash",
+      "qty": "Quantity sold",
+      "realised": "Average rate got",
+      "diffTotal": "Above day's rate",
+      "items": "Items"
+    },
+    "tables": {
+      "documents": "Documents",
+      "by_type": "Totals by type",
+      "accounts": "Summary",
+      "account_cash": "Cash",
+      "account_upi": "UPI",
+      "account_bank": "Bank",
+      "stock": "All items",
+      "low": "Low stock",
+      "slow": "Slow moving",
+      "pnl": "Profit & loss",
+      "months": "Month by month (financial year)",
+      "by_period": "By date",
+      "by_item": "By item",
+      "summary": "Summary by section",
+      "b2b": "B2B invoices (4A)",
+      "b2cl": "B2C large invoices (5)",
+      "b2cs": "B2C small (7)",
+      "cdnr": "Credit notes – registered (9B)",
+      "cdnur": "Credit notes – unregistered (9B)",
+      "exemp": "Nil rated and exempt (8)",
+      "hsn_b2b": "HSN summary – B2B (12)",
+      "hsn_b2c": "HSN summary – B2C (12)",
+      "docs": "Documents issued (13)",
+      "t31": "3.1 Sales and tax",
+      "t32": "3.2 Inter-state sales to unregistered",
+      "t4": "4 Input tax credit",
+      "payable": "Tax to pay",
+      "cmp08": "Table 3 – tax for the quarter",
+      "sales": "Sales register",
+      "purchases": "Purchase register",
+      "by_bill": "Profit by bill",
+      "by_customer": "Profit by customer"
+    },
+    "lines": {
+      "sales": "Sales",
+      "returns": "Less: sales returns",
+      "netSales": "Net sales",
+      "cogs": "Less: cost of goods sold",
+      "gross": "Gross profit",
+      "totalExpenses": "Less: total expenses",
+      "stockLoss": "Less: stock correction loss",
+      "net": "Net profit"
+    },
+    "values": {
+      "INV": "Bill",
+      "CN": "Return",
+      "RCPT": "Receipt",
+      "PAY": "Payment",
+      "PUR": "Purchase",
+      "DN": "Purch. return",
+      "EXP": "Expense",
+      "ADJ": "Stock corr.",
+      "OPEN": "Opening",
+      "active": "Active",
+      "cancelled": "Cancelled",
+      "yes": "Yes",
+      "no": "No",
+      "OK": "OK",
+      "LOW": "Low",
+      "OUT": "Out of stock",
+      "NEGATIVE": "Below zero",
+      "b2b": "B2B",
+      "b2cl": "B2C large",
+      "b2cs": "B2C small",
+      "cdnr": "CN registered",
+      "cdnur": "CN unregistered",
+      "nil": "Nil rated",
+      "igst": "IGST",
+      "cgst": "CGST",
+      "sgst": "SGST",
+      "opening": "Opening",
+      "scrap": "Scrap",
+      "damage": "Damage",
+      "weight_diff": "Weight difference",
+      "count": "Count correction",
+      "other": "Other"
+    },
+    "cols": {
+      "date": "Date",
+      "type": "Type",
+      "doc_no": "Number",
+      "party": "Party",
+      "amount": "Amount",
+      "status": "Status",
+      "count": "Documents",
+      "cancelled": "Cancelled",
+      "narration": "Details",
+      "money_in": "Money in",
+      "money_out": "Money out",
+      "balance": "Balance",
+      "account": "Account",
+      "opening": "Opening",
+      "closing": "Closing",
+      "ref_no": "Against bill",
+      "gstin": "GSTIN",
+      "pos": "Place of supply",
+      "taxable": "Taxable value",
+      "cgst": "CGST",
+      "sgst": "SGST",
+      "igst": "IGST",
+      "round_off": "Round off",
+      "total": "Total",
+      "supplier_bill_no": "Supplier bill no.",
+      "itc": "Input credit",
+      "sku": "Code",
+      "item": "Item",
+      "qty": "Quantity",
+      "unit": "Unit",
+      "larger": "In larger unit",
+      "avg_cost": "Average cost",
+      "value": "Value",
+      "min_stock": "Minimum",
+      "last_sale": "Last sale",
+      "days_since_sale": "Days since sale",
+      "line": "",
+      "month": "Month",
+      "cogs": "Cost of goods",
+      "gross": "Gross profit",
+      "expenses": "Expenses",
+      "stock_loss": "Stock loss",
+      "net": "Net profit",
+      "margin": "Margin",
+      "returns": "Of which returned",
+      "cost": "Cost",
+      "profit": "Profit",
+      "period": "Date",
+      "realised": "Rate got",
+      "base_rate": "Day's rate + extra",
+      "diff": "Difference",
+      "diff_amount": "Difference total",
+      "section": "Section",
+      "receiver": "Receiver name",
+      "inv_no": "Invoice number",
+      "inv_date": "Invoice date",
+      "inv_value": "Invoice value",
+      "reverse_charge": "Reverse charge",
+      "applicable_pct": "Applicable % of tax rate",
+      "inv_type": "Invoice type",
+      "ecom_gstin": "E-commerce GSTIN",
+      "rate": "Rate",
+      "cess": "Cess",
+      "note_no": "Note number",
+      "note_date": "Note date",
+      "note_type": "Note type",
+      "note_supply": "Note supply type",
+      "note_value": "Note value",
+      "ur_type": "UR type",
+      "hsn": "HSN",
+      "description": "Description",
+      "uqc": "UQC",
+      "total_value": "Total value",
+      "nil_rated": "Nil rated",
+      "exempted": "Exempted",
+      "non_gst": "Non-GST",
+      "nature": "Nature of document",
+      "sr_from": "Sr. no. from",
+      "sr_to": "Sr. no. to",
+      "detail": "Details",
+      "head": "Tax",
+      "payable": "Output tax",
+      "paid_by_itc": "Paid from input credit",
+      "cash": "To pay in cash",
+      "credit_left": "Credit carried forward",
+      "sr": "Sr.",
+      "desc": "Description",
+      "sales": "Sales"
+    },
+    "warnings": {
+      "noHsn": "HSN code missing",
+      "shortHsn": "HSN code shorter than 4 digits",
+      "noPlaceOfSupply": "Place of supply missing",
+      "noRateGroup": "No rate group set up"
+    },
+    "notes": {
+      "cancelledNotTotalled": "Cancelled documents are listed but not added to totals.",
+      "creditNotesNegative": "Returns (credit and debit notes) are shown as minus rows.",
+      "pnlFormula": "Net sales − cost of goods sold (average cost at the time of sale) = gross profit; − expenses (with GST that has no input credit) − stock correction loss = net profit. Round-off is not included.",
+      "stockLossNet": "Stock correction loss is after stock found in counts.",
+      "avgCostAsOf": "Average cost = all stock bought (value) ÷ all stock bought (quantity) up to the date.",
+      "slowMoving": "Slow moving: items in stock with no sale in the number of days chosen.",
+      "rateExtraToday": "Day's rate = the rate set for that day + the item's size extra as it is now.",
+      "b2clLimit": "B2C large: inter-state bills to buyers without GSTIN above ₹1,00,000 (from 1 Aug 2024).",
+      "b2csNetted": "Returns from buyers without GSTIN are netted in B2C small, except returns against B2C large bills.",
+      "hsnSplit": "HSN summary is split into B2B and B2C (GSTR-1 Table 12, from May 2025).",
+      "hsnDigits": "HSN needs at least 4 digits if last year's turnover was up to ₹5 crore (6 digits above).",
+      "noJson": "No JSON upload file is made. The Excel sheets follow the GST offline tool for your CA.",
+      "setOff": "Input credit is set off as the law says: IGST first, then CGST and SGST. Your CA may split it differently.",
+      "dnNetted": "Purchase returns reduce the input credit in 4(A)(5).",
+      "reverseCharge": "Reverse charge purchases are not recorded in Tula; add them if any.",
+      "compositionRate": "Worked out at 1% of turnover (traders), half CGST and half SGST. Confirm with your CA."
+    },
+    "colsBy": {
+      "sales": {
+        "party": "Customer"
+      },
+      "purchases": {
+        "party": "Supplier",
+        "doc_no": "Our number",
+        "pos": "Supplier state"
+      },
+      "by_bill": {
+        "doc_no": "Bill",
+        "party": "Customer",
+        "sales": "Sales (taxable)"
+      },
+      "by_customer": {
+        "party": "Customer",
+        "sales": "Sales (taxable)"
+      },
+      "by_item": {
+        "qty": "Quantity sold",
+        "sales": "Sales (taxable)"
+      },
+      "docs": {
+        "total": "Total number"
+      },
+      "by_period": {
+        "amount": "Taxable value"
+      },
+      "t31": {
+        "nature": "Nature of supplies"
+      },
+      "t32": {
+        "pos": "Place of supply"
+      },
+      "cmp08": {
+        "value": "Value"
+      }
+    }
+  }
+}
