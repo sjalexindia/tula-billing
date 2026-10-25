@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tula</string>
+    <string name="title_activity_main">Tula</string>
+    <string name="package_name">in.tula.app</string>
+    <string name="custom_url_scheme">in.tula.app</string>
+</resources>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1E2A33" />
+  <title>Tula</title>
+  <link rel="stylesheet" href="shell.css" />
+</head>
+<body>
+  <main class="card">
+    <header>
+      <img src="icon.png" alt="" width="56" height="56" />
+      <div>
+        <h1>Tula</h1>
+        <p class="lang-switch" role="group" aria-label="Language">
+          <button type="button" data-lang="en">English</button><button type="button" data-lang="ta">தமிழ்</button>
+        </p>
+      </div>
+    </header>
+
+    <section id="opening" hidden>
+      <p class="big" data-t="opening"></p>
+      <p class="addr" id="opening-addr"></p>
+      <button type="button" class="btn" id="change-1" data-t="change"></button>
+    </section>
+
+    <section id="form">
+      <p data-t="intro"></p>
+      <form id="connect" novalidate>
+        <label for="addr" data-t="label"></label>
+        <input id="addr" name="addr" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false"
+               placeholder="http://192.168.x.x:5000" />
+        <p class="hint" data-t="hint"></p>
+        <p class="error" id="error" role="alert" hidden></p>
+        <button type="submit" class="btn primary" id="connect-btn" data-t="connect"></button>
+      </form>
+      <details>
+        <summary data-t="helpTitle"></summary>
+        <ol>
+          <li data-t="help1"></li>
+          <li data-t="help2"></li>
+          <li data-t="help3"></li>
+        </ol>
+      </details>
+    </section>
+
+    <section id="failed" hidden>
+      <p class="big error-title" data-t="unreachable"></p>
+      <p class="addr" id="failed-addr"></p>
+      <ul>
+        <li data-t="check1"></li>
+        <li data-t="check2"></li>
+        <li data-t="check3"></li>
+      </ul>
+      <button type="button" class="btn primary" id="retry" data-t="retry"></button>
+      <button type="button" class="btn" id="change-2" data-t="change"></button>
+    </section>
+    <section id="back" hidden>
+      <p class="addr" id="back-addr"></p>
+      <button type="button" class="btn primary" id="reopen" data-t="openTula"></button>
+      <button type="button" class="btn" id="change-3" data-t="change"></button>
+    </section>
+  </main>
+  <script src="shell.js"></script>
+</body>
+</html>
