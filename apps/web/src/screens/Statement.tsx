@@ -69,7 +69,8 @@ function StatementView({ partyId }: { partyId: string }) {
   const wa = data.balanceTodayPaise > 0 ? reminderLink(p, data.balanceTodayPaise, s) : null;
   const shop = nameIn(lang, s['business.name_en'] ?? '', s['business.name_ta']);
   const kindLabel = (k: string) => (['INV', 'CN', 'RCPT', 'PAY', 'REFUND', 'OPEN', 'PUR', 'DN'].includes(k) ? t(`sales.st.kinds.${k}`) : k);
-  const balanceCell = (v: number) => <>{formatRs(Math.abs(v))} <small>{v > 0 ? t('sales.st.dr') : v < 0 ? t('sales.st.cr') : ''}</small></>;
+  // Positive = the customer owes; a negative balance is money of theirs we hold (advance).
+  const balanceCell = (v: number) => <>{formatRs(Math.abs(v))}{v < 0 && <small> {t('sales.st.cr')}</small>}</>;
 
   return (
     <div className="print-doc statement-page" lang={lang}>

@@ -87,14 +87,14 @@
       "printCn": "Print credit note"
     },
     "receipts": {
-      "title": "Payments received",
+      "title": "Receipts",
       "new": "New receipt",
       "none": "No payments received in this period.",
       "no": "Receipt no.",
       "customer": "Customer",
       "amount": "Amount",
       "forBills": "For {{bills}}",
-      "onAccount": "{{amount}} on account",
+      "onAccount": "{{amount}} to earlier balance / advance",
       "amountReceived": "Amount received ₹",
       "reference": "UTR / reference",
       "chequeNo": "Cheque no. and bank",
@@ -128,7 +128,8 @@
       "cancelTitle": "Cancel receipt {{no}}",
       "cancelHelp": "Use this when a cheque bounces or a payment was entered by mistake. The bills it paid become unpaid again.",
       "cancelPlaceholder": "For example: cheque bounced",
-      "cancelConfirm": "Cancel receipt"
+      "cancelConfirm": "Cancel receipt",
+      "today": "today"
     },
     "rp": {
       "title": "Receipt",
@@ -138,7 +139,7 @@
       "towards": "Against bill",
       "billAmount": "Bill amount",
       "paidNow": "Paid now",
-      "onAccount": "On account (advance)",
+      "onAccount": "Earlier balance / advance",
       "balance": "Balance after this payment"
     },
     "out": {
@@ -184,8 +185,7 @@
       "debit": "Bill",
       "credit": "Paid / returned",
       "balance": "Balance",
-      "dr": "Dr",
-      "cr": "Cr",
+      "cr": "advance",
       "opening": "Opening balance",
       "closing": "Closing balance",
       "none": "No entries in this period.",

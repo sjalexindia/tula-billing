@@ -265,7 +265,7 @@ function NewReceipt({ partyId }: { partyId?: string }) {
                   <tr key={b.id}>
                     <td>
                       <span className="mono">{b.docNo}</span>
-                      <span className="sub">{dmy(b.date)} · {b.overdueDays > 0 ? <span className="late">{t('sales.receipts.late', { n: b.overdueDays })}</span> : t('sales.receipts.daysOld', { count: b.daysOld })}</span>
+                      <span className="sub">{dmy(b.date)} · {b.overdueDays > 0 ? <span className="late">{t('sales.receipts.late', { n: b.overdueDays })}</span> : (b.daysOld === 0 ? t('sales.receipts.today') : t('sales.receipts.daysOld', { count: b.daysOld }))}</span>
                     </td>
                     <td className="r">{formatRs(b.totalPaise)}{(b.paidPaise > 0 || b.returnedPaise > 0) && <span className="sub">{t('sales.receipts.paidSoFar', { amount: formatRs(b.paidPaise + b.returnedPaise) })}</span>}</td>
                     <td className="r">{formatRs(b.balancePaise)}</td>

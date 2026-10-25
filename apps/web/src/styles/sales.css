@@ -100,15 +100,15 @@
 .tile.danger { border-color: var(--danger); background: var(--danger-soft); }
 .tile.danger b { color: var(--danger); }
 .sales .toolbar .check { padding: 0; }
-.out-grid td.actions { white-space: normal; }
-.out-grid td.actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
-.out-grid td.actions .btn + .btn, .out-grid td.actions .btn + .sub { margin-left: 0; }
+.m-label { display: none; }
 .pick { max-width: 460px; }
 
 /* ---------- printable documents: receipt (A5) and statement (A4) ---------- */
 .print-doc { margin: -18px -20px -40px; background: #8d989f; min-height: calc(100vh - 120px); padding: 18px 12px 40px; }
 .doc-actions { max-width: 210mm; margin: 0 auto 12px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; }
 .doc-actions .btn { white-space: nowrap; }
+.doc-actions > .btn.primary, .st-buttons { margin-left: auto; }
+.receipt-page .doc-actions { justify-content: flex-start; }
 .st-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--surface); border-radius: var(--radius); padding: 4px; }
 .st-controls .range-dates { padding: 0 6px; }
 .st-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -171,4 +171,7 @@
   .doc-title, .st-due { text-align: left; }
   .doc-title .kv { margin-left: 0; }
   .st-lines { font-size: 11px; }
+  .st-lines td { overflow-wrap: anywhere; }
+  .st-lines .nowrap { white-space: normal; }
+  .m-label { display: inline; color: var(--steel); font-weight: 400; }
 }

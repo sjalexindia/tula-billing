@@ -85,7 +85,7 @@ export function Outstanding(_props: ScreenProps) {
                     </span>
                   </td>
                   <td className="r"><b>{formatRs(r.balancePaise)}</b><span className="sub">{t('sales.out.creditDays', { count: r.creditDays })}</span></td>
-                  <td className={`r ${r.overduePaise > 0 ? 'owed' : ''}`}>{r.overduePaise > 0 ? formatRs(r.overduePaise) : '—'}{r.overduePaise > 0 && <span className="sub">{t('sales.out.oldest', { count: r.oldestDays })}</span>}</td>
+                  <td className={`r ${r.overduePaise > 0 ? 'owed' : ''}`}>{r.overduePaise > 0 && <span className="m-label">{t('sales.out.overdue')}: </span>}{r.overduePaise > 0 ? formatRs(r.overduePaise) : '—'}{r.overduePaise > 0 && <span className="sub">{t('sales.out.oldest', { count: r.oldestDays })}</span>}</td>
                   {BUCKETS.map((k) => <td key={k} className="r bucket">{r.buckets[k] ? formatRs(r.buckets[k]) : ''}</td>)}
                   {showInterest && <td className="r bucket">{r.interestPaise ? formatRs(r.interestPaise) : ''}</td>}
                   <td className="r actions">

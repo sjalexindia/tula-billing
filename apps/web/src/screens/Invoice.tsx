@@ -184,7 +184,7 @@ export function Invoice({ id }: { id: string }) {
                   <tr><th>SGST</th><td>{formatRs(doc.sgst_paise)}</td></tr>
                 </>}
                 {doc.round_off_paise !== 0 && <tr><th>{t('bill.roundOff')}</th><td>{formatRs(doc.round_off_paise)}</td></tr>}
-                <tr className="grand-row"><th>{t('bill.total')}</th><td>{formatRs(doc.total_paise)}</td></tr>
+                <tr className="grand-row"><th>{isCn ? t('sales.ret.total') : t('bill.total')}</th><td>{formatRs(doc.total_paise)}</td></tr>
                 {!isCn && bill.paidPaise > 0 && <tr><th>{t('invoice.paid')}</th><td>{formatRs(bill.paidPaise)}</td></tr>}
                 {!isCn && returned > 0 && <tr><th>{t('sales.cn.returned')}</th><td>{formatRs(returned)}</td></tr>}
                 {!isCn && (bill.paidPaise > 0 || returned > 0) && doc.status !== 'cancelled' && <tr><th>{t('invoice.balance')}</th><td><b>{formatRs(due)}</b></td></tr>}

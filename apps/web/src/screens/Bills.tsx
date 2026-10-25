@@ -186,7 +186,7 @@ export function Bills(_props: ScreenProps) {
 }
 
 function CancelBill({ row, onClose, onDone }: { row: RegisterRow; onClose: () => void; onDone: (msg: ReactNode) => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [check, setCheck] = useState<Awaited<ReturnType<typeof sales.cancelCheck>> | null>(null);
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
@@ -208,7 +208,7 @@ function CancelBill({ row, onClose, onDone }: { row: RegisterRow; onClose: () =>
 
   return (
     <Sheet title={t('sales.cancel.title', { no: row.docNo })} onClose={onClose}>
-      <p className="sheet-sub">{row.partyName} · {dmy(row.date)} · {formatRs(row.totalPaise)}</p>
+      <p className="sheet-sub">{nameIn(i18n.language, row.name_en, row.name_ta)} · {dmy(row.date)} · {formatRs(row.totalPaise)}</p>
       {check?.earlierMonth && <p className="notice warn" role="alert">{t('sales.cancel.earlierMonth')}</p>}
       {check && !check.canCancel && <p className="field-error" role="alert">{check.blocker?.code === 'HAS_RETURN' ? t('sales.cancel.hasReturn') : check.blocker?.message}</p>}
       <p className="hint">{t('sales.cancel.help')}</p>
@@ -283,7 +283,7 @@ function ReturnGoods({ row, onClose, onDone }: { row: RegisterRow; onClose: () =
 
   return (
     <Sheet title={t('sales.ret.title', { no: row.docNo })} onClose={onClose} wide>
-      <p className="sheet-sub">{row.partyName} · {dmy(row.date)} · {formatRs(row.totalPaise)}</p>
+      <p className="sheet-sub">{nameIn(ui, row.name_en, row.name_ta)} · {dmy(row.date)} · {formatRs(row.totalPaise)}</p>
       <p className="hint">{t('sales.ret.help')}</p>
       {data && data.creditNotes.length > 0 && (
         <p className="hint">{t('sales.ret.earlier')}: {data.creditNotes.map((c) => `${c.doc_no} (${formatRs(c.total_paise)})`).join(', ')}</p>
