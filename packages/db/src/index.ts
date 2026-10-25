@@ -13,7 +13,9 @@ const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'migr
 
 /** Open (or create) the local SQLite database. url examples: "file:tula.db", ":memory:" */
 export async function openDb(url: string): Promise<Db> {
-  const db = createClient({ url });
+  // One connection: the client otherwise pools several, and per-connection settings (foreign keys,
+  // busy timeout) would only apply to the first. Requests queue on it, which suits one shop computer.
+  const db = createClient({ url, concurrency: 1, timeout: 5000 });
   if (url !== ':memory:') await db.execute('PRAGMA journal_mode = WAL');
   await db.execute('PRAGMA foreign_keys = ON');
   await db.execute('PRAGMA busy_timeout = 5000');
@@ -53,7 +55,7 @@ export function uuidv7(now = Date.now()): string {
 export const nowIso = () => new Date().toISOString();
 
 /** Tables that never sync (local bookkeeping). */
-const LOCAL_ONLY = new Set(['sync_outbox', 'sync_state', 'schema_migrations', 'sessions']);
+const LOCAL_ONLY = new Set(['sync_outbox', 'sync_state', 'schema_migrations', 'sessions', 'sync_rejects']);
 
 /**
  * Insert a row into a synced table, filling id / timestamps / device_id,

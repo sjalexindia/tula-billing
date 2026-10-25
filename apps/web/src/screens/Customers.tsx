@@ -121,6 +121,7 @@ function PartyEditor({ id }: { id?: string }) {
         <div className="page-head">
           <h1>{id ? nameIn(ui, f.name_en, f.name_ta) : t('parties.add')}</h1>
           {balance != null && <span className={`page-sum ${balance > 0 ? 'owed' : ''}`}>{t('parties.balance')}: {formatRs(balance)}</span>}
+          {id && !walkIn && <a className="btn" href={`#/statement/${id}`}>{t('nav.statement')}</a>}
           <a className="btn" href="#/customers">{t('common.back')}</a>
         </div>
         <fieldset disabled={readOnly}>

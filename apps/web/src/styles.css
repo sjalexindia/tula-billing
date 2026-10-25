@@ -341,3 +341,12 @@ td.owed, .page-sum.owed { color: var(--danger); }
 .subtabs a { text-decoration: none; padding: 8px 14px; color: var(--ink-soft); font-weight: 600; border-bottom: 3px solid transparent; margin-bottom: -1px; }
 .subtabs a:hover { color: var(--ink); }
 .subtabs a[aria-current='page'] { color: var(--ink); border-bottom-color: var(--mark); }
+
+/* Phones: the group menu scrolls sideways inside the top bar instead of widening the page. */
+@media (max-width: 600px) {
+  .topbar .tabs { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+  .topbar .tabs a { white-space: nowrap; }
+  .subtabs { overflow-x: auto; flex-wrap: nowrap; padding: 6px 12px 0; }
+  .subtabs a { white-space: nowrap; }
+  .topbar .rates { flex: 1 1 auto; }
+}

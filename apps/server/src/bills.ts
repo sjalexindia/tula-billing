@@ -272,7 +272,8 @@ export async function listBills(ex: Exec, from: string, to: string) {
   return all(ex, `
     SELECT d.id, d.doc_no, d.doc_date, d.party_name, d.site, d.total_paise, d.status,
       d.total_paise - COALESCE((SELECT SUM(a.amount_paise) FROM money_allocations a JOIN money_docs m ON m.id = a.money_doc_id
-        WHERE a.sales_doc_id = d.id AND a.deleted = 0 AND m.status = 'active'), 0) AS balance_paise
+        WHERE a.sales_doc_id = d.id AND a.deleted = 0 AND m.status = 'active'), 0)
+      - COALESCE((SELECT SUM(c.total_paise) FROM sales_docs c WHERE c.ref_doc_id = d.id AND c.doc_type = 'CN' AND c.status = 'active' AND c.deleted = 0), 0) AS balance_paise
     FROM sales_docs d WHERE d.doc_type = 'INV' AND d.deleted = 0 AND d.doc_date BETWEEN ? AND ?
     ORDER BY d.doc_date DESC, d.doc_no DESC`, [from, to]);
 }
