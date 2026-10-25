@@ -3,17 +3,25 @@ import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api, type BillDetail } from '../api';
+import { dmy, sales, type DocLinks } from '../api/sales';
 import { nameIn, tFor } from '../i18n';
 
 export function Invoice({ id }: { id: string }) {
   const { t: tUi } = useTranslation();
   const [bill, setBill] = useState<BillDetail | null>(null);
   const [qr, setQr] = useState('');
+  const [links, setLinks] = useState<DocLinks | null>(null);
   const [error, setError] = useState('');
 
-  useEffect(() => { api.bill(id).then(setBill).catch((e) => setError((e as Error).message)); }, [id]);
+  useEffect(() => {
+    api.bill(id).then(setBill).catch((e) => setError((e as Error).message));
+    sales.links(id).then(setLinks).catch(() => setLinks(null));
+  }, [id]);
 
-  const due = bill ? bill.doc.total_paise - bill.paidPaise : 0;
+  const isCn = links?.docType === 'CN';
+  const returned = links?.returnedPaise ?? 0;
+  // A credit note is not something to pay; an invoice's due amount is reduced by returns against it.
+  const due = bill && links && !isCn && bill.doc.status !== 'cancelled' ? Math.max(0, bill.doc.total_paise - bill.paidPaise - returned) : 0;
   useEffect(() => {
     const s = bill?.settings;
     if (!bill || !s || due <= 0 || !s['business.upi_id'] || s['invoice.show_upi_qr'] !== 'true') return;
@@ -65,7 +73,7 @@ export function Invoice({ id }: { id: string }) {
     <div className={`invoice-page paper-${(s['invoice.paper'] ?? 'A4').toLowerCase()}`} lang={lang}>
       <style>{`@page { size: ${s['invoice.paper'] === 'A5' ? 'A5' : 'A4'}; margin: 0; }`}</style>
       <div className="invoice-actions no-print">
-        <a className="btn" href="#/">{tUi('invoice.back')}</a>
+        <button type="button" className="btn" onClick={() => (history.length > 1 ? history.back() : (location.hash = '#/bills'))}>{tUi('sales.back')}</button>
         <button type="button" className="btn primary" onClick={() => window.print()}>{tUi('invoice.print')}</button>
       </div>
 
@@ -84,12 +92,14 @@ export function Invoice({ id }: { id: string }) {
             </p>
           </div>
           <div className="inv-title">
-            <h2>{taxInvoice ? t('invoice.title') : t('invoice.billOfSupply')}</h2>
+            <h2>{isCn ? t('sales.cn.title') : taxInvoice ? t('invoice.title') : t('invoice.billOfSupply')}</h2>
             <p className="muted">{t('invoice.original')}</p>
             <table className="kv">
               <tbody>
-                <tr><th>{t('invoice.no')}</th><td className="mono"><b>{doc.doc_no}</b></td></tr>
+                <tr><th>{isCn ? t('sales.cn.no') : t('invoice.no')}</th><td className="mono"><b>{doc.doc_no}</b></td></tr>
                 <tr><th>{t('invoice.date')}</th><td>{doc.doc_date.split('-').reverse().join('-')}</td></tr>
+                {isCn && links?.ref && <tr><th>{t('sales.cn.againstNo')}</th><td className="mono">{links.ref.doc_no}</td></tr>}
+                {isCn && links?.ref && <tr><th>{t('sales.cn.againstDate')}</th><td>{dmy(links.ref.doc_date)}</td></tr>}
                 {doc.vehicle_no && <tr><th>{t('invoice.vehicle')}</th><td className="mono">{doc.vehicle_no}</td></tr>}
                 {doc.eway_bill_no && <tr><th>{t('invoice.ewayNo')}</th><td className="mono">{doc.eway_bill_no}</td></tr>}
               </tbody>
@@ -99,13 +109,14 @@ export function Invoice({ id }: { id: string }) {
 
         <section className="inv-parties">
           <div>
-            <h3>{t('invoice.billTo')}</h3>
+            <h3>{isCn ? t('sales.cn.customer') : t('invoice.billTo')}</h3>
             <p className="party-name">{doc.party_name}</p>
             {doc.party_address && <p>{doc.party_address}</p>}
             {party?.mobile && <p>{t('invoice.phone')}: {party.mobile}</p>}
             {doc.party_gstin && <p>{t('invoice.gstin')}: <b>{doc.party_gstin}</b></p>}
           </div>
           <div>
+            {isCn && links?.ref && <><h3>{t('sales.cn.reasonHead')}</h3><p>{t('sales.cn.against', { no: links.ref.doc_no, date: dmy(links.ref.doc_date) })}{links.reason ? ` — ${links.reason}` : ''}</p></>}
             {doc.site && <><h3>{t('invoice.site')}</h3><p>{doc.site}</p></>}
             <h3>{t('invoice.placeOfSupply')}</h3>
             <p>{stateLabel(doc.place_of_supply)}{inter ? ` — ${t('invoice.interState')}` : ''}</p>
@@ -162,7 +173,7 @@ export function Invoice({ id }: { id: string }) {
             <p className="words">{amountInWords(doc.total_paise, lang === 'ta' ? 'ta' : 'en')}</p>
             {s['gst.scheme'] === 'composition' && <p className="small">{t('invoice.compositionNote')}</p>}
             {s['business.bank_details'] && <p className="small">{t('invoice.bank')}: {s['business.bank_details']}</p>}
-            {terms.map((x) => <p key={x} className="small muted">{x}</p>)}
+            {!isCn && terms.map((x) => <p key={x} className="small muted">{x}</p>)}
           </div>
           <div className="inv-right">
             <table className="sums">
@@ -174,8 +185,10 @@ export function Invoice({ id }: { id: string }) {
                 </>}
                 {doc.round_off_paise !== 0 && <tr><th>{t('bill.roundOff')}</th><td>{formatRs(doc.round_off_paise)}</td></tr>}
                 <tr className="grand-row"><th>{t('bill.total')}</th><td>{formatRs(doc.total_paise)}</td></tr>
-                {bill.paidPaise > 0 && <tr><th>{t('invoice.paid')}</th><td>{formatRs(bill.paidPaise)}</td></tr>}
-                {bill.paidPaise > 0 && <tr><th>{t('invoice.balance')}</th><td><b>{formatRs(due)}</b></td></tr>}
+                {!isCn && bill.paidPaise > 0 && <tr><th>{t('invoice.paid')}</th><td>{formatRs(bill.paidPaise)}</td></tr>}
+                {!isCn && returned > 0 && <tr><th>{t('sales.cn.returned')}</th><td>{formatRs(returned)}</td></tr>}
+                {!isCn && (bill.paidPaise > 0 || returned > 0) && doc.status !== 'cancelled' && <tr><th>{t('invoice.balance')}</th><td><b>{formatRs(due)}</b></td></tr>}
+                {isCn && (links?.refundedPaise ?? 0) > 0 && <tr><th>{t('sales.cn.refunded')}</th><td>{formatRs(links!.refundedPaise)}</td></tr>}
               </tbody>
             </table>
             {qr && (

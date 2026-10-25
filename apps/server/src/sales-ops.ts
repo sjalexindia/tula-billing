@@ -633,7 +633,7 @@ async function billsRegister(ex: Exec, from: string, to: string, q: string) {
 
 async function receiptDetail(ex: Exec, id: string) {
   const m = await one<Record<string, unknown>>(ex, `
-    SELECT m.*, p.name_en, p.name_ta, p.mobile, p.address, p.gstin, u.name AS created_by_name
+    SELECT m.*, p.name_en, p.name_ta, p.mobile, p.address, p.gstin, p.lang, u.name AS created_by_name
     FROM money_docs m JOIN parties p ON p.id = m.party_id LEFT JOIN users u ON u.id = m.created_by WHERE m.id = ? AND m.deleted = 0`, [id]);
   if (!m || m.doc_type !== 'RCPT') throw new UserError('Receipt not found', 'NOT_FOUND', 404);
   const allocations = await all(ex, `
