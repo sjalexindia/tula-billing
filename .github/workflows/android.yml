@@ -1,0 +1,62 @@
+# Builds the thin Tula Android app (debug APK) and attaches it to the run as an artifact.
+# NOT YET VERIFIED on GitHub: written to the standard Capacitor + Gradle recipe, but it was
+# never run (the build sandbox has no Android SDK). See docs/07-sync-and-phones.md.
+name: Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*', 'android-*']
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        working-directory: .
+        run: npm ci
+
+      - name: Copy the connect shell and config into the Android project
+        run: |
+          if [ ! -d android ]; then npx cap add android; fi
+          npx cap sync android
+
+      - name: Build debug APK
+        working-directory: apps/web/android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Name the APK
+        run: |
+          mkdir -p out
+          cp android/app/build/outputs/apk/debug/app-debug.apk "out/tula-${GITHUB_REF_NAME//\//-}-${GITHUB_SHA::7}-debug.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tula-android-debug
+          path: apps/web/out/*.apk
+          if-no-files-found: error
+          retention-days: 30
