@@ -29,7 +29,7 @@ const NOTE_TEXT: Record<string, string> = {
 export const noteText = (code: string) => NOTE_TEXT[code] ?? code;
 
 const EN_VALUES: Record<string, string> = { yes: 'Yes', no: 'No', active: 'Active', cancelled: 'Cancelled', OK: 'OK', LOW: 'Low', OUT: 'Out of stock', NEGATIVE: 'Negative', igst: 'IGST', cgst: 'CGST', sgst: 'SGST', nil: 'Nil rated' };
-const LINE_EN: Record<string, string> = { sales: 'Sales', returns: 'Less: sales returns', netSales: 'Net sales', cogs: 'Less: cost of goods sold', gross: 'Gross profit', totalExpenses: 'Less: total expenses', stockLoss: 'Less: stock correction losses', net: 'Net profit' };
+const LINE_EN: Record<string, string> = { sales: 'Sales', returns: 'Sales returns', netSales: 'Net sales', cogs: 'Cost of goods sold', gross: 'Gross profit', totalExpenses: 'Total expenses', stockLoss: 'Stock correction loss', net: 'Net profit' };
 
 function cellValue(c: Col, v: unknown): ExcelJS.CellValue {
   if (v === null || v === undefined || v === '') return null;

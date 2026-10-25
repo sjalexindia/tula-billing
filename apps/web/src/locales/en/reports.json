@@ -149,12 +149,12 @@
     },
     "lines": {
       "sales": "Sales",
-      "returns": "Less: sales returns",
+      "returns": "Sales returns",
       "netSales": "Net sales",
-      "cogs": "Less: cost of goods sold",
+      "cogs": "Cost of goods sold",
       "gross": "Gross profit",
-      "totalExpenses": "Less: total expenses",
-      "stockLoss": "Less: stock correction loss",
+      "totalExpenses": "Total expenses",
+      "stockLoss": "Stock correction loss",
       "net": "Net profit"
     },
     "values": {

@@ -1,6 +1,8 @@
 import { all, type Exec } from '@tula/db';
 import { businessOf, DOC_TYPES, DOCS_SQL, n, type Col, type Report, type Row } from './common';
 
+const ADJ_REASON: Record<string, string> = { opening: 'Opening stock', weight_diff: 'Weight difference', scrap: 'Scrap', damage: 'Damage', count: 'Count correction', other: 'Stock correction' };
+
 /** R-01 Day book: every document in the period, cancelled ones struck through and left out of totals. */
 export async function dayBook(ex: Exec, from: string, to: string): Promise<Report> {
   const { business } = await businessOf(ex);
@@ -8,7 +10,7 @@ export async function dayBook(ex: Exec, from: string, to: string): Promise<Repor
     SELECT * FROM (${DOCS_SQL}) WHERE doc_date BETWEEN ? AND ?
     ORDER BY doc_date, created_at, doc_no`, [from, to]);
   const rows: Row[] = docs.map((d) => ({
-    date: d.doc_date, type: d.doc_type, doc_no: d.doc_no, party: d.party_name ?? '', amount: n(d.amount_paise),
+    date: d.doc_date, type: d.doc_type, doc_no: d.doc_no, party: d.doc_type === 'ADJ' ? ADJ_REASON[String(d.party_name)] ?? d.party_name : d.party_name ?? '', amount: n(d.amount_paise),
     status: d.status, _cancelled: d.status === 'cancelled',
   }));
   const byType: Row[] = DOC_TYPES.map((type) => {

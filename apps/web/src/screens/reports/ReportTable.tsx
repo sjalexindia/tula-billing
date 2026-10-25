@@ -30,7 +30,12 @@ export function useCellText() {
         const a = v as { whole: number; en: string; ta: string | null };
         return `${a.whole.toLocaleString('en-IN')} ${nameIn(lang, a.en, a.ta)}`;
       }
-      default: return c.translate ? t(`reports.values.${String(v)}`, { defaultValue: String(v) }) : String(v);
+      default:
+        if (c.type === 'code' && /^\d{4}-\d{2}$/.test(String(v))) {
+          const [y, m] = String(v).split('-').map(Number);
+          return new Intl.DateTimeFormat(`${lang}-IN`, { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(y!, m! - 1, 1)));
+        }
+        return c.translate ? t(`reports.values.${String(v)}`, { defaultValue: String(v) }) : String(v);
     }
   };
 }
