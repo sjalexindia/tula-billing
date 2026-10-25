@@ -1,0 +1,75 @@
+{
+  "sync": {
+    "locale": "en-IN",
+    "loading": "Loading…",
+    "never": "Not yet",
+    "justNow": "Just now",
+    "minutesAgo": "{{n}} min ago",
+    "since": "Since {{when}}",
+    "state": {
+      "ok": "Cloud copy is up to date",
+      "starting": "Cloud copy is starting",
+      "problem": "Cloud copy has a problem",
+      "off": "Cloud copy is not set up"
+    },
+    "lead": {
+      "ok": "Every bill and change on this computer is also kept safe in the cloud.",
+      "starting": "The first copy will be made in a few seconds.",
+      "problem": "Billing still works on this computer. Changes wait here and are sent when the problem is fixed.",
+      "off": "Your data is only on this computer. If it breaks or is stolen, the data is lost. Set up the cloud copy below."
+    },
+    "errors": {
+      "OFFLINE": "Cannot reach the cloud copy. Check the shop internet connection. Tula keeps trying on its own.",
+      "AUTH": "The cloud refused the access token. Create a new token and put it in TULA_SYNC_TOKEN, then restart Tula.",
+      "BAD_URL": "The cloud address in TULA_SYNC_URL is not correct. Check it, then restart Tula.",
+      "UPDATE_APP": "Another computer has a newer version of Tula. Update Tula on this computer to receive its changes.",
+      "REVOKED": "This computer was marked as lost, so it no longer sends or receives data.",
+      "EMPTY_HUB": "The cloud copy is empty."
+    },
+    "hub": "Cloud copy",
+    "lastSent": "Last sent",
+    "lastReceived": "Last received",
+    "waiting": "Changes waiting to send",
+    "rejected": "{{count}} change(s) could not be copied because the same record was entered on two computers. Check daily rates and items on both computers.",
+    "syncNow": "Sync now",
+    "syncing": "Syncing…",
+    "syncedNow": "Synced",
+    "notRunning": "Sync is configured but not running. Restart Tula.",
+    "setup": {
+      "title": "How to set up the cloud copy",
+      "step1": "Create a free database at turso.tech in the Mumbai region.",
+      "step2": "Create an access token for that database.",
+      "step3": "On this computer, put the address and token in Tula's settings file:",
+      "step4": "Restart Tula. This screen then shows \"Cloud copy is up to date\".",
+      "secret": "The token is a password: never send it on WhatsApp or put it in a photo.",
+      "doc": "Full steps:"
+    },
+    "phone": {
+      "title": "Open on a phone",
+      "step1": "Connect the phone to the shop Wi-Fi (the same one as this computer).",
+      "step2": "Open the camera and scan the code below. Tula opens in the browser.",
+      "step3": "Sign in with your name and PIN.",
+      "step4": "In the browser menu, tap \"Add to Home screen\" so Tula is one tap away next time.",
+      "noNetwork": "This computer is not connected to a network. Connect it to the shop Wi-Fi or router.",
+      "several": "This computer has more than one network address. If one code does not open, try the other.",
+      "qrAlt": "QR code to open {{url}}",
+      "app": "Using the Tula Android app instead? Type the address shown under the code once; the app remembers it."
+    },
+    "devices": {
+      "title": "Computers sharing this data",
+      "help": "Each computer has its own bill number series. Phones open Tula from a computer, so they are not listed here.",
+      "name": "Name",
+      "series": "Bill series",
+      "mainSeries": "Main",
+      "thisOne": "This computer",
+      "lost": "Lost",
+      "added": "Added {{when}}",
+      "rename": "Rename",
+      "newName": "New name for this computer",
+      "markLost": "Mark as lost",
+      "found": "Found again",
+      "confirmLost": "Mark \"{{name}}\" as lost? It will stop sending and receiving data. Also create a new access token so the old one stops working.",
+      "lostHelp": "If a computer is stolen, mark it as lost and create a new access token in Turso."
+    }
+  }
+}
