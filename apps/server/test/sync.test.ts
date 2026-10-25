@@ -113,6 +113,8 @@ describe('cloud replica sync', () => {
     const dbB = await openDb(`file:${join(dir, 'b.db')}`);
     const joined = await maybeJoin(dbB, { env: { TULA_JOIN: 'new', TULA_SYNC_URL: hubUrl, TULA_DEVICE_NAME: 'Back office PC' }, log: quiet });
     expect(joined).toBe(true);
+    // the new device row was pushed straight away, and nothing else is pending (signing in below adds an audit row)
+    expect(await outbox(dbB)).toBe(0);
     // first-run setup now does nothing
     expect((await setup(dbB, { preset: 'building-materials' })).skipped).toBe(true);
     B = await node(dbB, '4826'); // the owner's own PIN came across with the users table
@@ -123,8 +125,6 @@ describe('cloud replica sync', () => {
     }
     const me = await one<{ series_code: string; name: string; device_id: string }>(B.db, 'SELECT series_code, name, device_id FROM devices WHERE id = ?', [B.deviceId]);
     expect(me).toEqual({ series_code: 'C2', name: 'Back office PC', device_id: B.deviceId });
-    // the new device row was pushed straight away, and nothing else is pending
-    expect(await outbox(B.db)).toBe(0);
     expect(await count(hub.client, 'SELECT COUNT(*) FROM devices WHERE id = ?', [B.deviceId])).toBe(1);
     // cursor starts at the hub's end, so B does not re-apply history
     expect(Number((await one<{ value: string }>(B.db, "SELECT value FROM sync_state WHERE key = 'sync.cursor'"))!.value)).toBeGreaterThan(0);
@@ -210,7 +210,7 @@ describe('cloud replica sync', () => {
     const other = await insert(B.db, 'parties', B.deviceId, { party_type: 'customer', name_en: 'After the clash', state_code: '33' });
     await sync(A);
     const r = await sync(B);
-    expect(r.rejected).toBe(1);
+    expect(r.rejected).toBe(2); // B's own rate refused by the hub + A's rate clashing with it on B
     expect(await outbox(B.db)).toBe(0);
     expect(await count(B.db, "SELECT COUNT(*) FROM sync_rejects WHERE direction = 'push' AND table_name = 'daily_rates'")).toBe(1);
     expect(await count(hub.client, 'SELECT COUNT(*) FROM parties WHERE id = ?', [other])).toBe(1);
