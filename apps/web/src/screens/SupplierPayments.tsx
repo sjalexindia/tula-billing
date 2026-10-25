@@ -30,7 +30,7 @@ function PaymentsHome() {
   useEffect(() => { purchasesApi.payments(range.from, range.to).then((r) => setRows(r.rows)).catch((e) => setError(errText(e, t('purchases.common.network')))); }, [range, version, t]);
 
   return (
-    <div className="stack">
+    <div className="stack pu-stack">
       <section className="page">
         <div className="page-head">
           <h1>{t('purchases.pay.payables')}</h1>

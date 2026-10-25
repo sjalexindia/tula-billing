@@ -45,7 +45,13 @@
       "stockWarn": "Stock will go below zero for:",
       "perUnit": "/{{unit}}"
     },
-    "modes": { "cash": "Cash", "upi": "UPI", "bank": "Bank", "cheque": "Cheque", "credit": "On credit" },
+    "modes": {
+      "cash": "Cash",
+      "upi": "UPI",
+      "bank": "Bank",
+      "cheque": "Cheque",
+      "credit": "On credit"
+    },
     "pur": {
       "title": "Purchases",
       "new": "New purchase",
@@ -211,7 +217,8 @@
       "gain": "Gain",
       "minus": "Remove",
       "plus": "Add",
-      "nothing": "Enter at least one item that changes."
+      "nothing": "Enter at least one item that changes.",
+      "bigDiff": "Big difference: check the count"
     },
     "stock": {
       "value": "Stock value",

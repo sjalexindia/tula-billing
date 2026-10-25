@@ -201,6 +201,7 @@ function NewAdjustment() {
             <div className="stat">
               <span className="hint">{t('purchases.adj.difference')}</span><br />
               <span className={change && change < 0 ? 'neg' : change ? 'pos' : ''}>{change != null ? `${change > 0 ? '+' : ''}${formatQty(change, { trimZeros: true })} ${baseName}` : '—'}</span>
+              {p && change != null && Math.abs(change) * 4 > Math.max(p.stockMilli ?? 0, 1) && <span className="hint neg"><br />{t('purchases.adj.bigDiff')}</span>}
             </div>
             <div className="stat">
               <span className="hint">{t('purchases.common.value')}</span><br />

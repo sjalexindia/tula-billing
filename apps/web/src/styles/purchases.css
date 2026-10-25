@@ -3,6 +3,8 @@
 /* Tables scroll inside their box on narrow screens instead of widening the page. */
 .pu-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .pu-scroll > .grid { min-width: 560px; }
+/* Grid children may shrink below their content, so a wide table scrolls instead of widening the page. */
+.pu-stack > *, .pu-pay-grid > *, .pu-form .bill-body > * { min-width: 0; }
 
 /* Date range and other filters above a list */
 .pu-filters { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 14px; }
@@ -26,7 +28,7 @@
 /* ---------- New purchase ---------- */
 .pu-line {
   display: grid; gap: 10px; align-items: start; padding: 14px 0; border-bottom: 1px solid var(--rule);
-  grid-template-columns: minmax(180px, 1.8fr) minmax(150px, 2.2fr) minmax(90px, 0.9fr) minmax(76px, 0.6fr) minmax(130px, 1.1fr) 32px;
+  grid-template-columns: minmax(180px, 1.8fr) minmax(150px, 2.2fr) minmax(90px, 0.9fr) minmax(76px, 0.6fr) minmax(160px, 1.3fr) 32px;
 }
 .pu-line .field select { font: inherit; font-size: 15px; padding: 8px 6px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--surface); width: 100%; }
 .pu-line .line-amount .hint { max-width: 220px; }
