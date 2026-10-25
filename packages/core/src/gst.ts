@@ -46,21 +46,20 @@ export function calcLine(input: LineInput, supply: SupplyType): LineAmounts {
   const gross = roundDiv(rateQtyMilli * ratePaise, 1000);
   if (discount < 0 || discount > gross) throw new RangeError('Discount must be between 0 and the line value');
 
-  let taxable: Paise;
   if (input.inclusive) {
-    // gross is GST-inclusive: taxable = (gross - discount) × 100 / (100 + rate)
-    taxable = roundDiv((gross - discount) * 10000, 10000 + gstBp);
-  } else {
-    taxable = gross - discount;
+    // The quoted (GST-inclusive) amount is what the customer pays, to the paisa.
+    // Taxable value is back-calculated; tax is the remainder, so line total = quoted amount exactly.
+    const total = gross - discount;
+    const taxable = roundDiv(total * 10000, 10000 + gstBp);
+    const tax = total - taxable;
+    const cgst = supply === 'inter' ? 0 : roundDiv(tax, 2);
+    const sgst = supply === 'inter' ? 0 : tax - cgst;
+    const igst = supply === 'inter' ? tax : 0;
+    return { gross, discount, taxable, cgst, sgst, igst, total };
   }
+  const taxable = gross - discount;
   const tax = taxFor(taxable, gstBp, supply);
-  return {
-    gross: input.inclusive ? taxable + discount : gross,
-    discount,
-    taxable,
-    ...tax,
-    total: taxable + tax.cgst + tax.sgst + tax.igst,
-  };
+  return { gross, discount, taxable, ...tax, total: taxable + tax.cgst + tax.sgst + tax.igst };
 }
 
 export interface BillTotals {

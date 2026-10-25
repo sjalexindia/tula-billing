@@ -20,14 +20,14 @@ export interface SettingsSchema {
   states: Array<{ code: string; name: string }>;
 }
 export interface Totals { taxable: number; cgst: number; sgst: number; igst: number; beforeRoundOff: number; roundOff: number; total: number }
-export interface Warning { code: string; message: string; productId?: string }
+export interface Warning { code: string; message: string; productId?: string; thresholdPaise?: number }
 export interface Preview {
   supply: 'intra' | 'inter'; docKind: 'tax_invoice' | 'bill_of_supply'; lang: string; totals: Totals; balanceBefore: number; warnings: Warning[]; blocked: boolean;
-  lines: Array<{ lineNo: number; productId: string; baseQtyMilli: number; rateQtyMilli: number; ratePaise: number; rateSource: string; taxable: number; total: number }>;
+  lines: Array<{ lineNo: number; productId: string; baseQtyMilli: number; rateQtyMilli: number; ratePaise: number; inclusive: boolean; rateSource: string; taxable: number; total: number }>;
 }
 export interface BillLineInput { productId: string; entry: Record<string, string>; rate?: string; discount?: string }
 export interface BillInput {
-  partyId: string; site?: string; lang?: string; lines: BillLineInput[];
+  partyId: string; site?: string; vehicleNo?: string; lang?: string; lines: BillLineInput[];
   payment?: { mode: 'cash' | 'upi' | 'bank' | 'cheque'; amount: string }; confirmWarnings?: boolean;
 }
 
@@ -67,12 +67,12 @@ export const api = {
 export interface BillDetail {
   doc: {
     id: string; doc_no: string; doc_date: string; doc_kind: 'tax_invoice' | 'bill_of_supply'; party_name: string; party_gstin: string | null;
-    party_address: string | null; place_of_supply: string; supply_type: 'intra' | 'inter'; site: string | null; lang: string;
+    party_address: string | null; place_of_supply: string; supply_type: 'intra' | 'inter'; site: string | null; vehicle_no: string | null; eway_bill_no: string | null; lang: string;
     taxable_paise: number; cgst_paise: number; sgst_paise: number; igst_paise: number; round_off_paise: number; total_paise: number; status: string;
   };
   lines: Array<{
     line_no: number; description: string; hsn: string | null; entry_json: Record<string, string>; base_qty_milli: number;
-    rate_qty_milli: number; rate_unit_code: string; rate_unit_en: string; rate_unit_ta: string | null; rate_paise: number;
+    rate_qty_milli: number; rate_unit_code: string; rate_unit_en: string; rate_unit_ta: string | null; rate_paise: number; rate_inclusive: number;
     discount_paise: number; taxable_paise: number; gst_bp: number; cgst_paise: number; sgst_paise: number; igst_paise: number; line_total_paise: number;
   }>;
   party: { name_en: string; name_ta: string | null; mobile: string | null; gstin: string | null; address: string | null; state_code: string; is_walk_in: number } | null;

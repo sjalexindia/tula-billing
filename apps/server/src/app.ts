@@ -7,7 +7,7 @@ import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { existsSync } from 'node:fs';
 import { z, ZodError } from 'zod';
-import { createBill, getBill, listBills, priceBill } from './bills';
+import { applyNumberingSettings, createBill, getBill, listBills, priceBill } from './bills';
 import { catalog } from './catalog';
 import { localDeviceId, UserError, type Ctx } from './context';
 
@@ -55,16 +55,12 @@ export async function buildApp(db: Db, opts: { webDist?: string; logger?: boolea
 
     const tx = await db.transaction('write');
     try {
-      if (clean['invoice.prefix'] !== undefined) {
-        // Changing the prefix mid-year would break the consecutive series the GST rules require.
-        const fy = financialYear(todayIST());
-        const used = await one<{ next_no: number; prefix: string }>(tx,
-          "SELECT next_no, prefix FROM number_series WHERE doc_type = 'INV' AND owner_device = ? AND fy = ? AND deleted = 0", [deviceId, fy]);
-        if (used && Number(used.next_no) > 1 && used.prefix !== clean['invoice.prefix']) {
-          throw new UserError(`Invoices already issued this financial year with prefix ${used.prefix}. The new prefix can start from next financial year.`, 'PREFIX_IN_USE');
-        }
-        if (used) await tx.execute({ sql: "UPDATE number_series SET prefix = ?, updated_at = ? WHERE doc_type = 'INV' AND owner_device = ? AND fy = ?", args: [clean['invoice.prefix'], nowIso(), deviceId, fy] });
-      }
+      // Numbering settings shape the current year's invoice series. GST requires that series to be
+      // consecutive, so they can only change before the first invoice of the financial year.
+      const numbering = ['invoice.prefix', 'invoice.number_format', 'invoice.seq_digits', 'invoice.start_number'] as const;
+      const current = withDefaults(await getSettings(tx));
+      const changing = numbering.filter((k) => clean[k] !== undefined && clean[k] !== current[k]);
+      if (changing.length) await applyNumberingSettings(tx, deviceId, merged, changing);
       for (const [k, v] of Object.entries(clean)) {
         if (!isSettingKey(k)) continue;
         await setSetting(tx, deviceId, k, v);
@@ -130,7 +126,7 @@ export async function buildApp(db: Db, opts: { webDist?: string; logger?: boolea
     const p = await priceBill(db, req.body as never);
     return {
       supply: p.supply, docKind: p.docKind, lang: p.lang, totals: p.totals, balanceBefore: p.balanceBefore, warnings: p.warnings, blocked: p.blocked,
-      lines: p.lines.map((l) => ({ lineNo: l.lineNo, productId: l.product.id, baseQtyMilli: l.baseQty, rateQtyMilli: l.rateQty, ratePaise: l.ratePaise, rateSource: l.rateSource, taxable: l.taxable, cgst: l.cgst, sgst: l.sgst, igst: l.igst, total: l.total })),
+      lines: p.lines.map((l) => ({ lineNo: l.lineNo, productId: l.product.id, baseQtyMilli: l.baseQty, rateQtyMilli: l.rateQty, ratePaise: l.ratePaise, inclusive: l.inclusive, rateSource: l.rateSource, taxable: l.taxable, cgst: l.cgst, sgst: l.sgst, igst: l.igst, total: l.total })),
     };
   });
 

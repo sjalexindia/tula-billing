@@ -38,6 +38,7 @@ export function NewBill({ ratesVersion }: { ratesVersion: number }) {
   const [parties, setParties] = useState<Party[]>([]);
   const [customerText, setCustomerText] = useState('');
   const [site, setSite] = useState('');
+  const [vehicleNo, setVehicleNo] = useState('');
   const [billLang, setBillLang] = useState<string | null>(null); // null = customer's / business default
   const [lines, setLines] = useState<LineState[]>([emptyLine()]);
   const [payMode, setPayMode] = useState<'cash' | 'upi' | 'bank' | 'cheque'>('cash');
@@ -73,7 +74,7 @@ export function NewBill({ ratesVersion }: { ratesVersion: number }) {
 
   const input: BillInput | null = party && validLines.length
     ? {
-      partyId: party.id, site: site || undefined, lang: billLang ?? undefined,
+      partyId: party.id, site: site || undefined, vehicleNo: vehicleNo || undefined, lang: billLang ?? undefined,
       lines: validLines.map(({ l, p }) => ({ productId: p.id, entry: entryFor(l, p), rate: l.rate || undefined, discount: l.discount || undefined })),
       payment: paid.trim() ? { mode: payMode, amount: paid.trim() } : undefined,
     }
@@ -103,7 +104,7 @@ export function NewBill({ ratesVersion }: { ratesVersion: number }) {
       const r = await api.saveBill({ ...input, confirmWarnings: confirm });
       if (!r.saved) { setHeld({ warnings: r.warnings, blocked: !!r.blocked }); return; }
       setSaved({ id: r.id!, docNo: r.docNo! });
-      setLines([emptyLine()]); setPaid(''); setSite(''); setCustomerText(''); setPreview(null); setHeld(null); setBillLang(null);
+      setLines([emptyLine()]); setPaid(''); setSite(''); setVehicleNo(''); setCustomerText(''); setPreview(null); setHeld(null); setBillLang(null);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -116,6 +117,8 @@ export function NewBill({ ratesVersion }: { ratesVersion: number }) {
   const owesAfter = preview && totals ? preview.balanceBefore + totals.total - paidPaise : null;
   const activeLang = billLang ?? preview?.lang ?? party?.lang ?? settings?.values['invoice.default_lang'] ?? 'en';
   const setupNeeded = !!settings?.missingForBilling.length;
+  const ratesInclusive = settings?.values['billing.rates_include_gst'] === 'true' && settings?.values['gst.scheme'] === 'regular';
+  const eway = preview?.warnings.find((w) => w.code === 'EWAY');
 
   return (
     <form className="bill" onSubmit={(e) => { e.preventDefault(); void save(false); }}
@@ -146,6 +149,11 @@ export function NewBill({ ratesVersion }: { ratesVersion: number }) {
         <div className="field grow">
           <label htmlFor="site">{t('bill.site')}</label>
           <input id="site" value={site} placeholder={t('bill.sitePlaceholder')} onChange={(e) => setSite(e.target.value)} />
+        </div>
+        <div className="field vehicle">
+          <label htmlFor="vehicle">{t('bill.vehicle')}</label>
+          <input id="vehicle" value={vehicleNo} placeholder={t('bill.vehiclePlaceholder')} autoComplete="off"
+            onChange={(e) => setVehicleNo(e.target.value.toUpperCase())} />
         </div>
         {langs.length > 1 && (
           <div className="field">
@@ -196,7 +204,7 @@ export function NewBill({ ratesVersion }: { ratesVersion: number }) {
                   <Num id={`q-base-${l.key}`} label={units.length ? t('bill.exact', { unit: baseName }) : `${t('bill.qty')}${baseName ? ` (${baseName})` : ''}`}
                     value={p ? l.qty[p.baseUnit] ?? '' : ''} onChange={(v) => p && setQty(p.baseUnit, v, false)} />
                 </div>
-                <Num id={`rate-${l.key}`} label={`${t('bill.rate')} ₹`} value={l.rate}
+                <Num id={`rate-${l.key}`} label={ratesInclusive ? t('bill.rateIncl') : `${t('bill.rate')} ₹`} value={l.rate}
                   placeholder={calc ? (calc.ratePaise / 100).toFixed(2) : p ? (p.ratePaise / 100).toFixed(2) : ''}
                   onChange={(v) => update(l.key, { rate: v })} />
                 <Num id={`disc-${l.key}`} label={`${t('bill.discount')} ₹`} value={l.discount} onChange={(v) => update(l.key, { discount: v })} />
@@ -219,6 +227,7 @@ export function NewBill({ ratesVersion }: { ratesVersion: number }) {
         <aside className="totals" aria-live="polite">
           {preview?.supply === 'inter' && <p className="notice">{t('bill.interState')}</p>}
           {preview?.docKind === 'bill_of_supply' && <p className="notice">{t('bill.noGst')}</p>}
+          {eway && <p className="notice">{t('bill.ewayNotice', { amount: formatRs(eway.thresholdPaise ?? 0) })}</p>}
           <dl>
             <div><dt>{t('bill.taxable')}</dt><dd>{totals ? formatRs(totals.taxable) : '—'}</dd></div>
             {preview?.docKind !== 'bill_of_supply' && (preview?.supply === 'inter'

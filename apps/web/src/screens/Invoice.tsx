@@ -32,11 +32,16 @@ export function Invoice({ id }: { id: string }) {
 
   const { doc, lines, settings: s, party, units } = bill;
   const lang = doc.lang;
-  const t = tFor(lang);
+  // Bilingual bills print every label in the bill's language first, then the other enabled language.
+  const enabled = (s['app.languages'] ?? 'en').split(',');
+  const labelLangs = s['invoice.label_mode'] === 'bilingual' ? [lang, ...enabled.filter((l) => l !== lang)] : [lang];
+  const t = (key: string, opts?: Record<string, unknown>) => [...new Set(labelLangs.map((l) => String(tFor(l)(key, opts))))].join(' / ');
   const businessName = nameIn(lang, s['business.name_en'] ?? '', s['business.name_ta']);
   const inter = doc.supply_type === 'inter';
   const taxInvoice = doc.doc_kind === 'tax_invoice';
-  const terms = s[`invoice.terms_${lang}`] || s['invoice.terms_en'];
+  const terms = [...new Set(labelLangs.map((l) => s[`invoice.terms_${l}`]).filter(Boolean))];
+  const anyInclusive = lines.some((l) => l.rate_inclusive);
+  const legal = s['business.legal_name'];
   const stateLabel = (code: string) => `${stateName(code)} (${code})`;
   const unitLabel = (code: string) => {
     const u = units.find((x) => x.code === code);
@@ -69,7 +74,9 @@ export function Invoice({ id }: { id: string }) {
         <header className="inv-head">
           <div className="inv-shop">
             <h1>{businessName}</h1>
+            {labelLangs.length > 1 && s['business.name_ta'] && <p className="alt-name">{lang === 'ta' ? s['business.name_en'] : s['business.name_ta']}</p>}
             {s['business.tagline'] && <p className="tagline">{s['business.tagline']}</p>}
+            {legal && legal !== businessName && <p className="small">{t('invoice.legalName')}: {legal}</p>}
             <p>{s['business.address']}</p>
             <p>
               {s['business.phone'] && <>{t('invoice.phone')}: {s['business.phone']} &nbsp; </>}
@@ -83,6 +90,8 @@ export function Invoice({ id }: { id: string }) {
               <tbody>
                 <tr><th>{t('invoice.no')}</th><td className="mono"><b>{doc.doc_no}</b></td></tr>
                 <tr><th>{t('invoice.date')}</th><td>{doc.doc_date.split('-').reverse().join('-')}</td></tr>
+                {doc.vehicle_no && <tr><th>{t('invoice.vehicle')}</th><td className="mono">{doc.vehicle_no}</td></tr>}
+                {doc.eway_bill_no && <tr><th>{t('invoice.ewayNo')}</th><td className="mono">{doc.eway_bill_no}</td></tr>}
               </tbody>
             </table>
           </div>
@@ -107,7 +116,7 @@ export function Invoice({ id }: { id: string }) {
           <thead>
             <tr>
               <th className="c">{t('invoice.sn')}</th><th>{t('invoice.description')}</th><th>{t('invoice.hsn')}</th>
-              <th className="r">{t('invoice.qty')}</th><th className="r">{t('invoice.rate')}</th>
+              <th className="r">{t('invoice.qty')}</th><th className="r">{anyInclusive ? t('invoice.rateIncl') : t('invoice.rate')}</th>
               <th className="r">{t('invoice.disc')}</th><th className="r">{t('invoice.taxable')}</th>
               {taxInvoice && <th className="r">{t('invoice.gst')}</th>}<th className="r">{t('invoice.amount')}</th>
             </tr>
@@ -153,7 +162,7 @@ export function Invoice({ id }: { id: string }) {
             <p className="words">{amountInWords(doc.total_paise, lang === 'ta' ? 'ta' : 'en')}</p>
             {s['gst.scheme'] === 'composition' && <p className="small">{t('invoice.compositionNote')}</p>}
             {s['business.bank_details'] && <p className="small">{t('invoice.bank')}: {s['business.bank_details']}</p>}
-            {terms && <p className="small muted">{terms}</p>}
+            {terms.map((x) => <p key={x} className="small muted">{x}</p>)}
           </div>
           <div className="inv-right">
             <table className="sums">
@@ -163,8 +172,8 @@ export function Invoice({ id }: { id: string }) {
                   <tr><th>CGST</th><td>{formatRs(doc.cgst_paise)}</td></tr>
                   <tr><th>SGST</th><td>{formatRs(doc.sgst_paise)}</td></tr>
                 </>}
-                {doc.round_off_paise !== 0 && <tr><th>{tUi('bill.roundOff', { lng: lang })}</th><td>{formatRs(doc.round_off_paise)}</td></tr>}
-                <tr className="grand-row"><th>{tUi('bill.total', { lng: lang })}</th><td>{formatRs(doc.total_paise)}</td></tr>
+                {doc.round_off_paise !== 0 && <tr><th>{t('bill.roundOff')}</th><td>{formatRs(doc.round_off_paise)}</td></tr>}
+                <tr className="grand-row"><th>{t('bill.total')}</th><td>{formatRs(doc.total_paise)}</td></tr>
                 {bill.paidPaise > 0 && <tr><th>{t('invoice.paid')}</th><td>{formatRs(bill.paidPaise)}</td></tr>}
                 {bill.paidPaise > 0 && <tr><th>{t('invoice.balance')}</th><td><b>{formatRs(due)}</b></td></tr>}
               </tbody>
@@ -176,7 +185,7 @@ export function Invoice({ id }: { id: string }) {
               </figure>
             )}
             <div className="sign">
-              <p>{t('invoice.for', { shop: businessName })}</p>
+              <p>{[...new Set(labelLangs.map((l) => String(tFor(l)('invoice.for', { shop: nameIn(l, s['business.name_en'] ?? '', s['business.name_ta']) }))))].join(' / ')}</p>
               <p className="sign-line">{t('invoice.signatory')}</p>
             </div>
           </div>

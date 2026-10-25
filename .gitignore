@@ -8,3 +8,6 @@ data/
 .env.*
 android/app/build/
 *.tsbuildinfo
+# real business profiles stay out of the repo (examples are allowed)
+*.profile.json
+profiles/

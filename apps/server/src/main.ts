@@ -3,7 +3,7 @@ import { mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildApp } from './app';
-import { setup } from './setup';
+import { applyProfile, readProfile, setup } from './setup';
 
 /**
  * Configuration comes from environment variables; business data comes from Settings in the app.
@@ -12,6 +12,7 @@ import { setup } from './setup';
  *   TULA_HOST    interface to listen on            (default: 0.0.0.0, so phones on the LAN can connect)
  *   TULA_PRESET  starter catalogue on first run    (e.g. building-materials, blank; default: blank)
  *   TULA_DEMO    "1" to also load the preset's demo business, customers and stock
+ *   TULA_PROFILE path to a business profile JSON applied on first run (see docs/03-configuration.md)
  */
 const here = dirname(fileURLToPath(import.meta.url));
 const env = process.env;
@@ -21,8 +22,13 @@ const host = env.TULA_HOST ?? '0.0.0.0';
 
 mkdirSync(dirname(dbFile), { recursive: true });
 const db = await openDb(`file:${dbFile}`);
-const s = await setup(db, { preset: env.TULA_PRESET ?? 'blank', demo: env.TULA_DEMO === '1' });
-if (!s.skipped) console.log(`First run: set up with preset "${env.TULA_PRESET ?? 'blank'}"${env.TULA_DEMO === '1' ? ' + demo data' : ''}. Owner user created with PIN 1234 (PIN login arrives in Milestone 1).`);
+const profile = env.TULA_PROFILE ? readProfile(resolve(env.TULA_PROFILE)) : null;
+const preset = profile?.preset ?? env.TULA_PRESET ?? 'blank';
+const s = await setup(db, { preset, demo: env.TULA_DEMO === '1' });
+if (!s.skipped) {
+  console.log(`First run: set up with preset "${preset}"${env.TULA_DEMO === '1' ? ' + demo data' : ''}. Owner user created with PIN 1234 (PIN login arrives in Milestone 1).`);
+  if (profile) console.log('Applied business profile:', await applyProfile(db, profile));
+}
 
 const app = await buildApp(db, { webDist: join(here, '..', '..', 'web', 'dist'), logger: true });
 await app.listen({ port, host });

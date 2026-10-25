@@ -14,6 +14,8 @@ export const BillInput = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   partyId: z.string().min(1),
   site: z.string().max(120).optional(),
+  /** vehicle carrying the goods, printed on the bill and needed for an e-way bill */
+  vehicleNo: z.string().max(20).optional(),
   /** bill language; defaults to the customer's, then the business default */
   lang: z.string().optional(),
   notes: z.string().max(500).optional(),
@@ -32,7 +34,9 @@ export const BillInput = z.object({
 });
 export type BillInput = z.input<typeof BillInput>;
 
-export interface BillWarning { code: 'LOW_STOCK' | 'CREDIT_LIMIT' | 'RATE_MISSING'; message: string; productId?: string }
+/** EWAY and RATE_MISSING are information only; LOW_STOCK and CREDIT_LIMIT need confirmation (or block, per settings). */
+export interface BillWarning { code: 'LOW_STOCK' | 'CREDIT_LIMIT' | 'RATE_MISSING' | 'EWAY'; message: string; productId?: string; thresholdPaise?: number }
+const INFO_ONLY = new Set<BillWarning['code']>(['RATE_MISSING', 'EWAY']);
 
 /** Default prefixes for documents other than invoices (the invoice prefix is a setting). */
 export const DEFAULT_PREFIXES: Record<string, string> = { QT: 'QT', CN: 'CN', RCPT: 'RC', PAY: 'PY', PUR: 'PU', DN: 'DN', EXP: 'EX', ADJ: 'AD' };
@@ -42,14 +46,37 @@ export async function nextNumber(ex: Exec, deviceId: string, docType: string, fy
   const q = 'SELECT id, prefix, next_no, pad FROM number_series WHERE doc_type = ? AND owner_device = ? AND fy = ? AND deleted = 0';
   let s = await one<{ id: string; prefix: string; next_no: number; pad: number }>(ex, q, [docType, deviceId, fy]);
   if (!s) {
-    const prefix = docType === 'INV' ? settings['invoice.prefix'] : DEFAULT_PREFIXES[docType] ?? docType;
-    await insert(ex, 'number_series', deviceId, { doc_type: docType, owner_device: deviceId, fy, prefix, next_no: 1, pad: 4 });
+    const inv = docType === 'INV';
+    const prefix = inv ? settings['invoice.prefix'] : DEFAULT_PREFIXES[docType] ?? docType;
+    // New financial year: numbering restarts at 1 (the start-number setting only applies to the year it was set in).
+    const pad = inv ? Number(settings['invoice.seq_digits']) : 4;
+    await insert(ex, 'number_series', deviceId, { doc_type: docType, owner_device: deviceId, fy, prefix, next_no: 1, pad });
     s = (await one<{ id: string; prefix: string; next_no: number; pad: number }>(ex, q, [docType, deviceId, fy]))!;
   }
   const dev = await one<{ series_code: string }>(ex, 'SELECT series_code FROM devices WHERE id = ?', [deviceId]);
-  const docNo = formatDocNo({ prefix: s.prefix, fy, seriesCode: dev?.series_code ?? '', pad: Number(s.pad) }, Number(s.next_no));
+  const format = docType === 'INV' ? settings['invoice.number_format'] : undefined;
+  const docNo = formatDocNo({ prefix: s.prefix, fy, seriesCode: dev?.series_code ?? '', pad: Number(s.pad), format }, Number(s.next_no));
   await ex.execute({ sql: 'UPDATE number_series SET next_no = next_no + 1, updated_at = ? WHERE id = ?', args: [new Date().toISOString(), s.id] });
   return docNo;
+}
+
+/**
+ * Apply the invoice numbering settings to this device's current-year series.
+ * GST needs a consecutive series, so this refuses once the year's first invoice exists.
+ */
+export async function applyNumberingSettings(ex: Exec, deviceId: string, settings: Settings, changing: string[]) {
+  const fy = financialYear(todayIST());
+  const issued = await one<{ n: number }>(ex, "SELECT COUNT(*) n FROM sales_docs WHERE doc_type = 'INV' AND fy = ? AND device_id = ?", [fy, deviceId]);
+  if (Number(issued?.n ?? 0) > 0) {
+    throw new UserError(`Invoices already issued this financial year, so ${changing.join(', ')} can only change from next financial year.`, 'NUMBERING_IN_USE');
+  }
+  const values = { prefix: settings['invoice.prefix'], pad: Number(settings['invoice.seq_digits']), next_no: Number(settings['invoice.start_number']) };
+  const existing = await one<{ id: string }>(ex, "SELECT id FROM number_series WHERE doc_type = 'INV' AND owner_device = ? AND fy = ? AND deleted = 0", [deviceId, fy]);
+  if (existing) {
+    await ex.execute({ sql: 'UPDATE number_series SET prefix = ?, pad = ?, next_no = ?, updated_at = ? WHERE id = ?', args: [values.prefix, values.pad, values.next_no, new Date().toISOString(), existing.id] });
+  } else {
+    await insert(ex, 'number_series', deviceId, { doc_type: 'INV', owner_device: deviceId, fy, ...values });
+  }
 }
 
 /** Price and validate a bill without saving it (used for live totals and before save). */
@@ -71,6 +98,8 @@ export async function priceBill(ex: Exec, raw: BillInput) {
   const charge = settings['gst.scheme'] === 'regular'; // composition / unregistered: bill of supply, no GST
   const stockCheck = settings['billing.stock_check'];
   const creditCheck = settings['billing.credit_check'];
+  // GST-inclusive rates only make sense when GST is charged.
+  const inclusiveDefault = charge && settings['billing.rates_include_gst'] === 'true';
   const warnings: BillWarning[] = [];
 
   const lines = [];
@@ -96,7 +125,7 @@ export async function priceBill(ex: Exec, raw: BillInput) {
 
     let amounts: LineAmounts;
     try {
-      amounts = calcLine({ rateQtyMilli: rateQty, ratePaise, discountPaise: l.discount ? toPaise(l.discount) : 0, gstBp: charge ? Number(p.gst_bp) : 0, inclusive: l.inclusive }, supply);
+      amounts = calcLine({ rateQtyMilli: rateQty, ratePaise, discountPaise: l.discount ? toPaise(l.discount) : 0, gstBp: charge ? Number(p.gst_bp) : 0, inclusive: charge && (l.inclusive ?? inclusiveDefault) }, supply);
     } catch (e) {
       throw new UserError(`Line ${i + 1}: ${(e as Error).message}`);
     }
@@ -108,7 +137,7 @@ export async function priceBill(ex: Exec, raw: BillInput) {
     lines.push({
       lineNo: i + 1, product: p, entryJson: Object.fromEntries(Object.entries(l.entry).filter(([, v]) => v !== '' && v !== '0')),
       baseQty, rateUnitId, rateQty, ratePaise, rateSource: l.rate ? 'manual' : auto.source, autoRatePaise: auto.ratePaise,
-      gstBp: charge ? Number(p.gst_bp) : 0, ...amounts,
+      gstBp: charge ? Number(p.gst_bp) : 0, inclusive: charge && (l.inclusive ?? inclusiveDefault), ...amounts,
     });
   }
   const totals = calcBill(lines);
@@ -120,6 +149,15 @@ export async function priceBill(ex: Exec, raw: BillInput) {
     warnings.push({ code: 'CREDIT_LIMIT', message: `Outstanding would be ${(balanceBefore + totals.total - paid) / 100} against limit ${limit / 100}` });
   }
   if (paid > totals.total) throw new UserError('Payment is more than the bill total. Record the extra as a separate receipt.');
+
+  // E-way bill reminder: value of goods (not services) moved, including tax, against the state / inter-state threshold.
+  if (settings['eway.warn'] === 'true') {
+    const goodsValue = lines.filter((l) => l.product.track_stock).reduce((a, l) => a + l.total, 0);
+    const threshold = toPaise(settings[supply === 'inter' ? 'eway.threshold_inter' : 'eway.threshold_intra']);
+    if (threshold > 0 && goodsValue > threshold) {
+      warnings.push({ code: 'EWAY', message: `Goods worth more than ${threshold / 100}: an e-way bill is needed if they are transported`, thresholdPaise: threshold });
+    }
+  }
   const blocked = warnings.some((w) => (w.code === 'LOW_STOCK' && stockCheck === 'block') || (w.code === 'CREDIT_LIMIT' && creditCheck === 'block'));
   return { input, date, lang, party, placeOfSupply, supply, docKind: charge ? 'tax_invoice' : 'bill_of_supply', lines, totals, balanceBefore, paid, warnings, blocked, settings };
 }
@@ -129,7 +167,7 @@ export async function createBill(db: Db, ctx: Ctx, raw: BillInput) {
   try {
     const priced = await priceBill(tx, raw);
     const { input, date, lang, party, placeOfSupply, supply, docKind, lines, totals, paid, warnings, blocked, settings } = priced;
-    const needsConfirm = warnings.some((w) => w.code !== 'RATE_MISSING');
+    const needsConfirm = warnings.some((w) => !INFO_ONLY.has(w.code));
     if (blocked || (needsConfirm && !input.confirmWarnings)) {
       await tx.rollback();
       return { saved: false as const, blocked, warnings };
@@ -142,7 +180,7 @@ export async function createBill(db: Db, ctx: Ctx, raw: BillInput) {
       doc_type: 'INV', doc_kind: docKind, doc_no: docNo, doc_date: date, fy, party_id: party.id,
       party_name: lang === 'ta' && party.name_ta ? party.name_ta : party.name_en,
       party_gstin: party.gstin, party_address: party.address, place_of_supply: placeOfSupply, supply_type: supply,
-      site: input.site, lang, taxable_paise: totals.taxable, cgst_paise: totals.cgst, sgst_paise: totals.sgst,
+      site: input.site, vehicle_no: input.vehicleNo?.toUpperCase().replace(/\s+/g, ' ').trim() || null, lang, taxable_paise: totals.taxable, cgst_paise: totals.cgst, sgst_paise: totals.sgst,
       igst_paise: totals.igst, round_off_paise: totals.roundOff, total_paise: totals.total, notes: input.notes, created_by: ctx.userId,
     });
 
@@ -151,9 +189,9 @@ export async function createBill(db: Db, ctx: Ctx, raw: BillInput) {
       const costTotal = roundDiv(l.baseQty * cost, 1000);
       const lineId = await insert(tx, 'sales_doc_lines', dev, {
         doc_id: docId, line_no: l.lineNo, product_id: l.product.id,
-        description: lang === 'ta' && l.product.name_ta ? l.product.name_ta : l.product.name_en,
+        description: [l.product.brand, lang === 'ta' && l.product.name_ta ? l.product.name_ta : l.product.name_en].filter(Boolean).join(' '),
         hsn: l.product.hsn, entry_json: l.entryJson, base_qty_milli: l.baseQty, rate_unit_id: l.rateUnitId,
-        rate_qty_milli: l.rateQty, rate_paise: l.ratePaise, discount_paise: l.discount, taxable_paise: l.taxable,
+        rate_qty_milli: l.rateQty, rate_paise: l.ratePaise, rate_inclusive: l.inclusive ? 1 : 0, discount_paise: l.discount, taxable_paise: l.taxable,
         gst_bp: l.gstBp, cgst_paise: l.cgst, sgst_paise: l.sgst, igst_paise: l.igst, line_total_paise: l.total,
         cost_per_base_paise: cost, cost_total_paise: costTotal,
       });

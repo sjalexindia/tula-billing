@@ -3,6 +3,8 @@
  * never in code. Unknown keys are rejected; each key has a type and default.
  */
 import { stateFromGstin } from './gst';
+import { parseScaled } from './money';
+import { DEFAULT_DOC_FORMAT, DOC_NO_MAX, formatDocNo, validateDocFormat } from './numbering';
 import { STATES } from './states';
 
 type Kind =
@@ -13,7 +15,11 @@ type Kind =
   | { type: 'gstin' }
   | { type: 'langs' }
   | { type: 'lang' }
-  | { type: 'docPrefix' };
+  | { type: 'docPrefix' }
+  | { type: 'docFormat' }
+  | { type: 'int'; min: number; max: number }
+  | { type: 'amount' }
+  | { type: 'percent'; max: number };
 
 export interface SettingDef {
   kind: Kind;
@@ -21,7 +27,7 @@ export interface SettingDef {
   /** must be filled before the first bill can be saved */
   requiredForBilling?: boolean;
   /** owner-only to change (all settings are owner-only in Release 1, kept for later roles) */
-  group: 'business' | 'gst' | 'invoice' | 'billing' | 'app';
+  group: 'business' | 'gst' | 'invoice' | 'billing' | 'eway' | 'credit' | 'app';
 }
 
 /** Languages the app ships translations for. Add a locale file and an entry here to add one. */
@@ -32,6 +38,7 @@ export const SETTINGS = {
   // ---- Business identity (printed on every invoice)
   'business.name_en': { kind: { type: 'text', max: 80 }, default: '', requiredForBilling: true, group: 'business' },
   'business.name_ta': { kind: { type: 'text', max: 80 }, default: '', group: 'business' },
+  'business.legal_name': { kind: { type: 'text', max: 100 }, default: '', group: 'business' },
   'business.tagline': { kind: { type: 'text', max: 120 }, default: '', group: 'business' },
   'business.address': { kind: { type: 'text', max: 300 }, default: '', requiredForBilling: true, group: 'business' },
   'business.phone': { kind: { type: 'text', max: 40 }, default: '', group: 'business' },
@@ -50,11 +57,27 @@ export const SETTINGS = {
   'invoice.terms_ta': { kind: { type: 'text', max: 600 }, default: 'விற்ற பொருள் திரும்பப் பெறப்படாது. உள்ளூர் நீதிமன்ற அதிகார வரம்புக்கு உட்பட்டது.', group: 'invoice' },
   'invoice.show_upi_qr': { kind: { type: 'bool' }, default: 'true', group: 'invoice' },
   'invoice.paper': { kind: { type: 'enum', values: ['A4', 'A5'] }, default: 'A4', group: 'invoice' },
+  'invoice.label_mode': { kind: { type: 'enum', values: ['single', 'bilingual'] }, default: 'single', group: 'invoice' },
   'invoice.prefix': { kind: { type: 'docPrefix' }, default: 'INV', group: 'invoice' },
+  'invoice.number_format': { kind: { type: 'docFormat' }, default: DEFAULT_DOC_FORMAT, group: 'invoice' },
+  'invoice.seq_digits': { kind: { type: 'int', min: 1, max: 8 }, default: '4', group: 'invoice' },
+  /** first running number for the current financial year, e.g. to continue a paper bill book */
+  'invoice.start_number': { kind: { type: 'int', min: 1, max: 99_999_999 }, default: '1', group: 'invoice' },
 
   // ---- Billing rules
   'billing.stock_check': { kind: { type: 'enum', values: ['warn', 'block', 'off'] }, default: 'warn', group: 'billing' },
   'billing.credit_check': { kind: { type: 'enum', values: ['warn', 'block', 'off'] }, default: 'warn', group: 'billing' },
+  /** rates (master, daily and typed on the bill) already include GST; the bill back-calculates the taxable value */
+  'billing.rates_include_gst': { kind: { type: 'bool' }, default: 'false', group: 'billing' },
+
+  // ---- E-way bill reminders (thresholds differ by state; inter-state is ₹50,000 nationally)
+  'eway.warn': { kind: { type: 'bool' }, default: 'true', group: 'eway' },
+  'eway.threshold_intra': { kind: { type: 'amount' }, default: '50000', group: 'eway' },
+  'eway.threshold_inter': { kind: { type: 'amount' }, default: '50000', group: 'eway' },
+
+  // ---- Credit
+  'credit.default_days': { kind: { type: 'int', min: 0, max: 365 }, default: '0', group: 'credit' },
+  'credit.interest_pa': { kind: { type: 'percent', max: 36 }, default: '0', group: 'credit' },
 
   // ---- App
   'app.languages': { kind: { type: 'langs' }, default: 'en', group: 'app' },
@@ -100,8 +123,27 @@ export function validateSetting(key: string, raw: unknown): string {
       return [...new Set(list)].join(',');
     }
     case 'docPrefix':
-      if (!/^[A-Za-z0-9-]{1,6}$/.test(v)) throw new RangeError(`${key} must be 1–6 letters, digits or -`);
+      if (!/^[A-Za-z0-9-]{0,6}$/.test(v)) throw new RangeError(`${key} must be up to 6 letters, digits or -`);
       return v.toUpperCase();
+    case 'docFormat':
+      validateDocFormat(v);
+      return v;
+    case 'int': {
+      if (!/^\d+$/.test(v)) throw new RangeError(`${key} must be a whole number`);
+      const n = Number(v);
+      if (n < k.min || n > k.max) throw new RangeError(`${key} must be between ${k.min} and ${k.max}`);
+      return String(n);
+    }
+    case 'amount': {
+      const p = parseScaled(v, 2, key);
+      if (p < 0) throw new RangeError(`${key} cannot be negative`);
+      return (p / 100).toFixed(2).replace(/\.00$/, '');
+    }
+    case 'percent': {
+      const bp = parseScaled(v, 2, key);
+      if (bp < 0 || bp > k.max * 100) throw new RangeError(`${key} must be between 0 and ${k.max}`);
+      return (bp / 100).toString();
+    }
   }
 }
 
@@ -127,5 +169,14 @@ export function checkSettingsConsistency(s: Settings): string[] {
   const langs = s['app.languages'].split(',');
   if (!langs.includes(s['app.default_lang'])) issues.push('Default language must be one of the enabled languages');
   if (!langs.includes(s['invoice.default_lang'])) issues.push('Default invoice language must be one of the enabled languages');
+  if (s['invoice.label_mode'] === 'bilingual' && langs.length < 2) issues.push('Bilingual bills need two enabled languages');
+  if (s['invoice.number_format'].includes('{prefix}') && !s['invoice.prefix']) issues.push('The number format uses {prefix}, so the invoice prefix cannot be empty');
+  try {
+    // longest realistic number: phone series code + every digit used
+    const sample = formatDocNo({ prefix: s['invoice.prefix'], fy: '26-27', seriesCode: 'M9', pad: Number(s['invoice.seq_digits']), format: s['invoice.number_format'] }, 10 ** Number(s['invoice.seq_digits']) - 1);
+    if (sample.length > DOC_NO_MAX) issues.push(`Invoice numbers would exceed ${DOC_NO_MAX} characters`);
+  } catch (e) {
+    issues.push((e as Error).message);
+  }
   return issues;
 }

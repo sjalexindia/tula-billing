@@ -268,3 +268,8 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .paper-a5 .invoice { max-width: 148mm; min-height: 200mm; padding: 8mm; font-size: 10.5px; }
 .paper-a5 .invoice-actions { max-width: 148mm; }
 .paper-a5 .inv-shop h1 { font-size: 17px; }
+.field.vehicle { flex: 0 1 200px; }
+.inv-head .small { margin: 1px 0; }
+
+.alt-name { font-weight: 700; font-size: 14px; margin: 0 0 2px !important; }
+.inv-title h2 { font-size: 16px; }

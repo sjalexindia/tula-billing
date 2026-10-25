@@ -5,6 +5,7 @@ export interface ProductRow {
   sku: string;
   name_en: string;
   name_ta: string | null;
+  brand: string | null;
   hsn: string | null;
   gst_bp: number;
   base_unit_id: string;
@@ -99,7 +100,7 @@ export async function catalog(ex: Exec, date: string) {
   for (const p of prods) {
     const rate = await resolveRate(ex, p, null, date);
     out.push({
-      id: p.id, sku: p.sku, nameEn: p.name_en, nameTa: p.name_ta, hsn: p.hsn, gstBp: Number(p.gst_bp),
+      id: p.id, sku: p.sku, nameEn: p.name_en, nameTa: p.name_ta, brand: p.brand, hsn: p.hsn, gstBp: Number(p.gst_bp),
       categoryEn: p.category_en, categoryTa: p.category_ta,
       baseUnit: p.base_unit_code, baseUnitEn: p.base_unit_en, baseUnitTa: p.base_unit_ta, trackStock: !!p.track_stock,
       attrs: JSON.parse(p.attrs_json || '{}'),

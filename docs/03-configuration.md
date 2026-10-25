@@ -17,9 +17,14 @@ Every setting has a type, a default, and validation. The Settings screen is gene
 | `business.*` | Name (English/Tamil), tagline, address, phone, email, state, UPI ID, bank details |
 | `gst.scheme` | `regular` (tax invoice), `composition` or `unregistered` (bill of supply, no GST) |
 | `gst.gstin` | Checked for format and against the business state |
-| `invoice.prefix` | Invoice number prefix (1–6 characters). Cannot change mid-year once invoices exist (GST requires a consecutive series) |
+| `business.legal_name` | Name on the GST certificate, printed under the trade name |
+| `invoice.prefix`, `invoice.number_format`, `invoice.seq_digits`, `invoice.start_number` | Invoice numbering. Format tokens: `{prefix}` `{fy}` (26-27) `{yy}` (26) `{seq}`. `{seq}` with 1 digit and a start number continues a paper bill book (246, 247…). Numbers are checked against the 16-character GST limit. None of these can change once the year's first invoice exists (GST requires a consecutive series); numbering restarts at 1 each financial year |
 | `invoice.default_lang`, `invoice.terms_<lang>`, `invoice.show_upi_qr`, `invoice.paper` | Printed bill options (A4/A5) |
+| `invoice.label_mode` | `single` or `bilingual` (every label in both enabled languages, e.g. வரி விலைப்பட்டியல் / Tax Invoice) |
+| `billing.rates_include_gst` | Rates are quoted including GST. The bill back-calculates the taxable value and the line total equals the quoted amount to the paisa |
 | `billing.stock_check`, `billing.credit_check` | `warn` (ask before saving), `block` (refuse) or `off` |
+| `eway.warn`, `eway.threshold_intra`, `eway.threshold_inter` | Reminder on the bill when goods (not services) exceed the state's limit. Inter-state is ₹50,000 everywhere; intra-state limits differ by state (Tamil Nadu: ₹1,00,000). Bills can carry a vehicle number |
+| `credit.default_days`, `credit.interest_pa` | Defaults for new customers and overdue interest (used by outstanding reports in Milestone 4) |
 | `app.languages`, `app.default_lang` | Which languages this business uses; the language switch hides when only one is enabled |
 
 Billing is blocked until name, address, state and GSTIN (unless unregistered) are filled in.
@@ -39,6 +44,11 @@ A preset can declare:
 
 To support a new trade (electricals, tiles, fertiliser…), add a preset file. No code changes are needed.
 
+## Business profiles
+A profile is one business's real details in a JSON file, applied on first run with `TULA_PROFILE=path/to/profile.json`, or later with `npm run apply-profile -w apps/server -- path/to/profile.json`. It can set a preset, any settings, product patches (e.g. add a brand to every `TMT-*` item), and today's daily rates. Settings are validated exactly as in the app. See [examples/business-profile.example.json](examples/business-profile.example.json).
+
+Keep real profiles **out of this repository**. Never put sync tokens in a profile.
+
 ## Environment variables
 | Variable | Default | |
 |---|---|---|
@@ -47,6 +57,8 @@ To support a new trade (electricals, tiles, fertiliser…), add a preset file. N
 | `TULA_HOST` | `0.0.0.0` | Listens on the LAN so phones on the same Wi-Fi can connect |
 | `TULA_PRESET` | `blank` | First-run catalogue |
 | `TULA_DEMO` | unset | `1` loads the preset's demo data |
+| `TULA_PROFILE` | unset | Business profile applied on first run |
+| `TULA_SYNC_URL`, `TULA_SYNC_TOKEN` | unset | Cloud sync (Milestone 5). Secrets live only in the environment of the shop computer |
 
 ## Adding a language
 1. Add `apps/web/src/locales/<code>.json` (copy `en.json`; a test-style check confirms keys match).

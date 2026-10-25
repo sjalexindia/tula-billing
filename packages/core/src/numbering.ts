@@ -25,16 +25,34 @@ export function financialYearRange(fy: string): { from: string; to: string } {
 export const DOC_NO_MAX = 16;
 const DOC_NO_PATTERN = /^[A-Za-z0-9/-]+$/;
 
+export const DEFAULT_DOC_FORMAT = '{prefix}/{fy}/{seq}';
+
 export interface SeriesSpec {
-  prefix: string; // 'ST'
+  prefix: string; // 'ST' (may be empty when the format doesn't use it)
   fy: string; // '26-27'
-  seriesCode: string; // '' for the PC, 'M1' for phone 1
-  pad: number; // 4
+  seriesCode: string; // '' for the main computer, 'M1' for phone 1
+  pad: number; // digits in the running number, e.g. 4 -> 0001
+  /** tokens: {prefix} {fy} (26-27) {yy} (26) {seq} (series code + padded number). Default "{prefix}/{fy}/{seq}" */
+  format?: string;
+}
+
+/** Check a number format template; throws RangeError with a readable message. */
+export function validateDocFormat(format: string): void {
+  if (!format.includes('{seq}')) throw new RangeError('Number format must contain {seq}');
+  const literal = format.replace(/\{(prefix|fy|yy|seq)\}/g, '');
+  if (/[{}]/.test(literal)) throw new RangeError('Unknown token in number format. Use {prefix}, {fy}, {yy} and {seq}');
+  if (literal && !DOC_NO_PATTERN.test(literal)) throw new RangeError('Number format may only contain letters, digits, - and / besides the tokens');
 }
 
 export function formatDocNo(spec: SeriesSpec, n: number): string {
   if (!Number.isInteger(n) || n < 1) throw new RangeError('Document number must be a positive integer');
-  const docNo = `${spec.prefix}/${spec.fy}/${spec.seriesCode}${String(n).padStart(spec.pad, '0')}`;
+  const format = spec.format || DEFAULT_DOC_FORMAT;
+  validateDocFormat(format);
+  const docNo = format
+    .replace('{prefix}', spec.prefix)
+    .replace('{fy}', spec.fy)
+    .replace('{yy}', spec.fy.slice(0, 2))
+    .replace('{seq}', `${spec.seriesCode}${String(n).padStart(spec.pad, '0')}`);
   validateDocNo(docNo);
   return docNo;
 }

@@ -67,7 +67,11 @@
     "measured": "{{qty}} {{unit}}",
     "noGst": "No GST: bill of supply",
     "blocked": "This bill can't be saved",
-    "blockedHelp": "Your settings don't allow billing past stock or credit limits. Reduce the quantity or record a payment first."
+    "blockedHelp": "Your settings don't allow billing past stock or credit limits. Reduce the quantity or record a payment first.",
+    "vehicle": "Vehicle no.",
+    "vehiclePlaceholder": "For delivery / e-way bill",
+    "ewayNotice": "Goods above {{amount}}: an e-way bill is needed if they are transported. Note the vehicle number.",
+    "rateIncl": "Rate ₹ incl. GST"
   },
   "bills": {
     "title": "Today's bills",
@@ -128,7 +132,11 @@
     "print": "Print / Save as PDF",
     "interState": "Inter-state",
     "billOfSupply": "Bill of Supply",
-    "compositionNote": "Composition taxable person, not eligible to collect tax on supplies."
+    "compositionNote": "Composition taxable person, not eligible to collect tax on supplies.",
+    "legalName": "Legal name",
+    "vehicle": "Vehicle no.",
+    "ewayNo": "E-way bill no.",
+    "rateIncl": "Rate (incl. GST)"
   },
   "settings": {
     "title": "Settings",
@@ -140,7 +148,9 @@
       "gst": "GST",
       "invoice": "Invoice",
       "billing": "Billing rules",
-      "app": "App"
+      "app": "App",
+      "eway": "E-way bill",
+      "credit": "Credit"
     },
     "keys": {
       "business.name_en": "Business name (English)",
@@ -163,7 +173,18 @@
       "billing.stock_check": "When a bill exceeds stock",
       "billing.credit_check": "When a bill exceeds the customer's credit limit",
       "app.languages": "Languages used in this business",
-      "app.default_lang": "Default screen language"
+      "app.default_lang": "Default screen language",
+      "business.legal_name": "Legal name (as on GST certificate)",
+      "invoice.label_mode": "Bill labels",
+      "invoice.number_format": "Invoice number format ({prefix} {fy} {yy} {seq})",
+      "invoice.seq_digits": "Digits in the running number",
+      "invoice.start_number": "Start this year's numbering at",
+      "billing.rates_include_gst": "Rates include GST",
+      "eway.warn": "Remind about e-way bills",
+      "eway.threshold_intra": "E-way bill limit within the state (₹)",
+      "eway.threshold_inter": "E-way bill limit to other states (₹)",
+      "credit.default_days": "Default credit days for new customers",
+      "credit.interest_pa": "Interest on overdue (% per year)"
     },
     "values": {
       "regular": "Regular (tax invoice)",
@@ -177,7 +198,9 @@
       "A4": "A4",
       "A5": "A5",
       "en": "English",
-      "ta": "Tamil"
+      "ta": "Tamil",
+      "single": "One language",
+      "bilingual": "Both languages"
     },
     "pickState": "Pick a state"
   }

@@ -1,0 +1,31 @@
+{
+  "preset": "building-materials",
+  "settings": {
+    "business.name_en": "Example Hardwares",
+    "business.name_ta": "எக்சாம்பிள் ஹார்ட்வேர்ஸ்",
+    "business.legal_name": "A. EXAMPLE",
+    "business.tagline": "Authorised dealer: Example Steel",
+    "business.address": "1 Main Road, Example Town, Tamil Nadu 600001",
+    "business.phone": "90000 00000",
+    "business.state_code": "33",
+    "gst.scheme": "regular",
+    "gst.gstin": "33ABCDE1234F1Z5",
+    "app.languages": "en,ta",
+    "app.default_lang": "ta",
+    "invoice.default_lang": "ta",
+    "invoice.label_mode": "bilingual",
+    "invoice.paper": "A4",
+    "invoice.number_format": "{seq}",
+    "invoice.seq_digits": "1",
+    "invoice.start_number": "101",
+    "billing.rates_include_gst": "true",
+    "eway.threshold_intra": "100000",
+    "eway.threshold_inter": "50000",
+    "credit.default_days": "30"
+  },
+  "productPatches": [
+    { "match": "TMT-*", "set": { "brand": "EXAMPLE" } }
+  ],
+  "rates": { "TMT": "70.80" },
+  "notes": "Sample profile. Copy it, fill in the business's real details, keep the copy out of version control, and start the server with TULA_PROFILE=path/to/profile.json. Never put sync tokens here: they go in the TULA_SYNC_TOKEN environment variable."
+}

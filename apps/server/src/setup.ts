@@ -192,3 +192,71 @@ async function applyDemo(ex: Exec, dev: string, owner: string, p: Preset) {
     }
   }
 }
+
+// ---------- Business profile: one business's real details, kept outside the product repo ----------
+export interface Profile {
+  /** preset to start from on first run, e.g. "building-materials" */
+  preset?: string;
+  /** setting key -> value (validated against the registry) */
+  settings?: Record<string, string>;
+  /** change products from the preset, e.g. { "match": "TMT-*", "set": { "brand": "ACME" } } */
+  productPatches?: Array<{ match: string; set: { brand?: string; name_en?: string; name_ta?: string; hsn?: string; gst?: string; minStock?: string } }>;
+  /** today's daily rates, e.g. { "TMT": "62.50" } */
+  rates?: Record<string, string>;
+  /** free-form notes for whoever installs it; ignored by the app */
+  notes?: unknown;
+}
+
+export function readProfile(path: string): Profile {
+  return JSON.parse(readFileSync(path, 'utf8')) as Profile;
+}
+
+/** Apply a profile to an existing business. Safe to run again with the same file. */
+export async function applyProfile(db: Db, profile: Profile) {
+  const { applyNumberingSettings } = await import('./bills');
+  const { getSettings } = await import('@tula/db');
+  const { checkSettingsConsistency, withDefaults } = await import('@tula/core');
+  const dev = (await one<{ value: string }>(db, "SELECT value FROM sync_state WHERE key = 'device_id'"))?.value;
+  if (!dev) throw new Error('Run setup before applying a profile');
+
+  const clean: Record<string, string> = {};
+  for (const [k, v] of Object.entries(profile.settings ?? {})) clean[k] = validateSetting(k, v);
+  const tx = await db.transaction('write');
+  try {
+    const current = withDefaults(await getSettings(tx));
+    const merged = withDefaults({ ...(await getSettings(tx)), ...clean });
+    const issues = checkSettingsConsistency(merged);
+    if (issues.length) throw new Error(`Profile settings are inconsistent: ${issues.join('; ')}`);
+    for (const [k, v] of Object.entries(clean)) await setSetting(tx, dev, k, v);
+    const numbering = ['invoice.prefix', 'invoice.number_format', 'invoice.seq_digits', 'invoice.start_number'].filter((k) => clean[k] !== undefined && clean[k] !== current[k as keyof typeof current]);
+    if (numbering.length) await applyNumberingSettings(tx, dev, merged, numbering);
+
+    let patched = 0;
+    for (const p of profile.productPatches ?? []) {
+      const like = p.match.replace(/[%_]/g, '\\$&').replace(/\*/g, '%');
+      const sets: string[] = [];
+      const args: Array<string | number> = [];
+      const add = (col: string, val: string | number) => { sets.push(`${col} = ?`); args.push(val); };
+      if (p.set.brand !== undefined) add('brand', p.set.brand);
+      if (p.set.name_en !== undefined) add('name_en', p.set.name_en);
+      if (p.set.name_ta !== undefined) add('name_ta', p.set.name_ta);
+      if (p.set.hsn !== undefined) add('hsn', p.set.hsn);
+      if (p.set.gst !== undefined) add('gst_bp', toPaise(p.set.gst));
+      if (p.set.minStock !== undefined) add('min_stock_milli', toMilli(p.set.minStock));
+      if (!sets.length) continue;
+      const r = await tx.execute({ sql: `UPDATE products SET ${sets.join(', ')}, updated_at = ? WHERE sku LIKE ? ESCAPE '\\' AND deleted = 0`, args: [...args, new Date().toISOString(), like] });
+      patched += r.rowsAffected;
+    }
+    for (const [group, rate] of Object.entries(profile.rates ?? {})) {
+      const today = todayIST();
+      await tx.execute({ sql: 'DELETE FROM daily_rates WHERE rate_group = ? AND rate_date = ?', args: [group, today] });
+      await insert(tx, 'daily_rates', dev, { rate_group: group, rate_date: today, rate_paise: toPaise(rate) });
+    }
+    await insert(tx, 'audit_log', dev, { at: new Date().toISOString(), entity: 'profile', entity_id: 'profile', action: 'update', after_json: { settings: Object.keys(clean), patched } });
+    await tx.commit();
+    return { settings: Object.keys(clean).length, productsPatched: patched };
+  } catch (e) {
+    if (!tx.closed) await tx.rollback();
+    throw e;
+  }
+}

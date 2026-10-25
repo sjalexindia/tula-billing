@@ -153,6 +153,21 @@ describe('amount in words', () => {
 
 import { checkSettingsConsistency, missingForBilling, validateSetting, withDefaults, stateName } from '../src';
 
+describe('GST-inclusive rates', () => {
+  it('keeps the line total equal to the quoted amount, to the paisa', () => {
+    const cement = calcLine({ rateQtyMilli: 50000, ratePaise: 42000, gstBp: 1800, inclusive: true }, 'intra');
+    expect(cement.total).toBe(2_100_000);
+    expect(cement.taxable).toBe(1_779_661);
+    expect(cement.cgst + cement.sgst).toBe(2_100_000 - 1_779_661);
+    expect(Math.abs(cement.cgst - cement.sgst)).toBeLessThanOrEqual(1);
+    const transport = calcLine({ rateQtyMilli: 1000, ratePaise: 80000, gstBp: 1800, inclusive: true }, 'inter');
+    expect(transport.total).toBe(80000);
+    expect(transport.igst).toBe(80000 - transport.taxable);
+    const discounted = calcLine({ rateQtyMilli: 10000, ratePaise: 11800, discountPaise: 1800, gstBp: 1800, inclusive: true }, 'intra');
+    expect(discounted.total).toBe(116200);
+  });
+});
+
 describe('settings registry', () => {
   it('validates values by type', () => {
     expect(validateSetting('business.state_code', '33')).toBe('33');
@@ -175,5 +190,38 @@ describe('settings registry', () => {
     const s = withDefaults({ 'gst.gstin': '33ABCDE1234F1Z5', 'business.state_code': '29', 'app.languages': 'en', 'app.default_lang': 'ta' });
     expect(checkSettingsConsistency(s)).toHaveLength(2);
     expect(stateName('29')).toBe('Karnataka');
+  });
+});
+
+import { validateDocFormat } from '../src';
+
+describe('configurable invoice numbering', () => {
+  const base = { prefix: 'RE', fy: '26-27', seriesCode: '', pad: 4 };
+  it('supports custom formats, including a plain running number', () => {
+    expect(formatDocNo({ ...base, format: '{seq}', pad: 1 }, 246)).toBe('246');
+    expect(formatDocNo({ ...base, format: '{prefix}-{yy}-{seq}' }, 7)).toBe('RE-26-0007');
+    expect(formatDocNo({ ...base, format: '{seq}/{fy}', seriesCode: 'M1' }, 3)).toBe('M10003/26-27');
+    expect(formatDocNo(base, 1)).toBe('RE/26-27/0001'); // default format
+  });
+  it('rejects bad formats', () => {
+    expect(() => validateDocFormat('{prefix}/{fy}')).toThrow(/\{seq\}/);
+    expect(() => validateDocFormat('{seq}{month}')).toThrow(/Unknown token/);
+    expect(() => validateDocFormat('INV #{seq}')).toThrow();
+  });
+  it('validates the new numeric settings', () => {
+    expect(validateSetting('invoice.start_number', '0246')).toBe('246');
+    expect(() => validateSetting('invoice.start_number', '0')).toThrow();
+    expect(() => validateSetting('invoice.seq_digits', '2.5')).toThrow();
+    expect(validateSetting('eway.threshold_intra', '1,00,000')).toBe('100000');
+    expect(validateSetting('credit.interest_pa', '18')).toBe('18');
+    expect(validateSetting('credit.interest_pa', '1.5')).toBe('1.5');
+    expect(() => validateSetting('credit.interest_pa', '40')).toThrow();
+    expect(validateSetting('invoice.prefix', '')).toBe('');
+  });
+  it('catches settings that would break numbering or bilingual printing', () => {
+    expect(checkSettingsConsistency(withDefaults({ 'invoice.prefix': '' }))).toContain('The number format uses {prefix}, so the invoice prefix cannot be empty');
+    expect(checkSettingsConsistency(withDefaults({ 'invoice.prefix': 'LONGPX', 'invoice.seq_digits': '8' })).join()).toMatch(/16 characters/);
+    expect(checkSettingsConsistency(withDefaults({ 'invoice.label_mode': 'bilingual' }))).toContain('Bilingual bills need two enabled languages');
+    expect(checkSettingsConsistency(withDefaults({ 'invoice.prefix': '', 'invoice.number_format': '{seq}', 'invoice.seq_digits': '1' }))).toEqual([]);
   });
 });
