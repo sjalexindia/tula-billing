@@ -1,0 +1,14 @@
+{
+  "name": "tula-billing",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "build": "npm run build -w packages/core -w packages/db",
+    "test": "npm test -w packages/core -w apps/server",
+    "dev:server": "npm run dev -w apps/server",
+    "dev:web": "npm run dev -w apps/web",
+    "typecheck": "tsc -b"
+  },
+  "engines": { "node": ">=20" }
+}

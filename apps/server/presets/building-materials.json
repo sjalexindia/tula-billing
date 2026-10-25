@@ -1,0 +1,524 @@
+{
+ "id": "building-materials",
+ "name": "Building materials and hardware",
+ "description": "Starter catalogue for steel, cement, paint, plumbing and fencing dealers. Brand-neutral; rates are 0 until set. HSN codes and GST rates are typical — confirm with your CA.",
+ "rateGroups": [
+  {
+   "code": "TMT",
+   "name_en": "TMT bars",
+   "name_ta": "TMT கம்பி",
+   "unit": "KG"
+  }
+ ],
+ "categories": [
+  {
+   "key": "tmt",
+   "name_en": "TMT bars",
+   "name_ta": "TMT கம்பிகள்"
+  },
+  {
+   "key": "wire",
+   "name_en": "Binding wire",
+   "name_ta": "கட்டு கம்பி"
+  },
+  {
+   "key": "cement",
+   "name_en": "Cement",
+   "name_ta": "சிமெண்ட்"
+  },
+  {
+   "key": "paint",
+   "name_en": "Paint",
+   "name_ta": "பெயிண்ட்"
+  },
+  {
+   "key": "plumbing",
+   "name_en": "Plumbing",
+   "name_ta": "குழாய் பொருட்கள்"
+  },
+  {
+   "key": "fencing",
+   "name_en": "Fencing",
+   "name_ta": "வேலி பொருட்கள்"
+  },
+  {
+   "key": "services",
+   "name_en": "Charges",
+   "name_ta": "கட்டணங்கள்",
+   "service": true
+  }
+ ],
+ "products": [
+  {
+   "sku": "TMT-08",
+   "name_en": "TMT bar 8mm Fe550D",
+   "name_ta": "TMT கம்பி 8மிமீ Fe550D",
+   "category": "tmt",
+   "hsn": "7214",
+   "gst": "18",
+   "unit": "KG",
+   "rate": {
+    "group": "TMT",
+    "extra": "3"
+   },
+   "minStock": "500",
+   "units": [
+    {
+     "unit": "ROD",
+     "steelRod": {
+      "diameterMm": 8,
+      "lengthM": "12"
+     }
+    },
+    {
+     "unit": "BDL",
+     "multipleOf": "ROD",
+     "count": 10
+    }
+   ],
+   "attrs": {
+    "size_mm": 8,
+    "grade": "Fe550D",
+    "length_m": 12
+   }
+  },
+  {
+   "sku": "TMT-10",
+   "name_en": "TMT bar 10mm Fe550D",
+   "name_ta": "TMT கம்பி 10மிமீ Fe550D",
+   "category": "tmt",
+   "hsn": "7214",
+   "gst": "18",
+   "unit": "KG",
+   "rate": {
+    "group": "TMT",
+    "extra": "1"
+   },
+   "minStock": "500",
+   "units": [
+    {
+     "unit": "ROD",
+     "steelRod": {
+      "diameterMm": 10,
+      "lengthM": "12"
+     }
+    },
+    {
+     "unit": "BDL",
+     "multipleOf": "ROD",
+     "count": 7
+    }
+   ],
+   "attrs": {
+    "size_mm": 10,
+    "grade": "Fe550D",
+    "length_m": 12
+   }
+  },
+  {
+   "sku": "TMT-12",
+   "name_en": "TMT bar 12mm Fe550D",
+   "name_ta": "TMT கம்பி 12மிமீ Fe550D",
+   "category": "tmt",
+   "hsn": "7214",
+   "gst": "18",
+   "unit": "KG",
+   "rate": {
+    "group": "TMT",
+    "extra": "0"
+   },
+   "minStock": "500",
+   "units": [
+    {
+     "unit": "ROD",
+     "steelRod": {
+      "diameterMm": 12,
+      "lengthM": "12"
+     }
+    },
+    {
+     "unit": "BDL",
+     "multipleOf": "ROD",
+     "count": 5
+    }
+   ],
+   "attrs": {
+    "size_mm": 12,
+    "grade": "Fe550D",
+    "length_m": 12
+   }
+  },
+  {
+   "sku": "TMT-16",
+   "name_en": "TMT bar 16mm Fe550D",
+   "name_ta": "TMT கம்பி 16மிமீ Fe550D",
+   "category": "tmt",
+   "hsn": "7214",
+   "gst": "18",
+   "unit": "KG",
+   "rate": {
+    "group": "TMT",
+    "extra": "0"
+   },
+   "minStock": "500",
+   "units": [
+    {
+     "unit": "ROD",
+     "steelRod": {
+      "diameterMm": 16,
+      "lengthM": "12"
+     }
+    },
+    {
+     "unit": "BDL",
+     "multipleOf": "ROD",
+     "count": 3
+    }
+   ],
+   "attrs": {
+    "size_mm": 16,
+    "grade": "Fe550D",
+    "length_m": 12
+   }
+  },
+  {
+   "sku": "TMT-20",
+   "name_en": "TMT bar 20mm Fe550D",
+   "name_ta": "TMT கம்பி 20மிமீ Fe550D",
+   "category": "tmt",
+   "hsn": "7214",
+   "gst": "18",
+   "unit": "KG",
+   "rate": {
+    "group": "TMT",
+    "extra": "0"
+   },
+   "minStock": "500",
+   "units": [
+    {
+     "unit": "ROD",
+     "steelRod": {
+      "diameterMm": 20,
+      "lengthM": "12"
+     }
+    },
+    {
+     "unit": "BDL",
+     "multipleOf": "ROD",
+     "count": 2
+    }
+   ],
+   "attrs": {
+    "size_mm": 20,
+    "grade": "Fe550D",
+    "length_m": 12
+   }
+  },
+  {
+   "sku": "TMT-25",
+   "name_en": "TMT bar 25mm Fe550D",
+   "name_ta": "TMT கம்பி 25மிமீ Fe550D",
+   "category": "tmt",
+   "hsn": "7214",
+   "gst": "18",
+   "unit": "KG",
+   "rate": {
+    "group": "TMT",
+    "extra": "0"
+   },
+   "minStock": "500",
+   "units": [
+    {
+     "unit": "ROD",
+     "steelRod": {
+      "diameterMm": 25,
+      "lengthM": "12"
+     }
+    },
+    {
+     "unit": "BDL",
+     "multipleOf": "ROD",
+     "count": 1
+    }
+   ],
+   "attrs": {
+    "size_mm": 25,
+    "grade": "Fe550D",
+    "length_m": 12
+   }
+  },
+  {
+   "sku": "TMT-32",
+   "name_en": "TMT bar 32mm Fe550D",
+   "name_ta": "TMT கம்பி 32மிமீ Fe550D",
+   "category": "tmt",
+   "hsn": "7214",
+   "gst": "18",
+   "unit": "KG",
+   "rate": {
+    "group": "TMT",
+    "extra": "0"
+   },
+   "minStock": "500",
+   "units": [
+    {
+     "unit": "ROD",
+     "steelRod": {
+      "diameterMm": 32,
+      "lengthM": "12"
+     }
+    },
+    {
+     "unit": "BDL",
+     "multipleOf": "ROD",
+     "count": 1
+    }
+   ],
+   "attrs": {
+    "size_mm": 32,
+    "grade": "Fe550D",
+    "length_m": 12
+   }
+  },
+  {
+   "sku": "BW-20",
+   "name_en": "Binding wire 20 gauge",
+   "name_ta": "கட்டு கம்பி 20 கேஜ்",
+   "category": "wire",
+   "hsn": "7217",
+   "gst": "18",
+   "unit": "KG",
+   "rate": {
+    "fixed": "0"
+   },
+   "minStock": "100"
+  },
+  {
+   "sku": "CEM-OPC53",
+   "name_en": "Cement OPC 53 grade (50 kg)",
+   "name_ta": "சிமெண்ட் OPC 53 (50 கிலோ)",
+   "category": "cement",
+   "hsn": "2523",
+   "gst": "18",
+   "unit": "BAG",
+   "rate": {
+    "fixed": "0"
+   },
+   "minStock": "50"
+  },
+  {
+   "sku": "CEM-PPC",
+   "name_en": "Cement PPC (50 kg)",
+   "name_ta": "சிமெண்ட் PPC (50 கிலோ)",
+   "category": "cement",
+   "hsn": "2523",
+   "gst": "18",
+   "unit": "BAG",
+   "rate": {
+    "fixed": "0"
+   },
+   "minStock": "50"
+  },
+  {
+   "sku": "PNT-EMU-20",
+   "name_en": "Interior emulsion 20 L",
+   "name_ta": "உட்புற எமல்ஷன் 20 லி",
+   "category": "paint",
+   "hsn": "3209",
+   "gst": "18",
+   "unit": "NOS",
+   "rate": {
+    "fixed": "0"
+   }
+  },
+  {
+   "sku": "PNT-PRM-20",
+   "name_en": "Wall primer 20 L",
+   "name_ta": "சுவர் ப்ரைமர் 20 லி",
+   "category": "paint",
+   "hsn": "3209",
+   "gst": "18",
+   "unit": "NOS",
+   "rate": {
+    "fixed": "0"
+   }
+  },
+  {
+   "sku": "PVC-110-6",
+   "name_en": "PVC pipe 110 mm 6 kg/cm²",
+   "name_ta": "PVC குழாய் 110 மிமீ 6 கி/செமீ²",
+   "category": "plumbing",
+   "hsn": "3917",
+   "gst": "18",
+   "unit": "MTR",
+   "rate": {
+    "fixed": "0"
+   },
+   "units": [
+    {
+     "unit": "LEN",
+     "factor": "6"
+    }
+   ]
+  },
+  {
+   "sku": "PVC-ELB-110",
+   "name_en": "PVC elbow 110 mm",
+   "name_ta": "PVC எல்போ 110 மிமீ",
+   "category": "plumbing",
+   "hsn": "3917",
+   "gst": "18",
+   "unit": "NOS",
+   "rate": {
+    "fixed": "0"
+   }
+  },
+  {
+   "sku": "FEN-BARB",
+   "name_en": "Barbed wire",
+   "name_ta": "முள் கம்பி",
+   "category": "fencing",
+   "hsn": "7313",
+   "gst": "18",
+   "unit": "KG",
+   "rate": {
+    "fixed": "0"
+   },
+   "units": [
+    {
+     "unit": "ROLL",
+     "factor": "25"
+    }
+   ]
+  },
+  {
+   "sku": "FEN-CHAIN",
+   "name_en": "Chain link mesh 4 ft",
+   "name_ta": "சங்கிலி வலை 4 அடி",
+   "category": "fencing",
+   "hsn": "7314",
+   "gst": "18",
+   "unit": "MTR",
+   "rate": {
+    "fixed": "0"
+   }
+  },
+  {
+   "sku": "SRV-TRANS",
+   "name_en": "Transport charges",
+   "name_ta": "போக்குவரத்து கட்டணம்",
+   "category": "services",
+   "hsn": "9965",
+   "gst": "18",
+   "unit": "NOS",
+   "rate": {
+    "fixed": "0"
+   },
+   "service": true
+  },
+  {
+   "sku": "SRV-LOAD",
+   "name_en": "Loading / unloading",
+   "name_ta": "ஏற்றுதல் / இறக்குதல்",
+   "category": "services",
+   "hsn": "9967",
+   "gst": "18",
+   "unit": "NOS",
+   "rate": {
+    "fixed": "0"
+   },
+   "service": true
+  }
+ ],
+ "demo": {
+  "settings": {
+   "business.name_en": "Demo Traders",
+   "business.name_ta": "டெமோ டிரேடர்ஸ்",
+   "business.tagline": "Steel · Cement · Paint · Plumbing",
+   "business.address": "12 Main Road, Demo Town",
+   "business.phone": "90000 00000",
+   "business.state_code": "33",
+   "gst.gstin": "33ABCDE1234F1Z5",
+   "business.upi_id": "demo@upi",
+   "business.bank_details": "Demo Bank | A/c 000000000 | IFSC DEMO0000001",
+   "app.languages": "en,ta",
+   "invoice.default_lang": "ta",
+   "invoice.prefix": "DT"
+  },
+  "rates": {
+   "TMT": "60"
+  },
+  "fixedRates": {
+   "BW-20": "75",
+   "CEM-OPC53": "380",
+   "CEM-PPC": "360"
+  },
+  "parties": [
+   {
+    "party_type": "customer",
+    "name_en": "Sample Builders",
+    "name_ta": "சாம்பிள் பில்டர்ஸ்",
+    "mobile": "9000000001",
+    "address": "Anna Nagar, Demo Town",
+    "state_code": "33",
+    "credit_limit": "300000",
+    "credit_days": 30,
+    "opening_balance": "25000",
+    "lang": "ta"
+   },
+   {
+    "party_type": "supplier",
+    "name_en": "Sample Steel Distributor",
+    "state_code": "33",
+    "credit_days": 15
+   }
+  ],
+  "openingStock": [
+   [
+    "TMT-08",
+    "1500",
+    "58"
+   ],
+   [
+    "TMT-10",
+    "2000",
+    "56.5"
+   ],
+   [
+    "TMT-12",
+    "3000",
+    "55.5"
+   ],
+   [
+    "TMT-16",
+    "2500",
+    "55.5"
+   ],
+   [
+    "TMT-20",
+    "1200",
+    "55.5"
+   ],
+   [
+    "TMT-25",
+    "600",
+    "55.5"
+   ],
+   [
+    "TMT-32",
+    "300",
+    "56"
+   ],
+   [
+    "BW-20",
+    "300",
+    "68"
+   ],
+   [
+    "CEM-OPC53",
+    "200",
+    "330"
+   ]
+  ]
+ }
+}

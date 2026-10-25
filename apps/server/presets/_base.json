@@ -1,0 +1,22 @@
+{
+  "id": "_base",
+  "description": "Loaded for every business: common units of measure (GST UQC codes) and a walk-in customer.",
+  "units": [
+    { "code": "NOS", "name_en": "Nos", "name_ta": "எண்ணிக்கை", "uqc": "NOS" },
+    { "code": "PCS", "name_en": "Pcs", "name_ta": "துண்டு", "uqc": "PCS" },
+    { "code": "KG", "name_en": "Kg", "name_ta": "கிலோ", "uqc": "KGS" },
+    { "code": "TON", "name_en": "Tonne", "name_ta": "டன்", "uqc": "TON" },
+    { "code": "BAG", "name_en": "Bag", "name_ta": "மூட்டை", "uqc": "BAG" },
+    { "code": "LTR", "name_en": "Litre", "name_ta": "லிட்டர்", "uqc": "LTR" },
+    { "code": "MTR", "name_en": "Metre", "name_ta": "மீட்டர்", "uqc": "MTR" },
+    { "code": "SQF", "name_en": "Sq. ft", "name_ta": "சதுர அடி", "uqc": "SQF" },
+    { "code": "BOX", "name_en": "Box", "name_ta": "பெட்டி", "uqc": "BOX" },
+    { "code": "SET", "name_en": "Set", "name_ta": "தொகுப்பு", "uqc": "SET" },
+    { "code": "ROLL", "name_en": "Roll", "name_ta": "சுருள்", "uqc": "ROL" },
+    { "code": "BDL", "name_en": "Bundle", "name_ta": "கட்டு", "uqc": "BDL" },
+    { "code": "ROD", "name_en": "Rod", "name_ta": "கம்பி", "uqc": "NOS" },
+    { "code": "LEN", "name_en": "Length", "name_ta": "நீளம்", "uqc": "NOS" },
+    { "code": "TIN", "name_en": "Tin", "name_ta": "டின்", "uqc": "NOS" }
+  ],
+  "walkIn": { "name_en": "Walk-in customer", "name_ta": "நேரடி வாடிக்கையாளர்" }
+}
