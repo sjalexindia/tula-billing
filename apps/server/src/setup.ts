@@ -1,7 +1,7 @@
 import {
   financialYear, roundDiv, steelRodWeightMilli, toMilli, toPaise, todayIST, validateSetting,
 } from '@tula/core';
-import { insert, one, setSetting, uuidv7, type Db, type Exec } from '@tula/db';
+import { all, insert, one, setSetting, update, uuidv7, type Db, type Exec } from '@tula/db';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -163,7 +163,8 @@ async function applyDemo(ex: Exec, dev: string, owner: string, p: Preset) {
   const fy = financialYear(today);
   for (const [group, rate] of Object.entries(d.rates ?? {})) await insert(ex, 'daily_rates', dev, { rate_group: group, rate_date: today, rate_paise: toPaise(rate) });
   for (const [sku, rate] of Object.entries(d.fixedRates ?? {})) {
-    await ex.execute({ sql: 'UPDATE products SET sale_rate_paise = ? WHERE sku = ?', args: [toPaise(rate), sku] });
+    const pid = await idOf(ex, 'products', 'sku', sku);
+    await update(ex, 'products', dev, pid, { sale_rate_paise: toPaise(rate) });
   }
   for (const pa of d.parties ?? []) {
     const id = await insert(ex, 'parties', dev, {
@@ -240,13 +241,16 @@ export async function applyProfile(db: Db, profile: Profile) {
       if (p.set.gst !== undefined) add('gst_bp', toPaise(p.set.gst));
       if (p.set.minStock !== undefined) add('min_stock_milli', toMilli(p.set.minStock));
       if (!sets.length) continue;
-      const r = await tx.execute({ sql: `UPDATE products SET ${sets.join(', ')}, updated_at = ? WHERE sku LIKE ? ESCAPE '\\' AND deleted = 0`, args: [...args, new Date().toISOString(), like] });
-      patched += r.rowsAffected;
+      const ids = await all<{ id: string }>(tx, `SELECT id FROM products WHERE sku LIKE ? ESCAPE '\\' AND deleted = 0`, [like]);
+      const patch = Object.fromEntries(sets.map((s, i) => [s.replace(' = ?', ''), args[i]]));
+      for (const r of ids) await update(tx, 'products', dev, r.id, patch);
+      patched += ids.length;
     }
     for (const [group, rate] of Object.entries(profile.rates ?? {})) {
       const today = todayIST();
-      await tx.execute({ sql: 'DELETE FROM daily_rates WHERE rate_group = ? AND rate_date = ?', args: [group, today] });
-      await insert(tx, 'daily_rates', dev, { rate_group: group, rate_date: today, rate_paise: toPaise(rate) });
+      const existing = await one<{ id: string }>(tx, 'SELECT id FROM daily_rates WHERE rate_group = ? AND rate_date = ?', [group, today]);
+      if (existing) await update(tx, 'daily_rates', dev, existing.id, { rate_paise: toPaise(rate), deleted: 0 });
+      else await insert(tx, 'daily_rates', dev, { rate_group: group, rate_date: today, rate_paise: toPaise(rate) });
     }
     await insert(tx, 'audit_log', dev, { at: new Date().toISOString(), entity: 'profile', entity_id: 'profile', action: 'update', after_json: { settings: Object.keys(clean), patched } });
     await tx.commit();

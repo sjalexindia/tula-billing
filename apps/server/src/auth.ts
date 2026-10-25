@@ -1,4 +1,4 @@
-import { all, insert, nowIso, one, type Db, type Exec } from '@tula/db';
+import { all, insert, nowIso, one, update, type Db, type Exec } from '@tula/db';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
@@ -165,7 +165,7 @@ export function registerAuth(app: FastifyInstance, db: Db, deviceId: string) {
     assertNotLocked(req.user!.id);
     if (!u || !verifyPin(body.currentPin, u.pin_hash)) { recordFailure(req.user!.id); throw new UserError('Current PIN is wrong', 'BAD_LOGIN', 401); }
     checkNewPin(body.newPin);
-    await db.execute({ sql: 'UPDATE users SET pin_hash = ?, pin_set_at = ?, updated_at = ? WHERE id = ?', args: [hashPin(body.newPin), nowIso(), nowIso(), req.user!.id] });
+    await update(db, 'users', deviceId, req.user!.id, { pin_hash: hashPin(body.newPin), pin_set_at: nowIso() });
     await insert(db, 'audit_log', deviceId, { at: nowIso(), user_id: req.user!.id, entity: 'users', entity_id: req.user!.id, action: 'update', reason: 'PIN changed' });
     return { ok: true };
   });
@@ -204,15 +204,14 @@ export function registerAuth(app: FastifyInstance, db: Db, deviceId: string) {
     if (!u) throw new UserError('User not found', 'NOT_FOUND', 404);
     const losingOwner = u.role === 'owner' && ((b.role && b.role !== 'owner') || b.active === false);
     if (losingOwner && (await countOwners(db, id)) === 0) throw new UserError('There must always be at least one active owner', 'LAST_OWNER');
-    const sets: string[] = [];
-    const args: Array<string | number | null> = [];
-    if (b.name !== undefined) { sets.push('name = ?'); args.push(b.name); }
-    if (b.role !== undefined) { sets.push('role = ?'); args.push(b.role); }
-    if (b.lang !== undefined) { sets.push('lang = ?'); args.push(b.lang ?? null); }
-    if (b.active !== undefined) { sets.push('active = ?'); args.push(b.active ? 1 : 0); }
-    if (b.pin !== undefined) { PinSchema.parse(b.pin); sets.push('pin_hash = ?', 'pin_set_at = NULL'); args.push(hashPin(b.pin)); }
-    if (!sets.length) return { ok: true };
-    await db.execute({ sql: `UPDATE users SET ${sets.join(', ')}, updated_at = ? WHERE id = ?`, args: [...args, nowIso(), id] });
+    const patch: Record<string, string | number | null> = {};
+    if (b.name !== undefined) patch.name = b.name;
+    if (b.role !== undefined) patch.role = b.role;
+    if (b.lang !== undefined) patch.lang = b.lang ?? null;
+    if (b.active !== undefined) patch.active = b.active ? 1 : 0;
+    if (b.pin !== undefined) { PinSchema.parse(b.pin); patch.pin_hash = hashPin(b.pin); patch.pin_set_at = null; }
+    if (!Object.keys(patch).length) return { ok: true };
+    await update(db, 'users', deviceId, id, patch);
     if (b.active === false || b.pin !== undefined || b.role !== undefined) await db.execute({ sql: 'DELETE FROM sessions WHERE user_id = ?', args: [id] });
     await insert(db, 'audit_log', deviceId, { at: nowIso(), user_id: req.user!.id, entity: 'users', entity_id: id, action: 'update', after_json: { ...b, pin: b.pin ? 'reset' : undefined } });
     return { ok: true };

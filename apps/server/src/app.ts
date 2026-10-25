@@ -2,7 +2,7 @@ import {
   checkSettingsConsistency, financialYear, isSettingKey, missingForBilling, SETTINGS, STATES, SUPPORTED_LANGS, todayIST, toPaise,
   validateSetting, withDefaults,
 } from '@tula/core';
-import { all, getSettings, insert, nowIso, one, setSetting, type Db } from '@tula/db';
+import { all, getSettings, insert, nowIso, one, setSetting, update, type Db } from '@tula/db';
 import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 import { existsSync } from 'node:fs';
@@ -133,8 +133,7 @@ export async function buildApp(db: Db, opts: { webDist?: string; logger?: boolea
     try {
       const existing = await one<{ id: string }>(tx, 'SELECT id FROM daily_rates WHERE rate_group = ? AND rate_date = ?', [group, date]);
       if (existing) {
-        await tx.execute({ sql: 'UPDATE daily_rates SET rate_paise = ?, updated_at = ?, device_id = ? WHERE id = ?', args: [ratePaise, nowIso(), deviceId, existing.id] });
-        await tx.execute({ sql: 'INSERT INTO sync_outbox (table_name,row_id,op,payload_json,created_at) VALUES (?,?,?,?,?)', args: ['daily_rates', existing.id, 'upsert', JSON.stringify({ id: existing.id, rate_paise: ratePaise }), nowIso()] });
+        await update(tx, 'daily_rates', deviceId, existing.id, { rate_paise: ratePaise });
       } else {
         await insert(tx, 'daily_rates', deviceId, { rate_group: group, rate_date: date, rate_paise: ratePaise });
       }

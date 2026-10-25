@@ -2,7 +2,7 @@ import {
   calcBill, calcLine, financialYear, formatDocNo, missingForBilling, roundDiv, supplyTypeFor, toBaseMilli, toMilli, toPaise,
   todayIST, withDefaults, type LineAmounts, type Settings,
 } from '@tula/core';
-import { all, getSettings, insert, one, type Db, type Exec } from '@tula/db';
+import { all, getSettings, insert, one, update, type Db, type Exec } from '@tula/db';
 import { z } from 'zod';
 import { accountId, partyAccountId, partyBalance, post } from './accounts';
 import { avgCost, getProduct, productUnits, resolveRate, stockOnHand } from './catalog';
@@ -56,7 +56,7 @@ export async function nextNumber(ex: Exec, deviceId: string, docType: string, fy
   const dev = await one<{ series_code: string }>(ex, 'SELECT series_code FROM devices WHERE id = ?', [deviceId]);
   const format = docType === 'INV' ? settings['invoice.number_format'] : undefined;
   const docNo = formatDocNo({ prefix: s.prefix, fy, seriesCode: dev?.series_code ?? '', pad: Number(s.pad), format }, Number(s.next_no));
-  await ex.execute({ sql: 'UPDATE number_series SET next_no = next_no + 1, updated_at = ? WHERE id = ?', args: [new Date().toISOString(), s.id] });
+  await update(ex, 'number_series', deviceId, s.id, { next_no: Number(s.next_no) + 1 });
   return docNo;
 }
 
@@ -73,7 +73,7 @@ export async function applyNumberingSettings(ex: Exec, deviceId: string, setting
   const values = { prefix: settings['invoice.prefix'], pad: Number(settings['invoice.seq_digits']), next_no: Number(settings['invoice.start_number']) };
   const existing = await one<{ id: string }>(ex, "SELECT id FROM number_series WHERE doc_type = 'INV' AND owner_device = ? AND fy = ? AND deleted = 0", [deviceId, fy]);
   if (existing) {
-    await ex.execute({ sql: 'UPDATE number_series SET prefix = ?, pad = ?, next_no = ?, updated_at = ? WHERE id = ?', args: [values.prefix, values.pad, values.next_no, new Date().toISOString(), existing.id] });
+    await update(ex, 'number_series', deviceId, existing.id, values);
   } else {
     await insert(ex, 'number_series', deviceId, { doc_type: 'INV', owner_device: deviceId, fy, ...values });
   }
