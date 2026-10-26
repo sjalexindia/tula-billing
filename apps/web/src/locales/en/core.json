@@ -228,7 +228,8 @@
       "single": "One language",
       "bilingual": "Both languages"
     },
-    "pickState": "Pick a state"
+    "pickState": "Pick a state",
+    "numberingLocked": "Bills are already made this year, so these can only change from next April: {{fields}}. Put them back and save again."
   },
   "auth": {
     "title": "Sign in",

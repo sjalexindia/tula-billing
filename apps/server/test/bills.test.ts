@@ -135,6 +135,9 @@ describe('bills (building-materials preset with demo data)', () => {
     const res = await app.inject({ method: 'PUT', url: '/api/settings', payload: { 'invoice.prefix': 'NEW' } });
     expect(res.statusCode).toBe(400);
     expect(res.json().error).toBe('NUMBERING_IN_USE');
+    // Said in shop words, not setting keys.
+    expect(res.json().message).toContain('invoice number prefix');
+    expect(res.json().message).not.toContain('invoice.');
   });
 });
 

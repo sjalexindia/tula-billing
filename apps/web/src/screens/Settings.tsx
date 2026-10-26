@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, type SettingsSchema } from '../api';
+import { api, ApiError, type SettingsSchema } from '../api';
 import { useApp } from '../App';
 import { UsersPanel } from './Users';
 
@@ -37,7 +37,11 @@ export function SettingsScreen() {
       await reloadSettings();
       setMessage({ kind: 'ok', text: t('settings.saved') });
     } catch (e) {
-      setMessage({ kind: 'error', text: (e as Error).message });
+      // Numbering is locked once the year's first bill exists: name the fields as they read on screen.
+      const locked = e instanceof ApiError && e.code === 'NUMBERING_IN_USE'
+        ? Object.keys(changed).filter((k) => k.startsWith('invoice.') && ['prefix', 'number_format', 'seq_digits', 'start_number'].includes(k.slice(8)))
+        : [];
+      setMessage({ kind: 'error', text: locked.length ? t('settings.numberingLocked', { fields: locked.map(label).join(', ') }) : (e as Error).message });
     } finally {
       setSaving(false);
     }
