@@ -3,6 +3,8 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import v8 from 'node:v8';
+import { runInNewContext } from 'node:vm';
 import { migrate, type Db, type Migration } from './index';
 
 /* Shop-computer only: open a database file with one queued connection, and read the migrations folder. */
@@ -87,4 +89,21 @@ export function queued(client: Client): Client {
       return typeof v === 'function' ? v.bind(target) : v;
     },
   });
+}
+
+let collect: (() => void) | null = null;
+
+/**
+ * Close a database and let go of the file at once. The libSQL client keeps the file open after
+ * close() until garbage collection frees its prepared statements, and on Windows an open file
+ * cannot be renamed or deleted (restore, CLI tools, tests). Collecting garbage here frees them.
+ */
+export async function closeDb(db: Pick<Db, 'close'>): Promise<void> {
+  db.close();
+  if (!collect) {
+    v8.setFlagsFromString('--expose-gc');
+    collect = runInNewContext('gc') as () => void;
+  }
+  collect();
+  await new Promise((r) => setTimeout(r, 0));
 }

@@ -1,5 +1,4 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -23,12 +22,6 @@ export function appVersion(): string {
   } catch {
     return '0.0.0';
   }
-}
-
-/** Folder holding the migration .sql files of @tula/db (used to refuse backups from a newer version). */
-export function migrationsDir(): string {
-  const req = createRequire(import.meta.url);
-  return join(dirname(req.resolve('@tula/db/package.json')), 'migrations');
 }
 
 // ---------- Paths (all derived from the database file) ----------

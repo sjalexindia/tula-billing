@@ -1,5 +1,5 @@
 import type { WorkerReply, WorkerRequest } from './db.worker';
-import type { RawResult, SqliteBackend } from './sqlite-client';
+import type { RawResult, SqliteBackend } from '@tula/db/wasm';
 
 type Pending = { resolve: (v: unknown) => void; reject: (e: Error) => void };
 type Req = WorkerRequest extends infer R ? (R extends { id: number } ? Omit<R, 'id'> : never) : never;

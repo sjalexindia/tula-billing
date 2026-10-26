@@ -4,7 +4,7 @@ import type { Db, Migration } from '@tula/db';
 import { openHub, type HubConfig, type HubDriver } from '@tula/server/sync/hub';
 import { setRunsLocally, setTransport } from '../platform';
 import { isJoined, joinBusiness, prepareDb, startRuntime, type PhoneRuntime } from './runtime';
-import { createSqliteClient } from './sqlite-client';
+import { createSqliteClient } from '@tula/db/wasm';
 import { openWorkerBackend } from './sqlite-worker';
 
 /*

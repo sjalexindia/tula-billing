@@ -1,6 +1,6 @@
 import { createClient } from '@libsql/client';
 import { insert, type Db } from '@tula/db';
-import { openDb } from '@tula/db/node';
+import { closeDb, openDb } from '@tula/db/node';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -24,7 +24,8 @@ const tempDir = () => {
   roots.push(d);
   return d;
 };
-afterAll(() => roots.forEach((d) => rmSync(d, { recursive: true, force: true })));
+// Windows keeps files of databases still open in this process locked; leftovers in the temp folder are harmless
+afterAll(() => roots.forEach((d) => { try { rmSync(d, { recursive: true, force: true }); } catch { /* still open */ } }));
 
 /** A real database file (WAL, like the shop), set up with demo data, owner signed in. */
 async function bootFile() {
@@ -289,7 +290,7 @@ describe('restore', () => {
     const dev = String((await db.execute("SELECT value FROM sync_state WHERE key='device_id'")).rows[0]![0]);
     for (let i = 0; i < 3; i++) await insert(db, 'audit_log', dev, { at: new Date().toISOString(), entity: 'test', entity_id: String(i), action: 'update', reason: 'after backup' });
     await setLocal(db, { [KEYS.time]: '18:45' }); // changed after the backup: must survive the restore
-    db.close();
+    await closeDb(db); // the server has stopped: the file must be free to swap
     writePending(dbFile, { backup: join(dbFile, '..', 'backups', file), requestedAt: '', requestedBy: null, safety: null, keep: { [KEYS.time]: '18:45' } });
 
     const out = await applyPendingRestore(dbFile);
@@ -301,7 +302,7 @@ describe('restore', () => {
     expect(await count(restored, 'SELECT COUNT(*) FROM audit_log')).toBe(before);
     expect(String((await restored.execute(`SELECT value FROM sync_state WHERE key='${KEYS.time}'`)).rows[0]![0])).toBe('18:45');
     expect(String((await restored.execute(`SELECT value FROM sync_state WHERE key='${KEYS.restoredFrom}'`)).rows[0]![0])).toBe(file);
-    restored.close();
+    await closeDb(restored);
     expect(readLastRestore(dbFile)?.ok).toBe(true);
     // nothing pending: nothing happens
     expect(await applyPendingRestore(dbFile)).toBeNull();
@@ -312,7 +313,7 @@ describe('restore', () => {
     const { file } = (await call({ method: 'POST', url: '/api/ops/backup/run' })).json();
     const path = join(dbFile, '..', 'backups', file);
     const n = await count(db, 'SELECT COUNT(*) FROM products');
-    db.close();
+    await closeDb(db); // the server has stopped: the file must be free to swap
 
     const damaged = path.replace('.db', '-9.db');
     const bytes = readFileSync(path);
@@ -325,7 +326,7 @@ describe('restore', () => {
     writeFileSync(newer, readFileSync(path));
     const c = createClient({ url: `file:${newer}` });
     await c.execute("INSERT INTO schema_migrations VALUES ('9999_future.sql', '')");
-    c.close();
+    await closeDb(c);
     writePending(dbFile, { backup: newer, requestedAt: '', requestedBy: null, safety: null, keep: {} });
     const out = await applyPendingRestore(dbFile);
     expect(out?.ok).toBe(false);
@@ -333,7 +334,7 @@ describe('restore', () => {
 
     const still = await openDb(`file:${dbFile}`);
     expect(await count(still, 'SELECT COUNT(*) FROM products')).toBe(n);
-    still.close();
+    await closeDb(still);
   });
 
   it('from the app: re-asks the PIN, takes a safety backup, leaves a marker and restarts', async () => {
@@ -414,7 +415,7 @@ process.on('SIGTERM', () => process.exit(0));
   it('swaps in a real backup before the server starts', async () => {
     const { db, dbFile, call } = await bootFile();
     const { file } = (await call({ method: 'POST', url: '/api/ops/backup/run' })).json();
-    db.close();
+    await closeDb(db); // the server has stopped: the file must be free to swap
     writePending(dbFile, { backup: join(dbFile, '..', 'backups', file), requestedAt: '', requestedBy: null, safety: null, keep: {} });
     const dir = tempDir();
     const log = join(dir, 'fake.log');

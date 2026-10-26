@@ -1,13 +1,14 @@
-import { createClient } from '@libsql/client';
 import { all, one, type Exec } from '@tula/db';
+import { loadMigrations } from '@tula/db/node';
 import { createHash, randomBytes } from 'node:crypto';
 import { closeSync, createReadStream, existsSync, openSync, readSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync, copyFileSync } from 'node:fs';
 import { basename, isAbsolute, join, relative, resolve } from 'node:path';
 import { z } from 'zod';
 import { UserError } from '../context';
+import { withDbFile } from './dbfile';
 import { acquireLock } from './lock';
 import {
-  appVersion, backupLockFile, dataDir, defaultBackupDir, errMessage, istDate, istMonth, istStamp, migrationsDir, tmpDir,
+  appVersion, backupLockFile, dataDir, defaultBackupDir, errMessage, istDate, istMonth, istStamp, tmpDir,
 } from './util';
 
 /**
@@ -258,8 +259,7 @@ export async function verifyDbFile(file: string): Promise<Verified> {
   const fd = openSync(file, 'r');
   try { readSync(fd, head, 0, 16, 0); } finally { closeSync(fd); }
   if (head.toString('latin1') !== 'SQLite format 3\0') throw new UserError('This file is not a Tula backup', 'BAD_BACKUP');
-  const c = createClient({ url: `file:${file}` });
-  try {
+  return withDbFile(file, async (c) => {
     const ic = await c.execute('PRAGMA integrity_check');
     const res = ic.rows.map((r) => String(r[0])).join('; ');
     if (res !== 'ok') throw new UserError(`The backup is damaged (${res.slice(0, 200)})`, 'BAD_BACKUP');
@@ -280,15 +280,13 @@ export async function verifyDbFile(file: string): Promise<Verified> {
       business = b ? String(b.value) || null : null;
     }
     return { migrations, deviceId: String(dev.value), counts, business };
-  } finally {
-    c.close();
-  }
+  });
 }
 
 /** Migrations in a backup that this version of Tula does not have (backup is from a newer version). */
 export function unknownMigrations(migrations: string[]): string[] {
-  let known: Set<string>;
-  try { known = new Set(readdirSync(migrationsDir()).filter((f) => f.endsWith('.sql'))); } catch { return []; }
+  // the same list the database was opened with; never "none known", which would let a newer backup through
+  const known = new Set(loadMigrations().map((m) => m.name));
   return migrations.filter((m) => !known.has(m));
 }
 

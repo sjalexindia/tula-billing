@@ -1,10 +1,9 @@
 import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
 import type { Db } from '@tula/db';
 import { loadMigrations, openDb } from '@tula/db/node';
+import { createSqliteClient, directBackend } from '@tula/db/wasm';
 import type { FastifyInstance, InjectOptions } from 'fastify';
 import { prepareDb, startRuntime } from '../../web/src/local/runtime';
-import { createSqliteClient } from '../../web/src/local/sqlite-client';
-import { directBackend } from '../../web/src/local/sqlite-direct';
 import { buildApp } from '../src/app';
 import { setup, type SetupOptions } from '../src/setup';
 import { nodeHubDriver } from '../src/sync/node-hub';

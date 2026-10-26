@@ -1,8 +1,8 @@
-import { createClient } from '@libsql/client';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { UserError } from '../context';
 import { KEYS, setLocal, unknownMigrations, verifyDbFile, type Verified } from './backup';
+import { withDbFile } from './dbfile';
 import { dataDir, errMessage, lastRestoreFile, pendingRestoreFile, tmpDir } from './util';
 
 /**
@@ -49,6 +49,8 @@ const SIDE_FILES = ['', '-wal', '-shm', '-journal'];
  * If the final rename fails, the old files are put back.
  */
 export async function swapIn(dbFile: string, candidate: string, keep: Record<string, string>, fromName: string, now = new Date()): Promise<void> {
+  // this computer's settings go into the candidate first, so the swap is the last step
+  await withDbFile(candidate, (c) => setLocal(c, { ...keep, [KEYS.restoredAt]: now.toISOString(), [KEYS.restoredFrom]: fromName }), { save: true });
   const keepDir = join(dataDir(dbFile), 'before-restore');
   mkdirSync(keepDir, { recursive: true });
   const base = basename(dbFile);
@@ -65,12 +67,6 @@ export async function swapIn(dbFile: string, candidate: string, keep: Record<str
   } catch (e) {
     for (const s of moved) renameSync(join(keepDir, base + s), dbFile + s);
     throw e;
-  }
-  const c = createClient({ url: `file:${dbFile}` });
-  try {
-    await setLocal(c, { ...keep, [KEYS.restoredAt]: now.toISOString(), [KEYS.restoredFrom]: fromName });
-  } finally {
-    c.close();
   }
 }
 

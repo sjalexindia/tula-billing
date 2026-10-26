@@ -22,6 +22,7 @@ Phase 1 covers everything a building-materials shop does in a day, on the shop c
 - Every screen in English and Tamil at 1366 px and 390 px: no page errors, no raw text keys, no sideways page scroll.
 - All ten workflows driven in a real browser as owner and counter clerk; 11 issues found and fixed.
 - Not yet run on a real Windows PC: the install / auto-start scripts were parsed and dry-run only.
+- The automated tests also pass on Windows (October 2026). Running them there found that backups left temp files and restore could not replace the database, because the libSQL client keeps a file open after close() until garbage collection; backup files are now checked in memory (`ops/dbfile.ts`) and `closeDb()` lets go of a file at once.
 
 ## Known gaps (Phase 2 backlog)
 - Some English remains in Tamil mode: server warnings, cash-book entry text, state names, GSTR-1 terms.

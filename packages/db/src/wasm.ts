@@ -1,8 +1,11 @@
 import type { Client, InArgs, InStatement, InValue, ResultSet, Row, Transaction, TransactionMode } from '@libsql/client';
+import type { Database, Sqlite3Static } from '@sqlite.org/sqlite-wasm';
 
 /*
- * A libSQL `Client` on top of the official SQLite WebAssembly build, so the shop computer's code
- * (packages/db, the API routes, the sync engine) runs unchanged inside the phone app.
+ * A libSQL `Client` on top of the official SQLite WebAssembly build (`@tula/db/wasm`), so the shop
+ * computer's code (packages/db, the API routes, the sync engine) runs unchanged inside the phone app.
+ * The shop computer also uses it for backup files, because a SQLite WebAssembly database in memory
+ * holds no file open (Windows cannot delete or replace a file that is open).
  *
  * The backend runs single statements and scripts; this file adds what the code relies on from
  * libSQL: result rows readable by index and by column name, batches and transactions, and one
@@ -192,4 +195,34 @@ export function createSqliteClient(backend: SqliteBackend): Client {
     reconnect() { /* one local file: nothing to reconnect */ },
   };
   return client as unknown as Client;
+}
+
+// ---------- running on a database in this thread ----------
+// The phone app uses this inside its database worker (apps/web/src/local/db.worker.ts, persistent
+// storage); the shop computer uses it for in-memory copies of backup files (apps/server/src/ops/dbfile.ts),
+// and tests in Node with an in-memory database.
+
+export function runOn(sqlite3: Sqlite3Static, db: Database, sql: string, args: unknown[]): RawResult {
+  const stmt = db.prepare(sql);
+  try {
+    if (args.length) stmt.bind(args as never);
+    const rows: unknown[][] = [];
+    if (stmt.columnCount > 0) {
+      const columns = stmt.getColumnNames();
+      while (stmt.step()) rows.push(stmt.get([]) as unknown[]);
+      return { columns, rows, rowsAffected: 0, lastInsertRowid: null };
+    }
+    stmt.step();
+    return { columns: [], rows, rowsAffected: db.changes(), lastInsertRowid: sqlite3.capi.sqlite3_last_insert_rowid(db) as number | bigint };
+  } finally {
+    stmt.finalize();
+  }
+}
+
+export function directBackend(sqlite3: Sqlite3Static, db: Database): SqliteBackend {
+  return {
+    run: async (sql, args) => runOn(sqlite3, db, sql, args),
+    script: async (sql) => { db.exec(sql); },
+    close: async () => { db.close(); },
+  };
 }

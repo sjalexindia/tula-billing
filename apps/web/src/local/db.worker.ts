@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 import sqlite3InitModule, { type Database, type Sqlite3Static } from '@sqlite.org/sqlite-wasm';
-import { runOn } from './sqlite-direct';
+import { runOn } from '@tula/db/wasm';
 
 /*
  * The phone's database, in a Web Worker. SQLite WebAssembly keeps the file in the app's private

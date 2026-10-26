@@ -4,6 +4,7 @@ import { createInterface } from 'node:readline/promises';
 import { backupFolders, findBackup, getBackupConfig, getLocal, MACHINE_KEYS, readSidecar, runBackup } from '../ops/backup';
 import { prepareCandidate, swapIn } from '../ops/restore';
 import { errMessage } from '../ops/util';
+import { closeDb } from '@tula/db/node';
 import { cliSetup, fail, flag, openExisting, positional, runningInfo } from './common';
 
 /**
@@ -48,7 +49,7 @@ try {
     const safety = await runBackup(current, dbFile, { kind: 'safety' });
     console.log(`Safety backup of the current data: ${safety.path}`);
     keep = await getLocal(current, MACHINE_KEYS);
-    current.close();
+    await closeDb(current);
   }
   await swapIn(dbFile, candidate, keep, basename(path));
   console.log('Restored. Start Tula again (Start-ScheduledTask Tula, or systemctl start tula).');

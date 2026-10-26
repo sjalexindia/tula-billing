@@ -72,7 +72,7 @@ afterAll(() => {
   hub?.close();
   A?.db.close();
   B?.db.close();
-  rmSync(dir, { recursive: true, force: true });
+  try { rmSync(dir, { recursive: true, force: true }); } catch { /* Windows: files of databases closed a moment ago may still be locked */ }
 });
 
 describe('cloud replica sync', () => {
