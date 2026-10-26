@@ -53,7 +53,7 @@ export function OpeningStock() {
         <span className="page-sum">{t('opening.total')}: {formatRs(total)}</span>
       </div>
       <p className="hint">{t('opening.help')}</p>
-      <table className="grid compact">
+      <div className="scroll-x"><table className="grid compact">
         <thead><tr><th>{t('items.title')}</th><th className="r">{t('opening.qty')}</th><th className="r">{t('opening.cost')}</th><th className="r">{t('opening.value')}</th></tr></thead>
         <tbody>
           {rows.map((r) => {
@@ -69,7 +69,7 @@ export function OpeningStock() {
             );
           })}
         </tbody>
-      </table>
+      </table></div>
       <div className="form-actions">
         {msg && <p className={msg.ok ? 'saved-note' : 'field-error'} role={msg.ok ? 'status' : 'alert'}>{msg.text}</p>}
         <button type="submit" className="btn primary" disabled={saving}>{saving ? t('common.saving') : t('opening.save')}</button>

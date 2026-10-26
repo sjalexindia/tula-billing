@@ -32,7 +32,7 @@ function ItemList() {
       </div>
       <input className="search" type="search" placeholder={t('items.search')} value={q} onChange={(e) => setQ(e.target.value)} aria-label={t('common.search')} />
       {rows.length === 0 ? <p className="empty">{t('items.none')}</p> : shown.length === 0 ? <p className="empty">{t('items.noMatch')}</p> : (
-        <table className="grid">
+        <div className="scroll-x"><table className="grid">
           <thead>
             <tr><th>{t('items.code')}</th><th>{t('common.name')}</th><th>{t('items.category')}</th><th className="r">{t('bill.rate')}</th><th>{t('items.gst')}</th><th className="r">{t('items.stock')}</th></tr>
           </thead>
@@ -48,7 +48,7 @@ function ItemList() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       )}
     </section>
   );
@@ -184,7 +184,7 @@ function ItemEditor({ id }: { id?: string }) {
         <h2>{t('items.largerUnits')}</h2>
         <p className="hint">{t('items.largerHelp')}</p>
         {uRows.length > 0 && (
-          <table className="grid compact">
+          <div className="scroll-x"><table className="grid compact">
             <thead><tr><th>{t('items.unit')}</th><th className="r">{t('items.howMany', { base: unitName(f.baseUnit) })}</th><th>{t('items.calculated')}</th><th>{t('items.onBill')}</th><th /></tr></thead>
             <tbody>
               {uRows.map((r) => (
@@ -206,7 +206,7 @@ function ItemEditor({ id }: { id?: string }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
         <button type="button" className="btn small" onClick={() => setURows((rs) => [...rs, { key: k++, unit: '', factor: '', onBill: true, theoretical: false }])}>{t('items.addUnit')}</button>
       </fieldset>

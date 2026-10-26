@@ -30,7 +30,7 @@ function PartyList() {
         {me?.role !== 'viewer' && <a className="btn primary" href="#/customers/new">{t('parties.add')}</a>}
       </div>
       <input className="search" type="search" placeholder={t('parties.search')} value={q} onChange={(e) => setQ(e.target.value)} aria-label={t('common.search')} />
-      <table className="grid">
+      <div className="scroll-x"><table className="grid">
         <thead><tr><th>{t('common.name')}</th><th>{t('parties.mobile')}</th><th>{t('parties.type')}</th><th className="r">{t('parties.balance')}</th></tr></thead>
         <tbody>
           {shown.map((r) => (
@@ -42,7 +42,7 @@ function PartyList() {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
     </section>
   );
 }
@@ -180,7 +180,7 @@ function PartyEditor({ id }: { id?: string }) {
           <p className="hint">{t('parties.ratesHelp')}</p>
           <datalist id="rate-items">{catalog.map((c) => <option key={c.id} value={c.sku}>{nameIn(ui, c.nameEn, c.nameTa)}</option>)}</datalist>
           {rates.length > 0 && (
-            <table className="grid compact">
+            <div className="scroll-x"><table className="grid compact">
               <thead><tr><th>{t('parties.item')}</th><th className="r">{t('parties.fixedRate')}</th><th className="r">{t('parties.adjust')}</th><th /></tr></thead>
               <tbody>
                 {rates.map((r) => {
@@ -196,7 +196,7 @@ function PartyEditor({ id }: { id?: string }) {
                   );
                 })}
               </tbody>
-            </table>
+            </table></div>
           )}
           <div className="form-actions left">
             <button type="button" className="btn small" onClick={() => setRates((rs) => [...rs, { key: Date.now(), sku: '', rate: '', adjust: '' }])}>{t('parties.addRate')}</button>

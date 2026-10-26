@@ -350,3 +350,6 @@ td.owed, .page-sum.owed { color: var(--danger); }
   .subtabs a { white-space: nowrap; }
   .topbar .rates { flex: 1 1 auto; }
 }
+
+/* Wide tables scroll sideways inside their box instead of widening the page */
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
