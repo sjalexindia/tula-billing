@@ -122,7 +122,8 @@ export function registerOps(app: FastifyInstance, db: Db, _deviceId: string): vo
     if (!u || !verifyPin(body.pin, u.pin_hash)) {
       restoreFails.count += 1;
       if (restoreFails.count >= 3) { restoreFails.count = 0; restoreFails.until = Date.now() + 5 * 60000; }
-      throw new UserError('Wrong PIN', 'BAD_PIN', 401);
+      // not 401: the app treats 401 as "signed out"
+      throw new UserError('Wrong PIN', 'BAD_PIN', 403);
     }
     restoreFails.count = 0;
     if (!supervised()) {

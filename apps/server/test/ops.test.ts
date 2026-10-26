@@ -343,7 +343,8 @@ describe('restore', () => {
     let restarted = 0;
     setRestartForRestore(() => { restarted++; });
     try {
-      expect((await call({ method: 'POST', url: '/api/ops/restore', payload: { file, pin: '0000' } })).statusCode).toBe(401);
+      expect((await call({ method: 'POST', url: '/api/ops/restore', payload: { file, pin: '0000' } })).json().error).toBe('BAD_PIN');
+      expect((await call('/api/ops/backup')).statusCode).toBe(200); // still signed in
       expect((await call({ method: 'POST', url: '/api/ops/restore', payload: { file: '../tula.db', pin: '4826' } })).statusCode).toBe(404);
       expect(restarted).toBe(0);
       const r = await call({ method: 'POST', url: '/api/ops/restore', payload: { file, pin: '4826' } });

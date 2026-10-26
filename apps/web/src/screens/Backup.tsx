@@ -45,11 +45,12 @@ export function Backup(_props: ScreenProps) {
   const [info, setInfo] = useState<MachineInfo | null>(null);
   const [loadError, setLoadError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [runMsg, setRunMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  // key + values, so the message follows a language switch
+  const [runMsg, setRunMsg] = useState<{ ok: boolean; key: string; values: Record<string, string> } | null>(null);
   const [folder, setFolder] = useState('');
   const [time, setTime] = useState('21:00');
   const [enabled, setEnabled] = useState(true);
-  const [cfgMsg, setCfgMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [cfgMsg, setCfgMsg] = useState<{ ok: boolean; text: string; key?: string } | null>(null);
   const [restoring, setRestoring] = useState<BackupItem | null>(null);
   const [restarting, setRestarting] = useState(false);
 
@@ -75,9 +76,9 @@ export function Backup(_props: ScreenProps) {
     setRunMsg(null);
     try {
       const r = await opsApi.runNow();
-      setRunMsg(r.warningFolder ? { ok: false, text: t('ops.savedLocalOnly', { folder: r.warningFolder }) } : { ok: true, text: t('ops.backupDone', { size: formatBytes(r.sizeBytes) }) });
+      setRunMsg(r.warningFolder ? { ok: false, key: 'ops.savedLocalOnly', values: { folder: r.warningFolder } } : { ok: true, key: 'ops.backupDone', values: { size: formatBytes(r.sizeBytes) } });
     } catch (e) {
-      setRunMsg({ ok: false, text: t('ops.backupFailed', { reason: (e as Error).message }) });
+      setRunMsg({ ok: false, key: 'ops.backupFailed', values: { reason: (e as Error).message } });
     } finally {
       setBusy(false);
       void load();
@@ -90,7 +91,7 @@ export function Backup(_props: ScreenProps) {
       const st = await opsApi.saveConfig({ folder, time, enabled });
       setS(st);
       setFolder(st.isDefaultFolder ? '' : st.folder);
-      setCfgMsg({ ok: true, text: t('ops.settingsSaved') });
+      setCfgMsg({ ok: true, text: '', key: 'ops.settingsSaved' });
     } catch (e) {
       setCfgMsg({ ok: false, text: (e as Error).message });
     }
@@ -127,7 +128,7 @@ export function Backup(_props: ScreenProps) {
         {s.folderError && <p className="notice ops-problem">{t('ops.folderMissing', { folder: s.folder })}</p>}
         {s.lastRestore && !s.lastRestore.ok && <p className="notice ops-problem">{t('ops.restoreFailed', { reason: s.lastRestore.error ?? '' })}</p>}
         {s.restored && <p className="hint">{t('ops.restoredFrom', { file: s.restored.from, when: when(s.restored.at) })}</p>}
-        {runMsg && <p className={runMsg.ok ? 'saved-note' : 'field-error'} role={runMsg.ok ? 'status' : 'alert'}>{runMsg.text}</p>}
+        {runMsg && <p className={runMsg.ok ? 'saved-note' : 'field-error'} role={runMsg.ok ? 'status' : 'alert'}>{t(runMsg.key, runMsg.values)}</p>}
       </section>
 
       <section className="page">
@@ -150,7 +151,7 @@ export function Backup(_props: ScreenProps) {
             {t('ops.dailyOn')}
           </label>
           <div className="ops-actions">
-            {cfgMsg && <p className={cfgMsg.ok ? 'saved-note' : 'field-error'} role={cfgMsg.ok ? 'status' : 'alert'}>{cfgMsg.text}</p>}
+            {cfgMsg && <p className={cfgMsg.ok ? 'saved-note' : 'field-error'} role={cfgMsg.ok ? 'status' : 'alert'}>{cfgMsg.key ? t(cfgMsg.key) : cfgMsg.text}</p>}
             <button type="submit" className="btn primary" disabled={!changed}>{t('ops.saveSettings')}</button>
           </div>
         </form>

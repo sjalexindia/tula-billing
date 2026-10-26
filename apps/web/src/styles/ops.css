@@ -1,6 +1,6 @@
 /* Backup screen. Reuses .page, .field, .btn, .notice, .hint; only what is specific lives here. */
 .ops.stack { display: grid; gap: 16px; }
-.ops-h2 { font-size: 17px; margin-bottom: 12px; }
+.page h2.ops-h2 { font-size: 17px; margin: 0 0 12px; }
 
 .ops-status { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 14px 16px; border-radius: var(--radius); border-left: 6px solid var(--ok); background: #eef6f1; }
 .ops-status.warn { border-left-color: var(--mark); background: var(--mark-soft); }
