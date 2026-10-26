@@ -52,7 +52,7 @@ export function Outstanding(_props: ScreenProps) {
         <span className="page-sum owed">{formatRs(data.totals.balancePaise)}</span>
       </div>
       <div className="tiles">
-        <div className="tile danger"><span>{t('sales.out.overdue')}</span><b>{formatRs(data.totals.overduePaise)}</b></div>
+        <div className={`tile${data.totals.overduePaise > 0 ? ' danger' : ''}`}><span>{t('sales.out.overdue')}</span><b>{formatRs(data.totals.overduePaise)}</b></div>
         {BUCKETS.map((k) => <div className="tile" key={k}><span>{t(`sales.out.buckets.${k}`)}</span><b>{formatRs(data.totals.buckets[k])}</b></div>)}
         {showInterest && <div className="tile"><span>{t('sales.out.interest', { rate: data.interestPa })}</span><b>{formatRs(data.totals.interestPaise)}</b></div>}
       </div>
