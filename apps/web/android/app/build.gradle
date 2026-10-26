@@ -7,8 +7,9 @@ android {
         applicationId "in.tula.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // Android installs an APK over an older one only when this number is higher: CI passes its run number.
+        versionCode((System.getenv('TULA_VERSION_CODE') ?: '1').toInteger())
+        versionName(System.getenv('TULA_VERSION_NAME') ?: "1.0")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +17,22 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Release signing: the shop's own key, given only through the environment (GitHub secrets in CI,
+    // see .github/workflows/android.yml and docs/07). Without it a release build is not signed.
+    def keystore = System.getenv('TULA_KEYSTORE_FILE')
+    signingConfigs {
+        if (keystore) {
+            release {
+                storeFile file(keystore)
+                storePassword System.getenv('TULA_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('TULA_KEY_ALIAS')
+                keyPassword System.getenv('TULA_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
+            if (keystore) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
