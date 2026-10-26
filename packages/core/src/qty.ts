@@ -58,3 +58,16 @@ export function splitIntoUnits(baseMilli: Milli, factorMilli: Milli): { whole: n
   const whole = Math.floor(baseMilli / factorMilli);
   return { whole, remainderMilli: baseMilli - whole * factorMilli };
 }
+
+/**
+ * Stock in the largest larger unit, exactly: "46 Bundle + 13.35 Kg" (whole larger units, then what is left
+ * in the base unit). With a theoretical unit (a bundle or rod by calculated weight) it is an estimate: "≈ 46 Bundle…".
+ * Empty when there is not even one larger unit.
+ */
+export function largerUnitText(baseMilli: Milli, factorMilli: Milli, largerName: string, baseName: string, theoretical = false): string {
+  if (baseMilli <= 0 || factorMilli <= 0) return '';
+  const { whole, remainderMilli } = splitIntoUnits(baseMilli, factorMilli);
+  if (!whole) return '';
+  const rest = remainderMilli ? ` + ${formatQty(remainderMilli, { decimals: 2, trimZeros: true })} ${baseName}` : '';
+  return `${theoretical ? '≈ ' : ''}${whole.toLocaleString('en-IN')} ${largerName}${rest}`;
+}

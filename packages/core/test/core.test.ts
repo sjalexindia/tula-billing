@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  amountInWords, calcBill, calcLine, financialYear, financialYearRange, formatDocNo, formatQty, formatRs,
+  amountInWords, calcBill, calcLine, financialYear, financialYearRange, formatDocNo, formatQty, formatRs, largerUnitText,
   numberToWordsEn, numberToWordsTa, roundDiv, roundToRupee, splitIntoUnits, stateFromGstin, steelRodWeightMilli,
   supplyTypeFor, taxFor, toBaseMilli, toMilli, toPaise, todayIST,
 } from '../src';
@@ -67,6 +67,13 @@ describe('quantities and steel', () => {
   });
   it('splits stock into whole bundles + remainder', () => {
     expect(splitIntoUnits(2466670, 53333)).toEqual({ whole: 46, remainderMilli: 2466670 - 46 * 53333 });
+  });
+  it('shows stock in the larger unit with the rest in the base unit, not rounded down', () => {
+    expect(largerUnitText(2466670, 53333, 'Bundle', 'Kg')).toBe('46 Bundle + 13.35 Kg');
+    expect(largerUnitText(2466670, 53333, 'Bundle', 'Kg', true)).toBe('≈ 46 Bundle + 13.35 Kg');
+    expect(largerUnitText(500000, 50000, 'Bag', 'Kg')).toBe('10 Bag'); // nothing left over
+    expect(largerUnitText(20000, 50000, 'Bag', 'Kg')).toBe(''); // not even one bag
+    expect(largerUnitText(-5000, 50000, 'Bag', 'Kg')).toBe('');
   });
 });
 

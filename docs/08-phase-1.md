@@ -26,8 +26,6 @@ Phase 1 covers everything a building-materials shop does in a day, on the shop c
 
 ## Known gaps (Phase 2 backlog)
 - Some English remains in Tamil mode: server warnings, cash-book entry text, state names, GSTR-1 terms.
-- Stock "≈ in larger unit" rounds down.
-- Saving settings is all-or-nothing when one change is refused.
 - Return screen item names follow the bill's language.
 - A lost phone can't be cut off at once without changing every device's token: Turso can't revoke one token. Each phone gets its own token that expires (30 days suggested), and Devices & sync warns before it runs out (docs/07 §2).
 

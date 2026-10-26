@@ -28,8 +28,8 @@ export async function stockSummary(ex: Exec, asOf: string, slowDays: number): Pr
     WHERE p.deleted = 0 AND p.track_stock = 1
     ORDER BY p.sku`, [asOf, asOf]);
   // unit code breaks ties between equal-sized units, so every device shows the same one
-  const larger = await all<{ product_id: string; factor_milli: number; name_en: string; name_ta: string | null }>(ex, `
-    SELECT pu.product_id, pu.factor_milli, u.name_en, u.name_ta FROM product_units pu JOIN units u ON u.id = pu.unit_id
+  const larger = await all<{ product_id: string; factor_milli: number; is_theoretical: number; name_en: string; name_ta: string | null }>(ex, `
+    SELECT pu.product_id, pu.factor_milli, pu.is_theoretical, u.name_en, u.name_ta FROM product_units pu JOIN units u ON u.id = pu.unit_id
     WHERE pu.deleted = 0 ORDER BY pu.factor_milli DESC, u.code`);
   const largest = new Map<string, (typeof larger)[number]>();
   for (const l of larger) if (!largest.has(l.product_id)) largest.set(l.product_id, l);
@@ -39,12 +39,16 @@ export async function stockSummary(ex: Exec, asOf: string, slowDays: number): Pr
     const qty = n(p.qty);
     const avg = costs.get(String(p.id)) ?? 0;
     const big = largest.get(String(p.id));
-    const split = big && qty > 0 ? splitIntoUnits(qty, n(big.factor_milli)) : null;
+    const whole = big && qty > 0 ? splitIntoUnits(qty, n(big.factor_milli)).whole : 0;
     const status = qty < 0 ? 'NEGATIVE' : qty === 0 ? 'OUT' : qty <= n(p.min_stock_milli) ? 'LOW' : 'OK';
     const lastSale = p.last_sale ? String(p.last_sale) : null;
     return {
       sku: p.sku, item: { en: p.name_en, ta: p.name_ta }, qty, unit: { en: p.unit_en, ta: p.unit_ta },
-      larger: split && big ? { whole: split.whole, en: big.name_en, ta: big.name_ta } : null,
+      // shown as "46 Bundle + 13.35 Kg" (largerUnitText), not rounded down to whole bundles
+      larger: whole && big ? {
+        whole, qtyMilli: qty, factorMilli: n(big.factor_milli), theoretical: !!n(big.is_theoretical),
+        en: big.name_en, ta: big.name_ta, baseEn: p.unit_en, baseTa: p.unit_ta,
+      } : null,
       avg_cost: avg, value: roundDiv(qty * avg, 1000), min_stock: n(p.min_stock_milli), status,
       last_sale: lastSale, days_since_sale: lastSale ? daysBetween(lastSale, asOf) : null,
     };

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api, type Category, type ProductInput, type ProductRow, type RateGroupRow, type Unit } from '../api';
 import { useApp } from '../App';
+import { DeleteButton } from '../components/DeleteButton';
 import { nameIn } from '../i18n';
 
 const GST_RATES = ['0', '5', '18', '40', '3', '0.25', '12', '28'];
@@ -220,6 +221,7 @@ function ItemEditor({ id }: { id?: string }) {
         <div className="form-actions">
           <a className="btn" href="#/items">{t('common.cancel')}</a>
           <button type="submit" className="btn primary" disabled={saving}>{saving ? t('common.saving') : t('common.save')}</button>
+          {id && <DeleteButton kind="products" id={id} name={f.name_en} onDone={() => { location.hash = '#/items'; }} />}
         </div>
       )}
     </form>

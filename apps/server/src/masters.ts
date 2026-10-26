@@ -59,8 +59,12 @@ export const ProductBody = z.object({
 export type ProductBody = z.infer<typeof ProductBody>;
 
 export async function saveProduct(ex: Exec, dev: string, b: ProductBody, existingId?: string) {
-  const dupe = await one<{ id: string }>(ex, 'SELECT id FROM products WHERE sku = ? AND deleted = 0', [b.sku]);
-  if (dupe && dupe.id !== existingId) throw new UserError(`Item code ${b.sku} is already used`, 'DUPLICATE');
+  // item codes are unique even among deleted items (they stay in the recycle bin)
+  const dupe = await one<{ id: string; deleted: number }>(ex, 'SELECT id, deleted FROM products WHERE sku = ?', [b.sku]);
+  if (dupe && dupe.id !== existingId) {
+    if (Number(dupe.deleted)) throw new UserError(`Item code ${b.sku} belongs to a deleted item. Restore it from the recycle bin, or use another code.`, 'DUPLICATE');
+    throw new UserError(`Item code ${b.sku} is already used`, 'DUPLICATE');
+  }
   if (!(await one(ex, 'SELECT id FROM categories WHERE id = ? AND deleted = 0', [b.categoryId]))) throw new UserError('Pick a category', 'BAD_CATEGORY');
   const base = await unitId(ex, b.baseUnit);
   if (b.rateMode === 'daily') {
@@ -211,7 +215,7 @@ export function registerMasters(app: Router, db: Db, dev: string) {
 
   // ---------- Products ----------
   app.get('/api/products', async () => all(db, `
-    SELECT p.id, p.sku, p.name_en, p.name_ta, p.brand, p.hsn, p.gst_bp, p.active, p.track_stock, p.rate_mode, p.rate_group,
+    SELECT p.id, p.sku, p.category_id, p.name_en, p.name_ta, p.brand, p.hsn, p.gst_bp, p.active, p.track_stock, p.rate_mode, p.rate_group,
            p.rate_extra_paise, p.sale_rate_paise, u.code AS base_unit, c.name_en AS category_en, c.name_ta AS category_ta,
            COALESCE((SELECT SUM(qty_milli) FROM stock_moves m WHERE m.product_id = p.id AND m.deleted = 0), 0) AS stock_milli
     FROM products p JOIN units u ON u.id = p.base_unit_id JOIN categories c ON c.id = p.category_id

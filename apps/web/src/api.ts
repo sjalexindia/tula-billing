@@ -34,7 +34,8 @@ export interface BillInput {
 }
 
 export class ApiError extends Error {
-  constructor(message: string, public status: number, public code?: string) { super(message); }
+  /** `details`: extra facts from the server, e.g. { refused: { key: reason } } when settings were not saved */
+  constructor(message: string, public status: number, public code?: string, public details?: unknown) { super(message); }
 }
 
 /** Called whenever the server says the session is gone, so the app can show the sign-in screen. */
@@ -48,7 +49,7 @@ export interface Category { id: string; name_en: string; name_ta: string | null;
 export interface Unit { id: string; code: string; name_en: string; name_ta: string | null; gst_uqc: string | null }
 export interface RateGroupRow { id: string; code: string; name_en: string; name_ta: string | null; show_on_topbar: number; unit: string | null }
 export interface ProductRow {
-  id: string; sku: string; name_en: string; name_ta: string | null; brand: string | null; hsn: string | null; gst_bp: number; active: number;
+  id: string; sku: string; category_id: string; name_en: string; name_ta: string | null; brand: string | null; hsn: string | null; gst_bp: number; active: number;
   track_stock: number; rate_mode: 'fixed' | 'daily'; rate_group: string | null; rate_extra_paise: number; sale_rate_paise: number;
   base_unit: string; category_en: string; category_ta: string | null; stock_milli: number;
 }
@@ -85,7 +86,7 @@ export async function req<T>(method: string, url: string, body?: unknown, allow4
   if (res.status === 401 && !url.startsWith('/api/auth/login')) onSignedOut();
   if (!res.ok && !(allow409 && res.status === 409 && (data as { saved?: boolean })?.saved === false)) {
     const d = data as { message?: string; error?: string } | null;
-    throw new ApiError(d?.message ?? res.statusText, res.status, d?.error);
+    throw new ApiError(d?.message ?? res.statusText, res.status, d?.error, (d as { details?: unknown } | null)?.details);
   }
   return data as T;
 }
@@ -114,7 +115,7 @@ export const api = {
   saveOpening: (lines: Array<{ productId: string; qty: string; cost: string }>) => req<{ items: number }>('PUT', '/api/stock/opening', { lines }),
   settings: () => req<SettingsState>('GET', '/api/settings'),
   settingsSchema: () => req<SettingsSchema>('GET', '/api/settings/schema'),
-  saveSettings: (values: Record<string, string>) => req<SettingsState>('PUT', '/api/settings', values),
+  saveSettings: (values: Record<string, string>) => req<SettingsState & { saved: string[]; refused: Record<string, string> }>('PUT', '/api/settings', values),
   catalog: () => req<CatalogItem[]>('GET', '/api/catalog'),
   parties: () => req<Party[]>('GET', '/api/parties'),
   partiesAll: () => req<Party[]>('GET', '/api/parties?all=1'),
