@@ -81,6 +81,8 @@ export function App() {
   if (route.name === 'print' && route.id) return <AppCtx.Provider value={ctx}><Invoice key={route.id} id={route.id} /></AppCtx.Provider>;
 
   const allowed = NAV.filter((n) => n.roles.includes(me.role));
+  // A screen that exists but isn't for this role (e.g. a clerk opening #/purchases from a link): say so, don't silently show another screen.
+  const blocked = route.name !== '' && !allowed.some((n) => n.route === route.name) && NAV.some((n) => n.route === route.name);
   const currentItem = allowed.find((n) => n.route === route.name) ?? allowed[0]!;
   const current = currentItem.route;
   const groups = GROUP_ORDER.filter((g) => allowed.some((n) => n.group === g && !n.hidden));
@@ -140,7 +142,15 @@ export function App() {
           </nav>
         )}
         <main className="main">
-          <Screen key={`${current}/${route.id ?? ''}`} id={route.name === current ? route.id : undefined} ratesVersion={ratesVersion} />
+          {blocked
+            ? (
+              <section className="page">
+                <div className="page-head"><h1>{t('errors.notForYou')}</h1></div>
+                <p className="hint">{t('errors.notForYouHelp', { role: t(`auth.roles.${me.role}`) })}</p>
+                <div className="form-actions"><a className="btn primary" href="#/">{t('errors.goHome')}</a></div>
+              </section>
+            )
+            : <Screen key={`${current}/${route.id ?? ''}`} id={route.name === current ? route.id : undefined} ratesVersion={ratesVersion} />}
         </main>
       </div>
     </AppCtx.Provider>
