@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { opsApi, type BackupItem, type BackupStatus, type MachineInfo } from '../api/ops';
+import { opsApi, type BackupItem, type BackupStatus, type DriveInfo, type MachineInfo } from '../api/ops';
 import type { ScreenProps } from '../nav';
 import '../styles/ops.css';
 
@@ -157,6 +157,8 @@ export function Backup(_props: ScreenProps) {
         </form>
       </section>
 
+      <DriveCard current={s.isDefaultFolder ? '' : s.folder} onChosen={(st) => { setS(st); setFolder(st.isDefaultFolder ? '' : st.folder); }} />
+
       <section className="page">
         <h2 className="ops-h2">{t('ops.listTitle')}</h2>
         {!s.backups.length ? <p className="empty">{t('ops.noBackups')}</p> : (
@@ -273,6 +275,56 @@ function Restarting() {
       <h1>{t('ops.restartingTitle')}</h1>
       <p>{t('ops.restartingText')}</p>
       {slow && <p className="notice ops-problem">{t('ops.restartingSlow')}</p>}
+    </section>
+  );
+}
+
+/** Google Drive for desktop: offer its folder in one tap, or say how to get it (ops/drive.ts on the server). */
+function DriveCard({ current, onChosen }: { current: string; onChosen: (s: BackupStatus) => void }) {
+  const { t } = useTranslation();
+  const [d, setD] = useState<DriveInfo | null>(null);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const look = useCallback(() => { opsApi.drive().then(setD).catch(() => setD({ folders: [], appRunning: null })); }, []);
+  useEffect(look, [look]);
+  if (!d) return null;
+
+  const inside = (root: string) => current.toLowerCase().startsWith(root.toLowerCase());
+  const use = async (folder: string) => {
+    setMsg(null);
+    try {
+      onChosen(await opsApi.saveConfig({ folder }));
+      setMsg({ ok: true, text: t('drive.saved', { folder }) });
+    } catch (e) {
+      setMsg({ ok: false, text: (e as Error).message });
+    }
+  };
+
+  return (
+    <section className="page ops-drive">
+      <h2 className="ops-h2">{t('drive.title')}</h2>
+      {d.folders.length ? <p className="hint">{t('drive.found')}</p> : <p className="notice">{t('drive.notFound')}</p>}
+      {d.folders.length > 0 && d.appRunning === false && <p className="notice">{t('drive.notRunning')}</p>}
+      <ul className="ops-drive-list">
+        {d.folders.map((f) => (
+          <li key={f.root}>
+            <div>
+              <b className="ops-drive-path">{f.suggested}</b>
+              <span className="sub">{t(`drive.${f.kind}`)}{f.user ? ` · ${t('drive.account', { user: f.user })}` : ''}</span>
+              {f.kind === 'stream' && <span className="hint ops-warn-text">{t('drive.streamWarn')}</span>}
+            </div>
+            {inside(f.root)
+              ? <span className="saved-note">{t('drive.inUse')}</span>
+              : <button type="button" className={`btn small${f.kind === 'mirror' ? ' primary' : ''}`} onClick={() => void use(f.suggested)}>{t('drive.use')}</button>}
+          </li>
+        ))}
+      </ul>
+      {msg && <p className={msg.ok ? 'saved-note' : 'field-error'} role={msg.ok ? 'status' : 'alert'}>{msg.text}</p>}
+      {!d.folders.some((f) => f.kind === 'mirror') && (
+        <ol className="ops-drive-how">
+          <li>{t('drive.how1')}</li><li>{t('drive.how2')}</li><li>{t('drive.how3')}</li><li>{t('drive.how4')}</li>
+        </ol>
+      )}
+      <button type="button" className="btn small" onClick={look}>{t('drive.check')}</button>
     </section>
   );
 }

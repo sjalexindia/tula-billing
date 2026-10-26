@@ -34,6 +34,12 @@ Phase 1, plus phones that work on their own. Owner-facing steps first, then how 
 
 The token is a password. Keep it **only** in that environment file: never in a business profile, a screenshot, WhatsApp or git. Tula never shows it. The status screen shows only the database's host name.
 
+**A token per phone that runs out.** Turso cannot cut off one token: `turso db tokens invalidate` ends *every* token of the database (and of its group), and group tokens "cannot be revoked individually" (Turso docs, *db tokens invalidate* and *Create Group Auth Token*). What Turso can do is make a token that stops by itself. So give each phone its own token with an expiry, and keep the computer's token without one:
+```
+turso db tokens create tula-<shop> --expiration 30d      # for one phone; paste it on that phone
+```
+Settings → Devices & sync shows **Access token expires** with the date (read from the token itself; Tula never shows the token), and warns a week before it runs out, on the computer and on the phone. Make a new 30-day token for the phone before then and enter it there (**Change the access token**). A lost phone then loses access on its own within 30 days at most; to cut it off at once, invalidate all tokens and give every device a new one (below). A small relay that hands out and revokes per-device access would remove this limit, but it is a server to run and is not part of Tula.
+
 **Rotate the token** (once a year, when someone who knew it leaves, or when a phone is lost): create a new token, put it in `TULA_SYNC_TOKEN` on every computer, restart Tula, enter it on every phone that works on its own (Settings → Devices & sync → Change the access token), then invalidate the old ones with `turso db tokens invalidate tula-<shop>`. Note that invalidating **all** tokens of the database is how Turso revokes access, so do this on every computer the same day.
 
 **If the screen shows a problem**, it says what to do:
@@ -90,7 +96,7 @@ After that the phone opens straight into Tula. It bills, takes receipts, adds cu
 
 What is different on the phone:
 - No **Backup** screen: the cloud copy is the phone's off-site copy. Keep the daily backup on the shop computer.
-- **Share** instead of Print on bills, receipts and statements: it makes a picture of the document and opens the share sheet (WhatsApp, a Bluetooth printer app, Drive…). The app cannot print from the page itself. **Excel** downloads (reports, and Items & customers → Excel import & export) open the share sheet too.
+- **Share** and **Share as PDF** instead of Print on bills, receipts and statements: Share makes a picture of the document, Share as PDF puts that picture on A4 or A5 pages like the printed copy (more pages when it is long); both open the share sheet (WhatsApp, a Bluetooth printer app, Drive, Gmail…). The app cannot print from the page itself; a PDF can be printed from any PDF app. **Excel** downloads (reports, and Items & customers → Excel import & export) open the share sheet too.
 - **Change the access token** (Settings → Devices & sync) after the token was rotated.
 - **Use the shop computer instead** switches the app to the connect page. The phone's data stays; the connect page has **Work on this phone instead** to come back. Send waiting changes first (the screen warns if there are any).
 - Uninstalling the app or clearing its storage **deletes the phone's copy**, including bills that never reached the cloud copy. Check that "Changes waiting to send" is 0 first.
@@ -113,6 +119,18 @@ The same app does both: Tula on the phone (above), or Tula from the shop compute
 2. Send the APK to the phone (USB, or a shared drive link; not a public link). Open it. Android asks to allow **"Install unknown apps"** for the Files or Chrome app: allow it once, then install. Play Protect may warn about an unknown developer, because this is a debug build that isn't from the Play Store: choose "Install anyway".
 3. To use the shop computer: open **Tula**, choose **Connect to the shop computer**, type the address under the QR code (for example `192.168.1.20:5000`; `http://` and port 5000 are added if left out; a pasted QR link also works), then **Connect**. The app checks `/api/health`, remembers the address, and opens Tula. Next time it opens Tula straight away.
 4. If the computer can't be reached, the app shows **Try again** and **Change address**. The Back button from Tula also returns to this page.
+
+**Signed release APK (recommended before real use).** The debug APK is signed with a throw-away key and Play Protect warns about it. A release APK is signed with the shop's own key; every later release must use the same key, or phones refuse the update.
+1. Make the key once, on any computer with Java (Android Studio or a JDK):
+   ```
+   keytool -genkeypair -v -keystore tula-release.keystore -alias tula -keyalg RSA -keysize 4096 -validity 10000
+   ```
+   It asks for a password and a name. **Back up `tula-release.keystore` and the password** in two safe places (e.g. Google Drive and a USB stick). If they are lost, a new key means uninstalling the app from every phone.
+2. Turn the key into text: PowerShell `[Convert]::ToBase64String([IO.File]::ReadAllBytes("tula-release.keystore")) | Set-Clipboard` (Linux/macOS: `base64 -w0 tula-release.keystore`).
+3. GitHub → the repository → **Settings → Secrets and variables → Actions → New repository secret**, four times: `ANDROID_KEYSTORE_BASE64` (the text from step 2), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` (`tula`), `ANDROID_KEY_PASSWORD` (the same password unless keytool asked for a separate one).
+4. Run **Actions → Android APK**. With the secrets set it also uploads **`tula-android-release`**, signed with the shop's key (the log shows the certificate). Without them it builds only the debug APK, as before.
+
+Each run gets a higher version number (the run number), so a newer APK installs over an older one. Moving a phone from the debug APK to the release APK needs an uninstall first (different key), and **uninstalling deletes the phone's copy**: on that phone check that "Changes waiting to send" is 0, uninstall, install the release APK, and set it up again (§5).
 
 Technical notes: Capacitor 8, app id `in.tula.app`, `webDir` = `apps/web/dist-phone` (the phone build, `npm run build:phone -w apps/web`; the connect page from `apps/web/shell` is copied to `connect/`). Plain http to private LAN ranges (`192.168.*`, `10.*`, `172.16–31.*`, `*.local`) is allowed via `server.cleartext`, `allowNavigation` and `android.allowMixedContent`. `server.errorPath` = `connect/error.html`. The health check uses the native `CapacitorHttp` plugin, so the browser's cross-origin rules don't apply. Plugin: `@capacitor/preferences` (the mode, the cloud address and token, the session; app-private storage). The `android/` project is committed. CI (`.github/workflows/android.yml`, Ubuntu 24.04 with its preinstalled Android SDK) builds the phone app, runs `npx cap sync android` and `./gradlew assembleDebug` with Java 21. A signed release build (for Play Store or to avoid warnings) is not set up.
 
@@ -144,10 +162,10 @@ Technical notes: Capacitor 8, app id `in.tula.app`, `webDir` = `apps/web/dist-ph
 
 - **Clock-based last-writer-wins.** `updated_at` is each computer's wall clock (ISO time, millisecond resolution). A computer whose clock is wrong can win or lose edits unfairly; keep Windows time sync on. The spec's hybrid logical clock is not implemented. LWW is per row: two people changing *different* fields of the same item on two computers keeps only the later row. The losing version is not yet written to the audit log on pull.
 - Documents are append-only, so bills never conflict. Stock and balances are derived, so they converge.
-- One shared token for all computers and phones: per-device revocation is advisory (§4); real revocation means rotating the token on every device. A lost phone keeps its access until then.
+- Turso cannot revoke one token: per-device revocation is advisory (§4); real revocation means invalidating all tokens and giving every device a new one. A lost phone with an expiring token (§2) loses access when it runs out.
 - A phone billing offline can sell stock another device already sold; stock goes negative and the stock screens show it (as with two computers).
 - A phone's bills that never reached the cloud copy are lost if the phone is lost or reset, or the app is uninstalled.
-- The Android app shares bills as pictures; it does not print directly or make PDFs.
+- The Android app shares bills as pictures or PDFs; it does not print directly.
 - Phones working on their own were tested on their stack in Node and in desktop Chrome (worker, persistent storage, setup errors against the real Turso, read-only). The first setup on a real phone is the first full check.
 - `replace` cannot recover changes that never left the dead computer.
 - Rows set aside in `sync_rejects` need a person to look at them (no screen for that yet).
@@ -155,4 +173,4 @@ Technical notes: Capacitor 8, app id `in.tula.app`, `webDir` = `apps/web/dist-ph
 
 ## 8. Still to do for phones
 
-Per-device tokens (so a lost phone can be cut off without rotating everyone's token), PDF bills from the app, conflict review for masters edited on two devices, a signed release APK, and an https story for full-screen web install from the shop computer.
+Revoking one phone's token at once (Turso can only expire it or invalidate all; see §2), conflict review for masters edited on two devices, a signed release APK, and an https story for full-screen web install from the shop computer.

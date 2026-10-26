@@ -68,11 +68,17 @@ What it set up:
 
 Tula backs up every day at **9:00 PM** (change it in **Settings → Backup**). If the computer was off at that time, it backs up shortly after it is next switched on. Each backup is a complete, checked copy named like `tula-2026-10-25-2100.db`. Tula keeps the last 30 days, one per month for a year, and every hand-made backup from the last week.
 
-**Copy backups to the cloud (recommended):**
-1. Install **Google Drive for desktop** and sign in with the shop's Google account.
+**Copy backups to the cloud: Google Drive (recommended, free):**
+1. Install **Google Drive for desktop** (google.com/drive/download) and sign in with the shop's Google account.
 2. Google Drive settings (gear icon) → **Preferences** → **Google Drive** → choose **Mirror files**. The files are then kept in a normal folder, `C:\Users\<name>\My Drive`.
-3. In Tula: **Settings → Backup → Backup folder**, type `C:\Users\<name>\My Drive\Tula backups`, then **Save backup settings**, then **Back up now**.
+3. In Tula: **Settings → Backup**. The card **Copy backups to Google Drive** lists the Google Drive folders found on this computer. Press **Back up to this folder** next to `C:\Users\<name>\My Drive\Tula backups`, then **Back up now**. (Or type that folder under **Backup folder** yourself.)
 4. Check the backup appears in drive.google.com within a few minutes.
+
+What the card can and can't tell:
+- A **Mirror files** folder (`C:\Users\<name>\My Drive`) is listed first: Tula, which runs before anyone signs in, can write there.
+- A **Stream files** drive letter (`G:\My Drive`) is listed with a warning: it exists only for the signed-in person, so Tula running as a Windows service can't use it. Switch Google Drive to Mirror files.
+- If the Google Drive program isn't running, the card says so; backups still go into the folder and reach the cloud once it runs. Tula cannot see whether Google Drive is signed in or has finished uploading: check drive.google.com now and then.
+- Tula doesn't talk to Google directly (that would need a Google Cloud app registered for the shop); Google Drive for desktop does the copying.
 
 **Or a USB drive:** type e.g. `E:\Tula backups`. Leave it plugged in. If it is unplugged at backup time, Tula saves the backup on the computer instead and shows a warning on the Backup screen.
 
@@ -174,4 +180,4 @@ Task Scheduler "Tula" (SYSTEM, at start-up)        systemd tula.service
 ```
 Command-line tools (all accept `--env-file`): `apps/server/src/cli/backup.ts [--kind manual|safety] [--json]`, `cli/restore.ts <file> [--yes]` (refuses while Tula runs), `cli/status.ts [--json] [--wait SECONDS]`.
 
-Backup settings and status are machine-specific and live in the local-only `sync_state` table (`ops.backup_folder`, `ops.backup_time`, `ops.backup_enabled`, `ops.backup_last_*`); a restore keeps this computer's backup settings. API (owner only): `GET/PUT /api/ops/backup`, `POST /api/ops/backup/run`, `GET /api/ops/backup/:file/download`, `POST /api/ops/restore {file, pin}`, `GET /api/ops/info`.
+Backup settings and status are machine-specific and live in the local-only `sync_state` table (`ops.backup_folder`, `ops.backup_time`, `ops.backup_enabled`, `ops.backup_last_*`); a restore keeps this computer's backup settings. API (owner only): `GET/PUT /api/ops/backup`, `GET /api/ops/drive` (Google Drive for desktop folders found, and whether its program runs: `apps/server/src/ops/drive.ts`, which scans `C:\Users\*\My Drive`, `C:\Users\*\Google Drive` and drive letters with `My Drive`, and asks `tasklist` for `GoogleDriveFS.exe`), `POST /api/ops/backup/run`, `GET /api/ops/backup/:file/download`, `POST /api/ops/restore {file, pin}`, `GET /api/ops/info`.

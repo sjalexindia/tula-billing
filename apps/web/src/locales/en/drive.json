@@ -1,0 +1,20 @@
+{
+  "drive": {
+    "title": "Copy backups to Google Drive",
+    "found": "Google Drive for desktop is on this computer. Choose its folder and every backup is also copied to your Google Drive.",
+    "use": "Back up to this folder",
+    "inUse": "Backups go to this Google Drive folder.",
+    "account": "Windows account: {{user}}",
+    "mirror": "Mirror files",
+    "stream": "Stream files (drive letter)",
+    "streamWarn": "Tula runs before anyone signs in and cannot see a Google Drive drive letter. In Google Drive's Preferences choose \"Mirror files\", then come back and use the folder under C:\\Users\\<name>\\My Drive.",
+    "notRunning": "Google Drive is not running on this computer now. Backups still go into the folder and are copied to the cloud once Google Drive runs again.",
+    "notFound": "Google Drive for desktop was not found on this computer.",
+    "how1": "Install Google Drive for desktop (google.com/drive/download) and sign in with the shop's Google account.",
+    "how2": "In Google Drive: gear icon → Preferences → Google Drive → Mirror files.",
+    "how3": "Open this screen again: the folder appears here. Choose it, then press Back up now.",
+    "how4": "Check on drive.google.com that the backup arrives within a few minutes.",
+    "check": "Look for again",
+    "saved": "Backup folder set to {{folder}}. Press Back up now to try it."
+  }
+}

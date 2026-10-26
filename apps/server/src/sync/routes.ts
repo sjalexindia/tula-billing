@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { requireOwner } from '../auth';
 import { UserError } from '../context';
 import { pendingCount } from './engine';
-import { hubLabel } from './hub';
+import { hubLabel, tokenExpiry } from './hub';
 import { rows } from './schema';
 import { getStates } from './state';
 import type { SyncWorker } from './worker';
@@ -14,6 +14,8 @@ export interface SyncStatus {
   running: boolean;
   /** host of the cloud copy only — never the token or the full URL */
   hub: string | null;
+  /** when the access token stops working (its exp claim), null if it never does; never the token itself */
+  tokenExpiresAt: string | null;
   device: { id: string; name: string; seriesCode: string; revoked: boolean };
   lastPushAt: string | null;
   lastPullAt: string | null;
@@ -33,6 +35,7 @@ export async function syncStatus(db: Db, deviceId: string, worker: SyncWorker | 
     configured: !!cfg,
     running: !!worker,
     hub: cfg ? hubLabel(cfg.url) : null,
+    tokenExpiresAt: tokenExpiry(cfg?.token),
     device: { id: deviceId, name: dev?.name ?? '', seriesCode: dev?.series_code ?? '', revoked: !!dev?.revoked },
     lastPushAt: s['sync.last_push_at'] || null,
     lastPullAt: s['sync.last_pull_at'] || null,

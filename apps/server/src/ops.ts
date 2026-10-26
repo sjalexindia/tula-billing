@@ -9,6 +9,7 @@ import {
   BackupConfigInput, backupFolders, backupStatusValues, findBackup, getBackupConfig, getLocal, isBackupRunning, listBackups,
   MACHINE_KEYS, runBackup, saveBackupConfig, type BackupKind,
 } from './ops/backup';
+import { driveInfo } from './ops/drive';
 import { prepareCandidate, readLastRestore, writePending } from './ops/restore';
 import { BackupScheduler, nextRunAt } from './ops/scheduler';
 import { appVersion, dataDir, defaultBackupDir, errMessage, resolveDbFile, RESTORE_EXIT_CODE } from './ops/util';
@@ -142,6 +143,12 @@ export function registerOps(app: FastifyInstance, db: Db, _deviceId: string): vo
     await reply.status(202).send({ restarting: true, safety: safety.file });
     restartForRestore(app, db);
     return reply;
+  });
+
+  /** Google Drive for desktop folders on this computer, for a one-tap backup folder (ops/drive.ts). */
+  app.get('/api/ops/drive', async (req) => {
+    requireOwner(req);
+    return driveInfo();
   });
 
   app.get('/api/ops/info', async (req) => {

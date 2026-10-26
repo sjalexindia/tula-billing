@@ -5,6 +5,8 @@ export interface SyncStatus {
   running: boolean;
   /** host of the cloud copy only */
   hub: string | null;
+  /** when the access token stops working; null if it never does */
+  tokenExpiresAt: string | null;
   device: { id: string; name: string; seriesCode: string; revoked: boolean };
   lastPushAt: string | null;
   lastPullAt: string | null;
