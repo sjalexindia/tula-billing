@@ -16,6 +16,8 @@ Runs on the shop's own computer without internet, syncs to phones, backs up to G
 | [docs/03-configuration.md](docs/03-configuration.md) | Settings, presets, business profiles, environment variables, adding a language |
 | [docs/04-milestone-1.md](docs/04-milestone-1.md) | Sign-in and roles, items, customers, opening figures |
 | [docs/05-engineering-guide.md](docs/05-engineering-guide.md) | How Tula is built: numbers, data rules, accounting conventions, API, web, tests |
+| [docs/06-install-and-run.md](docs/06-install-and-run.md) | Installing on the shop PC, auto-start, backups and restore, troubleshooting |
+| [docs/07-sync-and-phones.md](docs/07-sync-and-phones.md) | Cloud copy (Turso), phones and other computers |
 | [packages/db/migrations/](packages/db/migrations/) | SQLite schema |
 
 ## Run it
