@@ -1,3 +1,4 @@
+import { largerUnitText } from '@tula/core';
 import ExcelJS from 'exceljs';
 import type { Col, Report, Row, Table } from './common';
 import { fileSafe, n } from './common';
@@ -49,8 +50,8 @@ function cellValue(c: Col, v: unknown): ExcelJS.CellValue {
       return o.code ? LINE_EN[o.code] ?? o.en ?? o.code : String(o.en ?? '');
     }
     case 'alt': {
-      const a = v as { whole: number; en: string };
-      return `${a.whole} ${a.en}`;
+      const a = v as { qtyMilli: number; factorMilli: number; theoretical: boolean; en: string; baseEn: string };
+      return largerUnitText(a.qtyMilli, a.factorMilli, a.en, a.baseEn, a.theoretical);
     }
     default: return String(v);
   }

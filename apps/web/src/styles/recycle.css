@@ -1,0 +1,7 @@
+/* Recycle bin screen and the Delete buttons on item, customer and expense-head screens */
+.recycle-screen { display: flex; flex-direction: column; gap: 16px; }
+.recycle-screen h2 { font-size: 18px; margin: 0 0 6px; }
+.recycle-cats { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 6px; }
+.recycle-cats li { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-bottom: 1px solid var(--rule); padding: 6px 0; }
+.btn.danger { color: var(--danger); }
+.btn.danger:hover { border-color: var(--danger); }

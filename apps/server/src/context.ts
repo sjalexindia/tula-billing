@@ -12,7 +12,8 @@ export async function localDeviceId(ex: Exec): Promise<string> {
 }
 
 export class UserError extends Error {
-  constructor(message: string, public code = 'BAD_REQUEST', public status = 400) {
+  /** `details` goes into the reply as is (e.g. which settings were refused and why). */
+  constructor(message: string, public code = 'BAD_REQUEST', public status = 400, public details?: unknown) {
     super(message);
   }
 }

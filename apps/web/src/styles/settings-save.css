@@ -1,0 +1,3 @@
+/* Settings: a change the server did not save keeps its value and shows why */
+.setting.refused input, .setting.refused select, .setting.refused textarea { border-color: var(--danger); background: var(--danger-soft); }
+.setting .field-error { display: block; margin-top: 4px; }

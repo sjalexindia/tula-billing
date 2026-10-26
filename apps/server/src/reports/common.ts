@@ -17,7 +17,7 @@ export type ColType =
   | 'pct' // basis points of a percentage (12.34% = 1234), e.g. margin
   | 'rate' // GST rate in basis points (18% = 1800); Excel writes 18
   | 'name' // { en, ta } or a string
-  | 'alt' // { whole, en, ta } — stock in the largest larger unit
+  | 'alt' // { whole, qtyMilli, factorMilli, theoretical, en, ta, baseEn, baseTa } — stock in the largest larger unit (largerUnitText)
   | 'code'; // short code shown as is (doc type, GSTIN, HSN); translated on screen when the column says so
 
 export interface Col {

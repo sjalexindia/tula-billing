@@ -1,0 +1,6 @@
+{
+  "settingsSave": {
+    "partly": "Saved {{saved}} change(s). {{count}} could not be saved: see the marked fields, fix them and save again.",
+    "none": "Nothing was saved: {{count}} change(s) need fixing. See the marked fields."
+  }
+}

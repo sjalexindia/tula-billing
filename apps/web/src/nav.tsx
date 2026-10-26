@@ -13,6 +13,7 @@ import { OpeningStock } from './screens/OpeningStock';
 import { Outstanding } from './screens/Outstanding';
 import { Purchases } from './screens/Purchases';
 import { Receipts } from './screens/Receipts';
+import { RecycleBin } from './screens/RecycleBin';
 import { Reports } from './screens/Reports';
 import { SettingsScreen } from './screens/Settings';
 import { Statement } from './screens/Statement';
@@ -68,6 +69,7 @@ export const NAV: NavItem[] = [
   { route: 'settings', label: 'nav.settings', group: 'settings', roles: OWNER, screen: SettingsScreen },
   { route: 'backup', label: 'nav.backup', group: 'settings', roles: OWNER, screen: Backup, computerOnly: true },
   { route: 'devices', label: 'nav.devices', group: 'settings', roles: OWNER, screen: Devices },
+  { route: 'recycle', label: 'nav.recycle', group: 'settings', roles: OWNER, screen: RecycleBin },
 ];
 
 export const GROUP_ORDER: NavItem['group'][] = ['billing', 'purchases', 'stock', 'reports', 'masters', 'settings'];

@@ -1,4 +1,4 @@
-import { formatQty, formatRs, splitIntoUnits } from '@tula/core';
+import { formatQty, formatRs, largerUnitText } from '@tula/core';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api, type CatalogItem } from '../api';
@@ -45,14 +45,13 @@ function StockList() {
               const q = p.stockMilli ?? 0;
               const largest = p.units[0]; // units arrive largest first
               const status = q < 0 ? 'NEGATIVE' : q === 0 ? 'OUT' : q <= p.minStockMilli ? 'LOW' : 'OK';
-              const split = largest && q > 0 ? splitIntoUnits(q, largest.factorMilli) : null;
               const v = valueOf.get(p.id);
               const unit = nameIn(ui, p.baseUnitEn, p.baseUnitTa);
               return (
                 <tr key={p.id}>
                   <td><a href={`#/stock/${p.id}`} title={t('purchases.stock.ledger')}>{nameIn(ui, p.nameEn, p.nameTa)}</a><span className="sub mono">{p.sku}</span></td>
                   <td className="r">{formatQty(q, { decimals: 2 })} {unit}</td>
-                  {anyLarger && <td className="r">{split && largest ? `${split.whole} ${nameIn(ui, largest.nameEn, largest.nameTa)}` : ''}</td>}
+                  {anyLarger && <td className="r">{largest ? largerUnitText(q, largest.factorMilli, nameIn(ui, largest.nameEn, largest.nameTa), unit, largest.theoretical) : ''}</td>}
                   <td className="r">{v?.avg_cost_paise ? `${formatRs(v.avg_cost_paise)}${t('purchases.common.perUnit', { unit })}` : ''}</td>
                   <td className="r">{v?.value_paise ? formatRs(v.value_paise) : ''}</td>
                   <td><span className={`status ${status.toLowerCase()}`}>{t(`stock.${status}`)}</span></td>

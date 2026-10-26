@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api, type CatalogItem, type Party, type PartyInput } from '../api';
 import { useApp } from '../App';
+import { DeleteButton } from '../components/DeleteButton';
 import { nameIn } from '../i18n';
 import { Field } from './Items';
 
@@ -170,6 +171,7 @@ function PartyEditor({ id }: { id?: string }) {
           <div className="form-actions">
             <a className="btn" href="#/customers">{t('common.cancel')}</a>
             <button type="submit" className="btn primary" disabled={saving}>{saving ? t('common.saving') : t('common.save')}</button>
+            {id && !walkIn && isOwner && <DeleteButton kind="parties" id={id} name={f.name_en} onDone={() => { location.hash = '#/customers'; }} />}
           </div>
         )}
       </form>
