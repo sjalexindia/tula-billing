@@ -8,6 +8,7 @@ import { nameIn, tFor } from '../i18n';
 import type { ScreenProps } from '../nav';
 import { reminderLink } from './Outstanding';
 import '../styles/sales.css';
+import { PrintShare } from '../components/PrintShare';
 
 /** #/statement/<partyId>: customer statement for a period, printable (A4) and shareable on WhatsApp. */
 export function Statement({ id }: ScreenProps) {
@@ -93,7 +94,7 @@ function StatementView({ partyId }: { partyId: string }) {
         <div className="st-buttons">
           {me?.role !== 'viewer' && data.balanceTodayPaise > 0 && <a className="btn" href={`#/receipts/for-${p.id}`}>{tUi('sales.out.takePayment')}</a>}
           {wa && <a className="btn wa" href={wa} target="_blank" rel="noreferrer">{tUi('sales.st.whatsapp')}</a>}
-          <button type="button" className="btn primary" onClick={() => window.print()}>{tUi('sales.printBtn')}</button>
+          <PrintShare target=".statement-doc" fileName={`${p.name_en} ${data.from} ${data.to}`} printLabel={tUi('sales.printBtn')} />
         </div>
       </div>
       {error && <p className="field-error no-print" role="alert">{error}</p>}

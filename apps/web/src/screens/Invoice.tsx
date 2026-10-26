@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api, type BillDetail } from '../api';
 import { dmy, sales, type DocLinks } from '../api/sales';
+import { PrintShare } from '../components/PrintShare';
 import { nameIn, tFor } from '../i18n';
 
 export function Invoice({ id }: { id: string }) {
@@ -74,7 +75,7 @@ export function Invoice({ id }: { id: string }) {
       <style>{`@page { size: ${s['invoice.paper'] === 'A5' ? 'A5' : 'A4'}; margin: 0; }`}</style>
       <div className="invoice-actions no-print">
         <button type="button" className="btn" onClick={() => (history.length > 1 ? history.back() : (location.hash = '#/bills'))}>{tUi('sales.back')}</button>
-        <button type="button" className="btn primary" onClick={() => window.print()}>{tUi('invoice.print')}</button>
+        <PrintShare target=".invoice" fileName={doc.doc_no} printLabel={tUi('invoice.print')} />
       </div>
 
       <article className="invoice">

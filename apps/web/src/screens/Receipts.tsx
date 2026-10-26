@@ -8,6 +8,7 @@ import { nameIn, tFor } from '../i18n';
 import type { ScreenProps } from '../nav';
 import { paiseOrNull, RangePicker, rangeFor, Sheet, type Range } from './Bills';
 import '../styles/sales.css';
+import { PrintShare } from '../components/PrintShare';
 
 /**
  * #/receipts            list for a date range, with "New receipt"
@@ -322,7 +323,7 @@ function ReceiptPrint({ id }: { id: string }) {
       <div className="doc-actions no-print">
         <a className="btn" href="#/receipts">{tUi('sales.receipts.backToList')}</a>
         {me?.role !== 'viewer' && <a className="btn" href="#/receipts/new">{tUi('sales.receipts.another')}</a>}
-        <button type="button" className="btn primary" onClick={() => window.print()}>{tUi('sales.printBtn')}</button>
+        <PrintShare target=".receipt-doc" fileName={r.doc_no} printLabel={tUi('sales.printBtn')} />
       </div>
       <article className="receipt-doc">
         {r.status === 'cancelled' && <div className="stamp">{t('invoice.cancelled')}</div>}

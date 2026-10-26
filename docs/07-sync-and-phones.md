@@ -90,7 +90,7 @@ After that the phone opens straight into Tula. It bills, takes receipts, adds cu
 
 What is different on the phone:
 - No **Backup** screen: the cloud copy is the phone's off-site copy. Keep the daily backup on the shop computer.
-- No **Excel download** on reports (they show on screen). **Printing does not work yet** inside the app: make and sync the bill on the phone, print it from the shop computer.
+- **Share** instead of Print on bills, receipts and statements: it makes a picture of the document and opens the share sheet (WhatsApp, a Bluetooth printer app, Drive…). The app cannot print from the page itself. **Excel** downloads (reports, and Items & customers → Excel import & export) open the share sheet too.
 - **Change the access token** (Settings → Devices & sync) after the token was rotated.
 - **Use the shop computer instead** switches the app to the connect page. The phone's data stays; the connect page has **Work on this phone instead** to come back. Send waiting changes first (the screen warns if there are any).
 - Uninstalling the app or clearing its storage **deletes the phone's copy**, including bills that never reached the cloud copy. Check that "Changes waiting to send" is 0 first.
@@ -147,7 +147,7 @@ Technical notes: Capacitor 8, app id `in.tula.app`, `webDir` = `apps/web/dist-ph
 - One shared token for all computers and phones: per-device revocation is advisory (§4); real revocation means rotating the token on every device. A lost phone keeps its access until then.
 - A phone billing offline can sell stock another device already sold; stock goes negative and the stock screens show it (as with two computers).
 - A phone's bills that never reached the cloud copy are lost if the phone is lost or reset, or the app is uninstalled.
-- Printing and Excel downloads are not available inside the Android app yet.
+- The Android app shares bills as pictures; it does not print directly or make PDFs.
 - Phones working on their own were tested on their stack in Node and in desktop Chrome (worker, persistent storage, setup errors against the real Turso, read-only). The first setup on a real phone is the first full check.
 - `replace` cannot recover changes that never left the dead computer.
 - Rows set aside in `sync_rejects` need a person to look at them (no screen for that yet).
@@ -155,4 +155,4 @@ Technical notes: Capacitor 8, app id `in.tula.app`, `webDir` = `apps/web/dist-ph
 
 ## 8. Still to do for phones
 
-Per-device tokens (so a lost phone can be cut off without rotating everyone's token), printing and sharing a bill (PDF or WhatsApp) from the app, conflict review for masters edited on two devices, a signed release APK, and an https story for full-screen web install from the shop computer.
+Per-device tokens (so a lost phone can be cut off without rotating everyone's token), PDF bills from the app, conflict review for masters edited on two devices, a signed release APK, and an https story for full-screen web install from the shop computer.
