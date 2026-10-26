@@ -7,6 +7,7 @@ export default defineConfig({
     include: [
       'test/bills.test.ts', 'test/m1.test.ts', 'test/sales-ops.test.ts', 'test/purchases.test.ts',
       'test/reports.test.ts', 'test/day-book.test.ts', 'test/shop-day.test.ts', 'test/excel.test.ts', 'test/masters-extra.test.ts',
+      'test/quotes.test.ts',
     ],
   },
 });
