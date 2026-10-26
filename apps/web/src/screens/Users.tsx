@@ -27,7 +27,7 @@ export function UsersPanel() {
   return (
     <section className="page users">
       <h2>{t('users.title')}</h2>
-      <table className="grid compact">
+      <div className="scroll-x"><table className="grid compact">
         <thead><tr><th>{t('users.name')}</th><th>{t('users.role')}</th><th /><th /></tr></thead>
         <tbody>
           {rows.map((u) => (
@@ -48,7 +48,7 @@ export function UsersPanel() {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
       <form className="add-user" onSubmit={(e) => { e.preventDefault(); void add(); }}>
         <div className="field"><label htmlFor="u-name">{t('users.name')}</label><input id="u-name" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} /></div>
         <div className="field">
