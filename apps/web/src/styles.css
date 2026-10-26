@@ -217,9 +217,19 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
   font-size: 56px; font-weight: 700; color: rgba(180, 35, 24, 0.25); border: 6px solid rgba(180, 35, 24, 0.25); padding: 4px 24px;
 }
 
+/* On a phone the A4 preview is narrower than the line table: scroll the table inside the paper. */
+.inv-lines-wrap { overflow-x: auto; }
+@media (max-width: 600px) {
+  .invoice-page { padding: 12px 6px 32px; }
+  .invoice { padding: 5mm; min-height: 0; }
+  .inv-lines { min-width: 560px; }
+}
+
 @media print {
   body { background: #fff; }
   .no-print { display: none !important; }
+  .inv-lines-wrap { overflow: visible; }
+  .inv-lines { min-width: 0; }
   .invoice-page { background: #fff; padding: 0; min-height: 0; }
   .invoice { max-width: none; min-height: 0; margin: 0; }
 }

@@ -78,7 +78,7 @@ export function App() {
   if (me.mustChangePin || changingPin) {
     return <ChangePin forced={me.mustChangePin} onDone={() => { setChangingPin(false); setMe({ ...me, mustChangePin: false }); }} onCancel={() => setChangingPin(false)} />;
   }
-  if (route.name === 'print' && route.id) return <AppCtx.Provider value={ctx}><Invoice id={route.id} /></AppCtx.Provider>;
+  if (route.name === 'print' && route.id) return <AppCtx.Provider value={ctx}><Invoice key={route.id} id={route.id} /></AppCtx.Provider>;
 
   const allowed = NAV.filter((n) => n.roles.includes(me.role));
   const currentItem = allowed.find((n) => n.route === route.name) ?? allowed[0]!;
