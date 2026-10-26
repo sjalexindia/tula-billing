@@ -22,6 +22,7 @@ Runs on the shop's own computer without internet, syncs to phones, backs up to G
 | [docs/07-sync-and-phones.md](docs/07-sync-and-phones.md) | Cloud copy (Turso), phones and other computers |
 | [docs/08-phase-1.md](docs/08-phase-1.md) | What Phase 1 delivered, how it was verified, known gaps |
 | [docs/09-excel.md](docs/09-excel.md) | Excel import and export of items, customers and suppliers, opening stock |
+| [docs/10-quotations.md](docs/10-quotations.md) | Quotations: make, print or share, turn into a bill |
 | [packages/db/migrations/](packages/db/migrations/) | SQLite schema |
 
 ## Run it

@@ -97,6 +97,9 @@ const BILLING_WRITES: Array<[string, RegExp]> = [
   ['POST', /^\/api\/bills(\/preview)?$/],
   ['POST', /^\/api\/parties$/],
   ['POST', /^\/api\/receipts(\/preview)?$/],
+  // quotations: make one, turn it into a bill, cancel one that isn't a bill yet
+  ['POST', /^\/api\/quotes(\/preview)?$/],
+  ['POST', /^\/api\/quotes\/[^/]+\/(convert(\/preview)?|cancel)$/],
 ];
 const ANY_ROLE_WRITES: Array<[string, RegExp]> = [
   ['POST', /^\/api\/auth\/(logout|pin)$/],

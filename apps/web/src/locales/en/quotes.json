@@ -1,0 +1,43 @@
+{
+  "nav": { "quotes": "Quotations", "newQuote": "New quotation" },
+  "quotes": {
+    "title": "Quotations",
+    "new": "New quotation",
+    "help": "A quotation gives the customer prices without changing stock or accounts. Make it a bill when they buy.",
+    "newHelp": "Quotation: priced like a bill, but stock, the customer's balance and GST returns do not change. Make it a bill from Billing → Quotations.",
+    "validUntil": "Valid until",
+    "save": "Save quotation",
+    "saved": "Quotation {{no}} saved",
+    "open": "Open quotation",
+    "another": "New quotation",
+    "search": "Number, customer or site",
+    "none": "No quotations in this period.",
+    "noMatch": "No quotation matches.",
+    "no": "Quotation",
+    "customer": "Customer / site",
+    "total": "Total",
+    "stateLabel": "State",
+    "state": { "all": "All", "open": "Open", "expired": "Past date", "converted": "Billed", "cancelled": "Cancelled" },
+    "billNo": "Bill {{no}}",
+    "validTill": "Valid till {{date}}",
+    "makeBill": "Make bill",
+    "cancel": "Cancel",
+    "confirmCancel": "Cancel quotation {{no}}? It can no longer become a bill.",
+    "convertTitle": "Make a bill from {{no}}",
+    "convertHelp": "The bill uses today's rates. Tick the box to keep the rates you quoted. Stock and the customer's balance change only now.",
+    "keepRates": "Keep the quoted rates",
+    "item": "Item",
+    "quotedRate": "Quoted rate",
+    "billRate": "Bill rate",
+    "amount": "Amount",
+    "billTotal": "Bill total",
+    "ratesChanged": "Some rates have changed since the quotation.",
+    "close": "Close",
+    "print": {
+      "title": "Quotation",
+      "no": "Quotation no.",
+      "validUntil": "Valid until",
+      "note": "This is a quotation, not a bill. Prices may change after the date above."
+    }
+  }
+}

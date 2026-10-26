@@ -6,6 +6,7 @@ import { api, type BillDetail } from '../api';
 import { dmy, sales, type DocLinks } from '../api/sales';
 import { PrintShare } from '../components/PrintShare';
 import { nameIn, tFor } from '../i18n';
+import { QuoteActions } from './Quotes';
 
 export function Invoice({ id }: { id: string }) {
   const { t: tUi } = useTranslation();
@@ -20,9 +21,10 @@ export function Invoice({ id }: { id: string }) {
   }, [id]);
 
   const isCn = links?.docType === 'CN';
+  const isQt = links?.docType === 'QT';
   const returned = links?.returnedPaise ?? 0;
-  // A credit note is not something to pay; an invoice's due amount is reduced by returns against it.
-  const due = bill && links && !isCn && bill.doc.status !== 'cancelled' ? Math.max(0, bill.doc.total_paise - bill.paidPaise - returned) : 0;
+  // A credit note or a quotation is not something to pay; an invoice's due amount is reduced by returns against it.
+  const due = bill && links && !isCn && !isQt && bill.doc.status !== 'cancelled' ? Math.max(0, bill.doc.total_paise - bill.paidPaise - returned) : 0;
   useEffect(() => {
     const s = bill?.settings;
     if (!bill || !s || due <= 0 || !s['business.upi_id'] || s['invoice.show_upi_qr'] !== 'true') { setQr(''); return; }
@@ -40,6 +42,7 @@ export function Invoice({ id }: { id: string }) {
   if (!bill) return null;
 
   const { doc, lines, settings: s, party, units } = bill;
+  const validUntil = (doc as { valid_until?: string | null }).valid_until;
   const lang = doc.lang;
   // Bilingual bills print every label in the bill's language first, then the other enabled language.
   const enabled = (s['app.languages'] ?? 'en').split(',');
@@ -75,6 +78,7 @@ export function Invoice({ id }: { id: string }) {
       <style>{`@page { size: ${s['invoice.paper'] === 'A5' ? 'A5' : 'A4'}; margin: 0; }`}</style>
       <div className="invoice-actions no-print">
         <button type="button" className="btn" onClick={() => (history.length > 1 ? history.back() : (location.hash = '#/bills'))}>{tUi('sales.back')}</button>
+        {isQt && <QuoteActions id={doc.id} docNo={doc.doc_no} />}
         <PrintShare target=".invoice" fileName={doc.doc_no} printLabel={tUi('invoice.print')} />
       </div>
 
@@ -93,12 +97,13 @@ export function Invoice({ id }: { id: string }) {
             </p>
           </div>
           <div className="inv-title">
-            <h2>{isCn ? t('sales.cn.title') : taxInvoice ? t('invoice.title') : t('invoice.billOfSupply')}</h2>
-            <p className="muted">{t('invoice.original')}</p>
+            <h2>{isQt ? t('quotes.print.title') : isCn ? t('sales.cn.title') : taxInvoice ? t('invoice.title') : t('invoice.billOfSupply')}</h2>
+            {!isQt && <p className="muted">{t('invoice.original')}</p>}
             <table className="kv">
               <tbody>
-                <tr><th>{isCn ? t('sales.cn.no') : t('invoice.no')}</th><td className="mono"><b>{doc.doc_no}</b></td></tr>
+                <tr><th>{isQt ? t('quotes.print.no') : isCn ? t('sales.cn.no') : t('invoice.no')}</th><td className="mono"><b>{doc.doc_no}</b></td></tr>
                 <tr><th>{t('invoice.date')}</th><td>{doc.doc_date.split('-').reverse().join('-')}</td></tr>
+                {isQt && validUntil && <tr><th>{t('quotes.print.validUntil')}</th><td>{dmy(validUntil)}</td></tr>}
                 {isCn && links?.ref && <tr><th>{t('sales.cn.againstNo')}</th><td className="mono">{links.ref.doc_no}</td></tr>}
                 {isCn && links?.ref && <tr><th>{t('sales.cn.againstDate')}</th><td>{dmy(links.ref.doc_date)}</td></tr>}
                 {doc.vehicle_no && <tr><th>{t('invoice.vehicle')}</th><td className="mono">{doc.vehicle_no}</td></tr>}
@@ -188,6 +193,7 @@ export function Invoice({ id }: { id: string }) {
                 </>}
                 {doc.round_off_paise !== 0 && <tr><th>{t('bill.roundOff')}</th><td>{formatRs(doc.round_off_paise)}</td></tr>}
                 <tr className="grand-row"><th>{isCn ? t('sales.ret.total') : t('bill.total')}</th><td>{formatRs(doc.total_paise)}</td></tr>
+                {isQt && <tr><td colSpan={2} className="small muted">{t('quotes.print.note')}</td></tr>}
                 {!isCn && bill.paidPaise > 0 && <tr><th>{t('invoice.paid')}</th><td>{formatRs(bill.paidPaise)}</td></tr>}
                 {!isCn && returned > 0 && <tr><th>{t('sales.cn.returned')}</th><td>{formatRs(returned)}</td></tr>}
                 {!isCn && (bill.paidPaise > 0 || returned > 0) && doc.status !== 'cancelled' && <tr><th>{t('invoice.balance')}</th><td><b>{formatRs(due)}</b></td></tr>}
