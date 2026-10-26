@@ -1,0 +1,28 @@
+# systemd unit for Tula on a Linux shop PC or small server. Installed by install.sh as
+# /etc/systemd/system/tula.service. It runs the Tula supervisor, which starts the server,
+# restarts it if it stops or hangs, applies restores and writes logs to /var/lib/tula/logs.
+[Unit]
+Description=Tula billing (supervisor)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=tula
+Group=tula
+WorkingDirectory=/opt/tula/app
+ExecStart=/usr/bin/env node --import tsx apps/server/src/supervisor.ts --env-file /etc/tula/tula.env
+# The supervisor already restarts the server; this restarts the supervisor itself.
+Restart=always
+RestartSec=5
+# SIGTERM to the supervisor (it stops the server cleanly), then SIGKILL anything left after 30 s.
+KillMode=mixed
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/var/lib/tula
+
+[Install]
+WantedBy=multi-user.target
