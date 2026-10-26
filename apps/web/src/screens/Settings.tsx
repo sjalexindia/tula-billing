@@ -22,11 +22,12 @@ export function SettingsScreen() {
   const missing = new Set(settings.missingForBilling);
   const changed = Object.fromEntries(Object.entries(draft).filter(([k, v]) => settings.values[k] !== v));
   const groups = [...new Set(schema.settings.map((s) => s.group))];
-  // Language-specific fields (…_ta) only show when that language is enabled.
+  // Language-specific fields (…_ta) only show when that language is enabled. Other two-letter
+  // endings (upi_id, show_upi_qr, interest_pa) are not languages and always show.
   const enabled = (draft['app.languages'] ?? 'en').split(',');
   const visible = (key: string) => {
     const m = /_([a-z]{2})$/.exec(key);
-    return !m || m[1] === 'en' || enabled.includes(m[1]!);
+    return !m || !schema.languages.includes(m[1]!) || m[1] === 'en' || enabled.includes(m[1]!);
   };
 
   const save = async () => {
@@ -77,10 +78,12 @@ export function SettingsScreen() {
                   ))}
                 </div>
               );
-            } else if ((s.kind.max ?? 0) > 150) {
+            } else if (s.kind.type === 'text' && (s.kind.max ?? 0) > 150) {
               control = <textarea id={id} rows={2} value={value} maxLength={s.kind.max} onChange={(e) => set(e.target.value)} />;
+            } else if (s.kind.type === 'int' || s.kind.type === 'amount' || s.kind.type === 'percent') {
+              control = <input id={id} inputMode={s.kind.type === 'int' ? 'numeric' : 'decimal'} value={value} onChange={(e) => set(e.target.value)} />;
             } else {
-              control = <input id={id} value={value} maxLength={s.kind.max} onChange={(e) => set(e.target.value)} />;
+              control = <input id={id} value={value} maxLength={s.kind.type === 'text' ? s.kind.max : undefined} onChange={(e) => set(e.target.value)} />;
             }
             return (
               <div className={`field setting${missing.has(s.key) ? ' missing' : ''}`} key={s.key}>
