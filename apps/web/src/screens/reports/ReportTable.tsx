@@ -24,7 +24,8 @@ export function useCellText() {
       case 'name': {
         if (typeof v !== 'object') return String(v);
         const o = v as { en?: string; ta?: string | null; code?: string };
-        return o.code ? t(`reports.lines.${o.code}`) : nameIn(lang, o.en ?? '', o.ta);
+        // A code is a P&L line or a value such as a stock-correction reason.
+        return o.code ? t(`reports.lines.${o.code}`, { defaultValue: t(`reports.values.${o.code}`, { defaultValue: o.en ?? o.code }) }) : nameIn(lang, o.en ?? '', o.ta);
       }
       case 'alt': {
         const a = v as { whole: number; en: string; ta: string | null };

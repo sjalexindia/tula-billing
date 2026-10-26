@@ -28,7 +28,7 @@ const NOTE_TEXT: Record<string, string> = {
 };
 export const noteText = (code: string) => NOTE_TEXT[code] ?? code;
 
-const EN_VALUES: Record<string, string> = { yes: 'Yes', no: 'No', active: 'Active', cancelled: 'Cancelled', OK: 'OK', LOW: 'Low', OUT: 'Out of stock', NEGATIVE: 'Negative', igst: 'IGST', cgst: 'CGST', sgst: 'SGST', nil: 'Nil rated' };
+const EN_VALUES: Record<string, string> = { yes: 'Yes', no: 'No', active: 'Active', cancelled: 'Cancelled', OK: 'OK', LOW: 'Low', OUT: 'Out of stock', NEGATIVE: 'Negative', igst: 'IGST', cgst: 'CGST', sgst: 'SGST', nil: 'Nil rated', OPEN: 'Opening' };
 const LINE_EN: Record<string, string> = { sales: 'Sales', returns: 'Sales returns', netSales: 'Net sales', cogs: 'Cost of goods sold', gross: 'Gross profit', totalExpenses: 'Total expenses', stockLoss: 'Stock correction loss', net: 'Net profit' };
 
 function cellValue(c: Col, v: unknown): ExcelJS.CellValue {
@@ -47,7 +47,7 @@ function cellValue(c: Col, v: unknown): ExcelJS.CellValue {
     case 'name': {
       if (typeof v !== 'object') return String(v);
       const o = v as { en?: string; code?: string };
-      return o.code ? LINE_EN[o.code] ?? o.code : String(o.en ?? '');
+      return o.code ? LINE_EN[o.code] ?? o.en ?? o.code : String(o.en ?? '');
     }
     case 'alt': {
       const a = v as { whole: number; en: string };

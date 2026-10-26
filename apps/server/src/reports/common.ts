@@ -122,25 +122,27 @@ export function sumRows(rows: Row[], keys: string[]): Row {
  * ADJ amount = value of the stock moved (+ found, − lost), excluding nothing else.
  */
 export const DOCS_SQL = `
-  SELECT d.id, d.doc_type, d.doc_no, d.doc_date, d.party_id, d.party_name, d.total_paise AS amount_paise, d.status, d.created_at
-  FROM sales_docs d WHERE d.deleted = 0 AND d.doc_type IN ('INV','CN')
+  SELECT d.id, d.doc_type, d.doc_no, d.doc_date, d.party_id, COALESCE(p.name_en, d.party_name) AS party_name, p.name_ta AS party_name_ta,
+    d.total_paise AS amount_paise, d.status, d.created_at
+  FROM sales_docs d LEFT JOIN parties p ON p.id = d.party_id WHERE d.deleted = 0 AND d.doc_type IN ('INV','CN')
   UNION ALL
-  SELECT m.id, m.doc_type, m.doc_no, m.doc_date, m.party_id, p.name_en, m.amount_paise, m.status, m.created_at
+  SELECT m.id, m.doc_type, m.doc_no, m.doc_date, m.party_id, p.name_en, p.name_ta, m.amount_paise, m.status, m.created_at
   FROM money_docs m LEFT JOIN parties p ON p.id = m.party_id WHERE m.deleted = 0
   UNION ALL
-  SELECT u.id, u.doc_type, u.doc_no, u.doc_date, u.party_id, p.name_en, u.total_paise, u.status, u.created_at
+  SELECT u.id, u.doc_type, u.doc_no, u.doc_date, u.party_id, p.name_en, p.name_ta, u.total_paise, u.status, u.created_at
   FROM purchase_docs u LEFT JOIN parties p ON p.id = u.party_id WHERE u.deleted = 0
   UNION ALL
-  SELECT e.id, 'EXP', e.doc_no, e.doc_date, e.party_id, COALESCE(p.name_en, h.name_en), e.total_paise, e.status, e.created_at
+  SELECT e.id, 'EXP', e.doc_no, e.doc_date, e.party_id, COALESCE(p.name_en, h.name_en), CASE WHEN p.id IS NULL THEN h.name_ta ELSE p.name_ta END,
+    e.total_paise, e.status, e.created_at
   FROM expenses e LEFT JOIN parties p ON p.id = e.party_id LEFT JOIN expense_heads h ON h.id = e.head_id WHERE e.deleted = 0
   UNION ALL
-  SELECT a.id, 'ADJ', a.doc_no, a.doc_date, NULL, a.reason,
+  SELECT a.id, CASE WHEN a.reason = 'opening' THEN 'OPEN' ELSE 'ADJ' END, a.doc_no, a.doc_date, NULL, a.reason, NULL,
     COALESCE((SELECT SUM(CASE WHEN m.qty_milli >= 0 THEN COALESCE(m.value_paise, 0) ELSE -ABS(COALESCE(m.value_paise, 0)) END)
       FROM stock_moves m WHERE m.source_type = 'ADJ' AND m.source_id = a.id AND m.deleted = 0), 0),
     'active', a.created_at
   FROM stock_adjustments a WHERE a.deleted = 0`;
 
-export const DOC_TYPES = ['INV', 'CN', 'RCPT', 'PAY', 'PUR', 'DN', 'EXP', 'ADJ'] as const;
+export const DOC_TYPES = ['INV', 'CN', 'RCPT', 'PAY', 'PUR', 'DN', 'EXP', 'ADJ', 'OPEN'] as const;
 
 /** Safe filename part: keeps letters in any script, digits, spaces, - and _. */
 export const fileSafe = (s: string) => s.replace(/[^\p{L}\p{M}\p{N} _-]+/gu, ' ').replace(/\s+/g, ' ').trim();
