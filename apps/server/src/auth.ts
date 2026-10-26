@@ -72,7 +72,8 @@ async function userForToken(db: Db, token: string): Promise<SessionUser | null> 
     FROM sessions s JOIN users u ON u.id = s.user_id
     WHERE s.token_hash = ? AND u.deleted = 0`, [sha256(token)]);
   if (!row || !row.active || row.expires_at < nowIso()) return null;
-  await db.execute({ sql: 'UPDATE sessions SET last_seen = ? WHERE token_hash = ?', args: [nowIso(), sha256(token)] });
+  // Best-effort: a busy database (another request mid-transaction) must not fail the request itself.
+  await db.execute({ sql: 'UPDATE sessions SET last_seen = ? WHERE token_hash = ?', args: [nowIso(), sha256(token)] }).catch(() => undefined);
   return { id: row.id, name: row.name, role: row.role, lang: row.lang, mustChangePin: !row.pin_set_at };
 }
 

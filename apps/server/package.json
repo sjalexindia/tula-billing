@@ -7,7 +7,11 @@
     "dev": "tsx watch src/main.ts",
     "start": "tsx src/main.ts",
     "test": "vitest run",
-    "apply-profile": "tsx src/apply-profile.ts"
+    "apply-profile": "tsx src/apply-profile.ts",
+    "supervise": "tsx src/supervisor.ts",
+    "backup": "tsx src/cli/backup.ts",
+    "restore": "tsx src/cli/restore.ts",
+    "status": "tsx src/cli/status.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
