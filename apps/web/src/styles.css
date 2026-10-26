@@ -356,12 +356,12 @@ td.owed, .page-sum.owed { color: var(--danger); }
 .subtabs a:hover { color: var(--ink); }
 .subtabs a[aria-current='page'] { color: var(--ink); border-bottom-color: var(--mark); }
 
-/* Phones: the group menu scrolls sideways inside the top bar instead of widening the page. */
+/* Phones: every group stays in view, wrapping onto more rows as needed (each as wide as its name); nothing scrolls sideways. */
 @media (max-width: 600px) {
-  .topbar .tabs { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
-  .topbar .tabs a { white-space: nowrap; }
-  .subtabs { overflow-x: auto; flex-wrap: nowrap; padding: 6px 12px 0; }
-  .subtabs a { white-space: nowrap; }
+  .topbar .tabs { flex-wrap: wrap; gap: 4px; }
+  .topbar .tabs a { flex: 1 1 auto; padding: 7px 8px; text-align: center; font-size: 14px; white-space: nowrap; }
+  .subtabs { padding: 6px 12px 0; row-gap: 0; }
+  .subtabs a { padding: 8px 10px; }
   .topbar .rates { flex: 1 1 auto; }
 }
 
