@@ -60,6 +60,11 @@ export async function nextNumber(ex: Exec, deviceId: string, docType: string, fy
   return docNo;
 }
 
+const NUMBERING_WORDS: Record<string, string> = {
+  'invoice.prefix': 'invoice number prefix', 'invoice.number_format': 'invoice number format',
+  'invoice.seq_digits': 'digits in the running number', 'invoice.start_number': 'starting number',
+};
+
 /**
  * Apply the invoice numbering settings to this device's current-year series.
  * GST needs a consecutive series, so this refuses once the year's first invoice exists.
@@ -68,7 +73,8 @@ export async function applyNumberingSettings(ex: Exec, deviceId: string, setting
   const fy = financialYear(todayIST());
   const issued = await one<{ n: number }>(ex, "SELECT COUNT(*) n FROM sales_docs WHERE doc_type = 'INV' AND fy = ? AND device_id = ?", [fy, deviceId]);
   if (Number(issued?.n ?? 0) > 0) {
-    throw new UserError(`Invoices already issued this financial year, so ${changing.join(', ')} can only change from next financial year.`, 'NUMBERING_IN_USE');
+    const words = changing.map((k) => NUMBERING_WORDS[k] ?? k).join(', ');
+    throw new UserError(`Bills are already made this financial year, so the ${words} can only change from next April. Undo that change and save again.`, 'NUMBERING_IN_USE');
   }
   const values = { prefix: settings['invoice.prefix'], pad: Number(settings['invoice.seq_digits']), next_no: Number(settings['invoice.start_number']) };
   const existing = await one<{ id: string }>(ex, "SELECT id FROM number_series WHERE doc_type = 'INV' AND owner_device = ? AND fy = ? AND deleted = 0", [deviceId, fy]);

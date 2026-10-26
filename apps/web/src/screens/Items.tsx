@@ -17,8 +17,13 @@ function ItemList() {
   const { isOwner } = useApp();
   const [rows, setRows] = useState<ProductRow[] | null>(null);
   const [q, setQ] = useState('');
-  useEffect(() => { api.products().then(setRows).catch(() => setRows([])); }, []);
+  const [units, setUnits] = useState<Map<string, Unit>>(new Map());
+  useEffect(() => {
+    api.products().then(setRows).catch(() => setRows([]));
+    api.units().then((u) => setUnits(new Map(u.map((x) => [x.code, x])))).catch(() => {});
+  }, []);
   const ui = i18n.language;
+  const unitName = (code: string) => { const u = units.get(code); return u ? nameIn(ui, u.name_en, u.name_ta) : code; };
   const shown = useMemo(() => {
     const s = q.trim().toLowerCase();
     return (rows ?? []).filter((r) => !s || [r.sku, r.name_en, r.name_ta ?? '', r.brand ?? ''].some((x) => x.toLowerCase().includes(s)));
@@ -44,7 +49,7 @@ function ItemList() {
                 <td>{nameIn(ui, r.category_en, r.category_ta)}</td>
                 <td className="r">{r.rate_mode === 'daily' ? <span className="sub-inline">{r.rate_group}{r.rate_extra_paise ? ` +${formatRs(r.rate_extra_paise)}` : ''}</span> : formatRs(r.sale_rate_paise)}</td>
                 <td>{r.gst_bp / 100}%</td>
-                <td className="r">{r.track_stock ? `${formatQty(r.stock_milli, { decimals: 0 })} ${r.base_unit}` : '—'}</td>
+                <td className="r">{r.track_stock ? `${formatQty(r.stock_milli, { decimals: 0 })} ${unitName(r.base_unit)}` : '—'}</td>
               </tr>
             ))}
           </tbody>

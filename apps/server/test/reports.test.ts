@@ -292,7 +292,7 @@ describe('reports', () => {
     expect(s.find((x) => x.code === 'BANK')!.closing).toBe(-P(100000 + 2360));
     const bank = table(r, 'account_bank');
     expect(bank.rows.at(-1)!.balance).toBe(-P(102360));
-    expect(bank.rows.some((x) => x.doc_no === 'PY/26-27/0001' && x.party === 'Steel Mill Agency')).toBe(true);
+    expect(bank.rows.some((x) => x.doc_no === 'PY/26-27/0001' && (x.party as { en: string }).en === 'Steel Mill Agency')).toBe(true);
     // the opening balance carries over into the next month
     const oct = await get('/api/reports/cash-book?from=2026-10-01&to=2026-10-31');
     expect(table(oct, 'accounts').rows.find((x) => x.code === 'CASH')!.opening).toBe(P(885 - 16180));

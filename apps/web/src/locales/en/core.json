@@ -120,7 +120,10 @@
   "errors": {
     "network": "Can't reach the billing server. Check that the main computer is on.",
     "setup": "Finish setting up your business before the first bill.",
-    "setupLink": "Open settings"
+    "setupLink": "Open settings",
+    "notForYou": "This screen is not open to you",
+    "notForYouHelp": "You are signed in as {{role}}. Ask the owner if you need something from here.",
+    "goHome": "Go to my first screen"
   },
   "invoice": {
     "title": "Tax Invoice",
@@ -225,7 +228,8 @@
       "single": "One language",
       "bilingual": "Both languages"
     },
-    "pickState": "Pick a state"
+    "pickState": "Pick a state",
+    "numberingLocked": "Bills are already made this year, so these can only change from next April: {{fields}}. Put them back and save again."
   },
   "auth": {
     "title": "Sign in",

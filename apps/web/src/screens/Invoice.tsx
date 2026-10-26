@@ -24,7 +24,7 @@ export function Invoice({ id }: { id: string }) {
   const due = bill && links && !isCn && bill.doc.status !== 'cancelled' ? Math.max(0, bill.doc.total_paise - bill.paidPaise - returned) : 0;
   useEffect(() => {
     const s = bill?.settings;
-    if (!bill || !s || due <= 0 || !s['business.upi_id'] || s['invoice.show_upi_qr'] !== 'true') return;
+    if (!bill || !s || due <= 0 || !s['business.upi_id'] || s['invoice.show_upi_qr'] !== 'true') { setQr(''); return; }
     const params = new URLSearchParams({
       pa: s['business.upi_id'], pn: s['business.name_en'] ?? '', am: (due / 100).toFixed(2), cu: 'INR', tn: `Bill ${bill.doc.doc_no}`,
     });
@@ -123,31 +123,33 @@ export function Invoice({ id }: { id: string }) {
           </div>
         </section>
 
-        <table className="inv-lines">
-          <thead>
-            <tr>
-              <th className="c">{t('invoice.sn')}</th><th>{t('invoice.description')}</th><th>{t('invoice.hsn')}</th>
-              <th className="r">{t('invoice.qty')}</th><th className="r">{anyInclusive ? t('invoice.rateIncl') : t('invoice.rate')}</th>
-              <th className="r">{t('invoice.disc')}</th><th className="r">{t('invoice.taxable')}</th>
-              {taxInvoice && <th className="r">{t('invoice.gst')}</th>}<th className="r">{t('invoice.amount')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lines.map((l) => (
-              <tr key={l.line_no}>
-                <td className="c">{l.line_no}</td>
-                <td>{l.description}{breakdown(l) && <span className="sub">{breakdown(l)}</span>}</td>
-                <td>{l.hsn}</td>
-                <td className="r nowrap">{formatQty(l.rate_qty_milli, { trimZeros: true })} {unitName(l)}</td>
-                <td className="r">{formatRs(l.rate_paise, { symbol: false })}</td>
-                <td className="r">{l.discount_paise ? formatRs(l.discount_paise, { symbol: false }) : ''}</td>
-                <td className="r">{formatRs(l.taxable_paise, { symbol: false })}</td>
-                {taxInvoice && <td className="r">{l.gst_bp / 100}%</td>}
-                <td className="r">{formatRs(l.line_total_paise, { symbol: false })}</td>
+        <div className="inv-lines-wrap">
+          <table className="inv-lines">
+            <thead>
+              <tr>
+                <th className="c">{t('invoice.sn')}</th><th>{t('invoice.description')}</th><th>{t('invoice.hsn')}</th>
+                <th className="r">{t('invoice.qty')}</th><th className="r">{anyInclusive ? t('invoice.rateIncl') : t('invoice.rate')}</th>
+                <th className="r">{t('invoice.disc')}</th><th className="r">{t('invoice.taxable')}</th>
+                {taxInvoice && <th className="r">{t('invoice.gst')}</th>}<th className="r">{t('invoice.amount')}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {lines.map((l) => (
+                <tr key={l.line_no}>
+                  <td className="c">{l.line_no}</td>
+                  <td>{l.description}{breakdown(l) && <span className="sub">{breakdown(l)}</span>}</td>
+                  <td>{l.hsn}</td>
+                  <td className="r nowrap">{formatQty(l.rate_qty_milli, { trimZeros: true })} {unitName(l)}</td>
+                  <td className="r">{formatRs(l.rate_paise, { symbol: false })}</td>
+                  <td className="r">{l.discount_paise ? formatRs(l.discount_paise, { symbol: false }) : ''}</td>
+                  <td className="r">{formatRs(l.taxable_paise, { symbol: false })}</td>
+                  {taxInvoice && <td className="r">{l.gst_bp / 100}%</td>}
+                  <td className="r">{formatRs(l.line_total_paise, { symbol: false })}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         <section className="inv-foot">
           <div className="inv-left">

@@ -3,6 +3,15 @@ import { businessOf, DOC_TYPES, DOCS_SQL, n, type Col, type Report, type Row } f
 
 const ADJ_REASON: Record<string, string> = { opening: 'Opening stock', weight_diff: 'Weight difference', scrap: 'Scrap', damage: 'Damage', count: 'Count correction', other: 'Stock correction' };
 
+/** Party in both languages; a stock correction shows its reason, translated on screen from the code. */
+function partyCell(d: Record<string, unknown>): Row[string] {
+  if (d.doc_type === 'ADJ' || d.doc_type === 'OPEN') {
+    const reason = String(d.party_name ?? 'other');
+    return { code: reason, en: ADJ_REASON[reason] ?? reason };
+  }
+  return d.party_name ? { en: String(d.party_name), ta: (d.party_name_ta as string | null) ?? null } : '';
+}
+
 /** R-01 Day book: every document in the period, cancelled ones struck through and left out of totals. */
 export async function dayBook(ex: Exec, from: string, to: string): Promise<Report> {
   const { business } = await businessOf(ex);
@@ -10,7 +19,7 @@ export async function dayBook(ex: Exec, from: string, to: string): Promise<Repor
     SELECT * FROM (${DOCS_SQL}) WHERE doc_date BETWEEN ? AND ?
     ORDER BY doc_date, created_at, doc_no`, [from, to]);
   const rows: Row[] = docs.map((d) => ({
-    date: d.doc_date, type: d.doc_type, doc_no: d.doc_no, party: d.doc_type === 'ADJ' ? ADJ_REASON[String(d.party_name)] ?? d.party_name : d.party_name ?? '', amount: n(d.amount_paise),
+    date: d.doc_date, type: d.doc_type, doc_no: d.doc_no, party: partyCell(d), amount: n(d.amount_paise),
     status: d.status, _cancelled: d.status === 'cancelled',
   }));
   const byType: Row[] = DOC_TYPES.map((type) => {
@@ -24,7 +33,7 @@ export async function dayBook(ex: Exec, from: string, to: string): Promise<Repor
     { key: 'date', type: 'date', header: 'Date' },
     { key: 'type', type: 'code', header: 'Type', width: 8, translate: true },
     { key: 'doc_no', type: 'code', header: 'Number', width: 18 },
-    { key: 'party', type: 'text', header: 'Party / details', width: 32 },
+    { key: 'party', type: 'name', header: 'Party / details', width: 32 },
     { key: 'amount', type: 'money', header: 'Amount' },
     { key: 'status', type: 'code', header: 'Status', width: 11, translate: true },
   ];
@@ -61,7 +70,7 @@ export async function cashBook(ex: Exec, from: string, to: string): Promise<Repo
     const op = (await all<{ b: number }>(ex, `SELECT COALESCE(SUM(e.debit_paise - e.credit_paise), 0) b ${join} WHERE ${live} AND e.entry_date < ?`, [acc.id, from]))[0];
     const opening = n(op?.b);
     const entries = await all<Record<string, unknown>>(ex, `
-      SELECT e.entry_date, e.source_type, e.debit_paise, e.credit_paise, e.narration, d.doc_no, d.party_name
+      SELECT e.entry_date, e.source_type, e.debit_paise, e.credit_paise, e.narration, d.doc_no, d.party_name, d.party_name_ta
       ${join} WHERE ${live} AND e.entry_date BETWEEN ? AND ?
       ORDER BY e.entry_date, e.created_at`, [acc.id, from, to]);
     let bal = opening;
@@ -69,7 +78,7 @@ export async function cashBook(ex: Exec, from: string, to: string): Promise<Repo
     for (const e of entries) {
       bal += n(e.debit_paise) - n(e.credit_paise);
       rows.push({
-        date: e.entry_date, type: e.source_type, doc_no: e.doc_no ?? '', party: e.party_name ?? '', narration: e.narration ?? '',
+        date: e.entry_date, type: e.source_type, doc_no: e.doc_no ?? '', party: e.party_name ? { en: String(e.party_name), ta: (e.party_name_ta as string | null) ?? null } : '', narration: e.narration ?? '',
         money_in: n(e.debit_paise) || null, money_out: n(e.credit_paise) || null, balance: bal,
       });
     }
@@ -82,7 +91,7 @@ export async function cashBook(ex: Exec, from: string, to: string): Promise<Repo
         { key: 'date', type: 'date', header: 'Date' },
         { key: 'type', type: 'code', header: 'Type', width: 8, translate: true },
         { key: 'doc_no', type: 'code', header: 'Number', width: 18 },
-        { key: 'party', type: 'text', header: 'Party', width: 28 },
+        { key: 'party', type: 'name', header: 'Party', width: 28 },
         { key: 'narration', type: 'text', header: 'Details', width: 30 },
         { key: 'money_in', type: 'money', header: 'Money in' },
         { key: 'money_out', type: 'money', header: 'Money out' },

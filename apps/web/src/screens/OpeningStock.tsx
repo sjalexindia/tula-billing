@@ -1,7 +1,7 @@
 import { formatQty, formatRs, parseScaled, roundDiv, toMilli } from '@tula/core';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, type OpeningRow } from '../api';
+import { api, type OpeningRow, type Unit } from '../api';
 import { nameIn } from '../i18n';
 
 /** Enter the counted stock and its cost per unit; only changed rows are saved. */
@@ -12,12 +12,17 @@ export function OpeningStock() {
   const [draft, setDraft] = useState<Record<string, { qty: string; cost: string }>>({});
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [units, setUnits] = useState<Map<string, Unit>>(new Map());
 
   const load = () => api.opening().then((r) => {
     setRows(r);
     setDraft(Object.fromEntries(r.map((x) => [x.product_id, { qty: x.qty_milli ? formatQty(x.qty_milli, { trimZeros: true }).replace(/,/g, '') : '', cost: x.cost_paise != null ? (x.cost_paise / 100).toFixed(2) : '' }])));
   });
-  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    void load();
+    api.units().then((u) => setUnits(new Map(u.map((x) => [x.code, x])))).catch(() => {});
+  }, []);
+  const unitName = (code: string) => { const u = units.get(code); return u ? nameIn(ui, u.name_en, u.name_ta) : code; };
   if (!rows) return null;
 
   const changed = rows.filter((r) => {
@@ -62,7 +67,7 @@ export function OpeningStock() {
             return (
               <tr key={r.product_id} className={changed.includes(r) ? 'changed' : ''}>
                 <td>{nameIn(ui, r.name_en, r.name_ta)}<span className="sub mono">{r.sku}</span></td>
-                <td className="r"><input className="num" inputMode="decimal" aria-label={`${t('opening.qty')} ${r.sku}`} value={d.qty} onChange={(e) => set('qty', e.target.value)} /> <span className="unit">{r.base_unit}</span></td>
+                <td className="r"><input className="num" inputMode="decimal" aria-label={`${t('opening.qty')} ${r.sku}`} value={d.qty} onChange={(e) => set('qty', e.target.value)} /> <span className="unit">{unitName(r.base_unit)}</span></td>
                 <td className="r"><input className="num" inputMode="decimal" aria-label={`${t('opening.cost')} ${r.sku}`} value={d.cost} onChange={(e) => set('cost', e.target.value)} /></td>
                 <td className="r">{value(r.product_id) ? formatRs(value(r.product_id)) : ''}</td>
               </tr>

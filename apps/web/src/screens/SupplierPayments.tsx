@@ -185,7 +185,7 @@ function NewPayment({ supplierId }: { supplierId?: string }) {
             <div className="field wide">
               <label htmlFor="pay-sup">{t('purchases.common.supplier')}</label>
               <select id="pay-sup" value={partyId} onChange={(e) => { setPartyId(e.target.value); setManual(false); setAlloc({}); }}>
-                <option value="">{t('purchases.pur.pickSupplier')}</option>
+                <option value="">{t('purchases.pay.pickSupplier')}</option>
                 {(suppliers ?? []).map((s) => <option key={s.id} value={s.id}>{nameIn(ui, s.name_en, s.name_ta)}{s.balance_paise < 0 ? ` — ${formatRs(-s.balance_paise)}` : ''}</option>)}
               </select>
             </div>
