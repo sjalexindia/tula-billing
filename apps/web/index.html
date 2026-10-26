@@ -20,8 +20,10 @@
     <script>
       // App-shell cache for the installed app. Service workers exist only in secure contexts
       // (https, localhost), so on http://<LAN IP> this does nothing and the app still works.
-      // Skipped on the Vite dev server so development never serves stale files.
-      if ('serviceWorker' in navigator && window.isSecureContext && location.port !== '5173') {
+      // Skipped on the Vite dev server so development never serves stale files, and in the Android
+      // app, which carries its own files.
+      var inApp = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+      if ('serviceWorker' in navigator && window.isSecureContext && location.port !== '5173' && !inApp) {
         window.addEventListener('load', function () {
           navigator.serviceWorker.register('/sw.js').catch(function () {});
         });

@@ -1,16 +1,17 @@
 # Cloud copy (sync) and phones
 
-Phase 1. Owner-facing steps first, then how it works and its limits.
+Phase 1, plus phones that work on their own. Owner-facing steps first, then how it works and its limits.
 
-## 1. What sync does in Phase 1, and what it doesn't do
+## 1. What sync does, and what it doesn't do
 
 **Does:**
 - Keeps an **off-site copy of all business data** in a cloud libSQL database (Turso). Every change on the shop computer (bills, receipts, items, customers, settings, users and so on) is sent within a few seconds. If the internet is down, changes wait on the computer and are sent later.
 - Lets you **set up a replacement computer**, or a second one, from that copy ("join").
 - Lets two or more computers share the same data, each with its own bill number series.
+- Lets **phones work on their own** with the Android app: a phone keeps its own copy, bills anywhere (no internet, shop computer off), and exchanges changes through the cloud copy when it has internet (§5).
 
 **Doesn't:**
-- Phones do **not** keep their own copy. A phone is a screen for the shop computer: it works only on the shop Wi-Fi while that computer is on. Billing on a phone without the computer is Phase 2.
+- A phone in the browser, or the Android app in "Connect to the shop computer" mode, keeps **no** copy: it is a screen for the shop computer and works only on the shop Wi-Fi while that computer is on.
 - It is not a backup history. The cloud copy is the **latest state**, not yesterday's version. Keep using the daily backup on the Backup screen as well.
 - Login sessions are never copied. Each computer signs its own people in, but users and PINs are copied.
 
@@ -33,7 +34,7 @@ Phase 1. Owner-facing steps first, then how it works and its limits.
 
 The token is a password. Keep it **only** in that environment file: never in a business profile, a screenshot, WhatsApp or git. Tula never shows it. The status screen shows only the database's host name.
 
-**Rotate the token** (once a year, or when someone who knew it leaves): create a new token, put it in `TULA_SYNC_TOKEN` on every computer, restart Tula, then invalidate the old ones with `turso db tokens invalidate tula-<shop>`. Note that invalidating **all** tokens of the database is how Turso revokes access, so do this on every computer the same day.
+**Rotate the token** (once a year, when someone who knew it leaves, or when a phone is lost): create a new token, put it in `TULA_SYNC_TOKEN` on every computer, restart Tula, enter it on every phone that works on its own (Settings → Devices & sync → Change the access token), then invalidate the old ones with `turso db tokens invalidate tula-<shop>`. Note that invalidating **all** tokens of the database is how Turso revokes access, so do this on every computer the same day.
 
 **If the screen shows a problem**, it says what to do:
 
@@ -44,6 +45,8 @@ The token is a password. Keep it **only** in that environment file: never in a b
 | The cloud address is not correct | Fix `TULA_SYNC_URL`. |
 | Another computer has a newer version | Update Tula on this computer. Its changes wait safely on the hub. |
 | This computer was marked as lost | See §4. |
+
+A phone working on its own shows the same states in its own words, and lets you enter a new token there (§5).
 
 ## 3. Join a new or replacement computer
 
@@ -69,11 +72,28 @@ Start Tula. The log says what happened, for example: `sync: joined the business 
 
 ## 4. Devices screen: rename, "mark as lost"
 
-Settings → Devices & sync lists every computer that shares the data, with its bill series. **Mark as lost** (from another computer) makes that computer stop sending and receiving as soon as it next connects. All computers share one Turso token, so a thief with the computer still has the token: **also rotate the token** (§2). "Found again" undoes the mark. A computer cannot mark itself as lost.
+Settings → Devices & sync lists every computer, and every phone that works on its own, with its bill series. **Mark as lost** (from another device) makes that device stop sending and receiving as soon as it next connects. All devices share one Turso token, so a thief with the computer or phone still has the token: **also rotate the token** (§2). "Found again" undoes the mark. A device cannot mark itself as lost.
 
 ## 5. Phones
 
-Phones open Tula **from the shop computer**, over the shop Wi-Fi. The shop computer must be on and Tula running (it listens on the LAN by default: `TULA_HOST=0.0.0.0`).
+Two ways:
+- **The Android app, "Work on this phone"**: Tula runs on the phone itself, with its own copy of the data. Works anywhere. Needs the cloud copy (§2).
+- **Open Tula from the shop computer**, in the phone's browser or with the Android app in "Connect to the shop computer" mode. Only on the shop Wi-Fi, while the shop computer is on with Tula running (it listens on the LAN by default: `TULA_HOST=0.0.0.0`).
+
+### Android app: work on this phone (anywhere)
+1. Install the APK (see "Android app (APK)" below).
+2. Open **Tula** and choose **Work on this phone**.
+3. Paste the **cloud address** (`TULA_SYNC_URL`) and the **access token** (`TULA_SYNC_TOKEN`), the same two values as on the shop computer, and give the phone a name. Tap **Copy the business to this phone**. This step needs internet. The phone copies everything from the cloud copy and becomes a new device with its own bill series: **`M1`**, then `M2` for the next phone, and so on. Its bills are numbered like `DT/26-27/M10001`.
+4. Sign in with your name and PIN (the same PINs as on the shop computer).
+
+After that the phone opens straight into Tula. It bills, takes receipts, adds customers and shows reports **without internet and without the shop computer**. Every change waits on the phone and goes to the cloud copy within seconds of having internet; the shop computer's changes come back the same way. Settings → Devices & sync on the phone shows its series, the changes waiting to send, and **Sync now**.
+
+What is different on the phone:
+- No **Backup** screen: the cloud copy is the phone's off-site copy. Keep the daily backup on the shop computer.
+- No **Excel download** on reports (they show on screen). **Printing does not work yet** inside the app: make and sync the bill on the phone, print it from the shop computer.
+- **Change the access token** (Settings → Devices & sync) after the token was rotated.
+- **Use the shop computer instead** switches the app to the connect page. The phone's data stays; the connect page has **Work on this phone instead** to come back. Send waiting changes first (the screen warns if there are any).
+- Uninstalling the app or clearing its storage **deletes the phone's copy**, including bills that never reached the cloud copy. Check that "Changes waiting to send" is 0 first.
 
 ### Browser (any phone)
 1. Connect the phone to the shop Wi-Fi.
@@ -88,13 +108,13 @@ What "Add to Home screen" really does today (checked October 2026):
 The service worker caches only the app's static files (page, scripts, styles, icons). It **never** caches `/api/`, so figures are always live.
 
 ### Android app (APK)
-A thin app that opens Tula from the shop computer full screen, without the address bar.
+The same app does both: Tula on the phone (above), or Tula from the shop computer full screen, without the address bar.
 1. Build: on GitHub → Actions → **Android APK** → *Run workflow* (also runs for tags `v*` / `android-*`). When it finishes, download the artifact `tula-android-debug` (a zip with `tula-…-debug.apk`).
 2. Send the APK to the phone (USB, or a shared drive link; not a public link). Open it. Android asks to allow **"Install unknown apps"** for the Files or Chrome app: allow it once, then install. Play Protect may warn about an unknown developer, because this is a debug build that isn't from the Play Store: choose "Install anyway".
-3. Open **Tula**, type the address under the QR code (for example `192.168.1.20:5000`; `http://` and port 5000 are added if left out; a pasted QR link also works), then **Connect**. The app checks `/api/health`, remembers the address, and opens Tula. Next time it opens Tula straight away.
+3. To use the shop computer: open **Tula**, choose **Connect to the shop computer**, type the address under the QR code (for example `192.168.1.20:5000`; `http://` and port 5000 are added if left out; a pasted QR link also works), then **Connect**. The app checks `/api/health`, remembers the address, and opens Tula. Next time it opens Tula straight away.
 4. If the computer can't be reached, the app shows **Try again** and **Change address**. The Back button from Tula also returns to this page.
 
-Technical notes: Capacitor 8, app id `in.tula.app`, `webDir` = `apps/web/shell` (the connect page; no build step). Plain http to private LAN ranges (`192.168.*`, `10.*`, `172.16–31.*`, `*.local`) is allowed via `server.cleartext`, `allowNavigation` and `android.allowMixedContent`. `server.errorPath` = `error.html`. The health check uses the native `CapacitorHttp` plugin, so the browser's cross-origin rules don't apply. The `android/` project is committed. CI runs `npx cap sync android` and `./gradlew assembleDebug` with Java 21. **The CI build has not been run yet**: the first run may need small fixes. A signed release build (for Play Store or to avoid warnings) is not set up.
+Technical notes: Capacitor 8, app id `in.tula.app`, `webDir` = `apps/web/dist-phone` (the phone build, `npm run build:phone -w apps/web`; the connect page from `apps/web/shell` is copied to `connect/`). Plain http to private LAN ranges (`192.168.*`, `10.*`, `172.16–31.*`, `*.local`) is allowed via `server.cleartext`, `allowNavigation` and `android.allowMixedContent`. `server.errorPath` = `connect/error.html`. The health check uses the native `CapacitorHttp` plugin, so the browser's cross-origin rules don't apply. Plugin: `@capacitor/preferences` (the mode, the cloud address and token, the session; app-private storage). The `android/` project is committed. CI (`.github/workflows/android.yml`, Ubuntu 24.04 with its preinstalled Android SDK) builds the phone app, runs `npx cap sync android` and `./gradlew assembleDebug` with Java 21. A signed release build (for Play Store or to avoid warnings) is not set up.
 
 **Router tip:** give the shop computer a fixed IP (a DHCP reservation in the Wi-Fi router). Otherwise the address can change after a power cut, and phones and the app must be pointed at the new one.
 
@@ -110,18 +130,29 @@ Technical notes: Capacitor 8, app id `in.tula.app`, `webDir` = `apps/web/shell` 
 - **Worker** (`sync/worker.ts`). Push, then pull: every 30 s, and about 3 s after the outbox count rises (polled every second). Exponential backoff from 5 s up to 5 min. It never throws into the server. It records `sync.last_push_at`, `sync.last_pull_at`, `sync.pending`, `sync.last_error` (+ `_code`, `_at`) in `sync_state`. The same failure is logged once.
 - **Join** (`sync/join.ts`). Reads the hub's max `seq` first, copies every synced table (keyset pages, FKs deferred, one local transaction), sets the cursor, creates or takes over the device, and pushes.
 - **Conflicts the hub can't take** (a UNIQUE clash, e.g. two computers entering the same day's rate) are retried row by row. Rows that still fail go to the local `sync_rejects` table instead of blocking sync, and the screen shows a count. Nothing resolves them automatically yet.
-- **API** (owner only): `GET /api/sync/status`, `POST /api/sync/now`, `GET /api/devices`, `PUT /api/devices/:id` (`{name?, revoked?}`), `GET /api/network`.
-- **Tests:** `apps/server/test/sync.test.ts` uses two computers and a **file** hub (`file:…/hub.db`). The client API is identical to Turso's; only the URL differs.
+- **API** (owner only): `GET /api/sync/status`, `POST /api/sync/now`, `GET /api/devices`, `PUT /api/devices/:id` (`{name?, revoked?}`), `GET /api/network` (computer only).
+- **Tests:** `apps/server/test/sync.test.ts` uses two computers and a **file** hub (`file:…/hub.db`). The client API is identical to Turso's; only the URL differs. `test/phone.test.ts` does the same with a phone.
+
+### Phones working on their own (for developers)
+- The phone build (`vite build --mode phone`) runs Tula's own server code inside the WebView: `registerApi` (`apps/server/src/api.ts`) and `registerSyncRoutes` on an in-process router (`apps/web/src/local/router.ts`) that implements the `Router` contract in `apps/server/src/http.ts`. The web app's `/api` calls go through `apiFetch` (`src/platform.ts`), which the phone points at that router. The session token is kept in Preferences and sent as `Authorization: Bearer`.
+- The database is SQLite WebAssembly (`@sqlite.org/sqlite-wasm`) in a Web Worker (`src/local/db.worker.ts`) on the **opfs-sahpool** VFS (persistent; no COOP/COEP headers needed). `src/local/sqlite-client.ts` wraps it as a libSQL `Client`: rows by index and by name, batches, transactions, one statement at a time (other statements wait while a transaction is open, like `queued()` on the computer). Migrations are bundled with `import.meta.glob`.
+- The hub is reached with `@libsql/client/web` over HTTPS (`HubDriver` in `sync/hub.ts`; the computer's driver is `sync/node-hub.ts`). Joining is `joinFromHub(…, { mode: 'new', kind: 'phone' })`: series `M1`…`M9`, `MA`…`MZ`. The sync worker is the same class; it also runs when the app comes back to the front.
+- PINs: `@noble/hashes` scrypt, with the same parameters and bytes as Node's `scryptSync` (which the computer keeps using because it is faster).
+- `npm run test:phone -w apps/server` runs the business tests on this stack in Node (in-memory SQLite WebAssembly).
 
 ## 7. Limits (Phase 1)
 
 - **Clock-based last-writer-wins.** `updated_at` is each computer's wall clock (ISO time, millisecond resolution). A computer whose clock is wrong can win or lose edits unfairly; keep Windows time sync on. The spec's hybrid logical clock is not implemented. LWW is per row: two people changing *different* fields of the same item on two computers keeps only the later row. The losing version is not yet written to the audit log on pull.
 - Documents are append-only, so bills never conflict. Stock and balances are derived, so they converge.
-- One shared token for all computers: per-device revocation is advisory (§4); real revocation means rotating the token.
+- One shared token for all computers and phones: per-device revocation is advisory (§4); real revocation means rotating the token on every device. A lost phone keeps its access until then.
+- A phone billing offline can sell stock another device already sold; stock goes negative and the stock screens show it (as with two computers).
+- A phone's bills that never reached the cloud copy are lost if the phone is lost or reset, or the app is uninstalled.
+- Printing and Excel downloads are not available inside the Android app yet.
+- Phones working on their own were tested on their stack in Node and in desktop Chrome (worker, persistent storage, setup errors against the real Turso, read-only). The first setup on a real phone is the first full check.
 - `replace` cannot recover changes that never left the dead computer.
 - Rows set aside in `sync_rejects` need a person to look at them (no screen for that yet).
-- Turso over the real network has **not** been exercised in development; only the `file:` hub, which uses the same client API. Migrations on the hub run through `executeMultiple` with `BEGIN … COMMIT`. Check this on the first real setup.
+- The shop computer syncs with the real Turso (checked October 2026). Migrations on the hub run through `executeMultiple` with `BEGIN … COMMIT`.
 
-## 8. Phase 2: phones that bill offline
+## 8. Still to do for phones
 
-Each phone would keep its own libSQL replica and outbox, with its own series code (`M1`, `M2`; `devices.series_code` is ready). It would push and pull through the same hub `sync_log`, so the server-side design here carries over. Needs: a phone-side database (Turso's embedded replicas or our outbox over HTTP, after the spike in the spec §6.1), per-device tokens, conflict review for masters, and an https story for full-screen web install.
+Per-device tokens (so a lost phone can be cut off without rotating everyone's token), printing and sharing a bill (PDF or WhatsApp) from the app, conflict review for masters edited on two devices, a signed release APK, and an https story for full-screen web install from the shop computer.

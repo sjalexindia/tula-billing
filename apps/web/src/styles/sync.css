@@ -39,3 +39,18 @@
   .sync-actions .btn { display: block; width: 100%; margin: 0 0 6px; }
   .sync-actions .btn + .btn { margin-left: 0; }
 }
+
+/* This phone (only when Tula runs on the phone itself) */
+.sync-phone { border: 1px solid var(--rule); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
+.sync-phone details { margin-top: 10px; }
+.sync-phone summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
+.sync-phone .form-grid { margin-top: 8px; }
+
+/* First start of the Android app: choose how the phone is used, then set it up */
+.phone-start .signin-card { gap: 12px; }
+.phone-choice { display: grid; gap: 10px; }
+.phone-choice button { text-align: left; display: grid; gap: 4px; padding: 14px 16px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; }
+.phone-choice button b { font-size: 17px; }
+.phone-choice button span { color: var(--ink-soft); font-size: 14px; }
+.phone-choice button.primary { border-color: var(--mark); border-width: 2px; }
+.phone-start .field input { width: 100%; }

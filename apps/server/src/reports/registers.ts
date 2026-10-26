@@ -1,6 +1,5 @@
 import { all, type Exec } from '@tula/db';
-import { businessOf, n, sumRows, type Col, type Report, type Row } from './common';
-import { posLabel } from './xlsx';
+import { businessOf, n, posLabel, sumRows, type Col, type Report, type Row } from './common';
 
 const MONEY = ['taxable', 'cgst', 'sgst', 'igst', 'round_off', 'total'];
 

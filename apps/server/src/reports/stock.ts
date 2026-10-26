@@ -27,9 +27,10 @@ export async function stockSummary(ex: Exec, asOf: string, slowDays: number): Pr
     FROM products p JOIN units u ON u.id = p.base_unit_id
     WHERE p.deleted = 0 AND p.track_stock = 1
     ORDER BY p.sku`, [asOf, asOf]);
+  // unit code breaks ties between equal-sized units, so every device shows the same one
   const larger = await all<{ product_id: string; factor_milli: number; name_en: string; name_ta: string | null }>(ex, `
     SELECT pu.product_id, pu.factor_milli, u.name_en, u.name_ta FROM product_units pu JOIN units u ON u.id = pu.unit_id
-    WHERE pu.deleted = 0 ORDER BY pu.factor_milli DESC`);
+    WHERE pu.deleted = 0 ORDER BY pu.factor_milli DESC, u.code`);
   const largest = new Map<string, (typeof larger)[number]>();
   for (const l of larger) if (!largest.has(l.product_id)) largest.set(l.product_id, l);
   const costs = await avgCostsAsOf(ex, asOf);

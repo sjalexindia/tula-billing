@@ -9,6 +9,8 @@ Runs on the shop's own computer without internet, syncs to phones, backs up to G
 ## Status
 **Phase 1 done.** A full shop day: billing, returns, receipts, purchases, expenses, stock, reports and GST returns, roles, backups, auto-start and sync. See [docs/08-phase-1.md](docs/08-phase-1.md).
 
+**Phones that work anywhere.** The Android app can run Tula on the phone itself: it bills with no internet and the shop computer off, and syncs through the cloud copy. See [docs/07-sync-and-phones.md](docs/07-sync-and-phones.md) §5.
+
 | Doc | What it covers |
 |---|---|
 | [docs/01-release-1-spec.md](docs/01-release-1-spec.md) | Goals, roles, use cases, business rules, architecture, screens, release plan |

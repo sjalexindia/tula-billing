@@ -1,4 +1,5 @@
-import { all, getSettings, insert, one, openDb, softDelete, update, type Db } from '@tula/db';
+import { all, getSettings, insert, one, softDelete, update, type Db } from '@tula/db';
+import { openDb } from '@tula/db/node';
 import type { FastifyInstance } from 'fastify';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -9,6 +10,7 @@ import { setup } from '../src/setup';
 import { maybeJoin, startSync, syncWorkerOf } from '../src/sync';
 import { pull, push, syncOnce } from '../src/sync/engine';
 import { openHub, type Hub } from '../src/sync/hub';
+import { nodeHubDriver } from '../src/sync/node-hub';
 import { nextComputerCode } from '../src/sync/join';
 import { callAs, type Call } from './helpers';
 
@@ -63,7 +65,7 @@ beforeAll(async () => {
   const dbA = await openDb(`file:${join(dir, 'a.db')}`);
   await setup(dbA, { preset: 'building-materials', demo: true });
   A = await node(dbA, '1234', '4826');
-  hub = await openHub({ url: hubUrl });
+  hub = await openHub({ url: hubUrl }, nodeHubDriver);
 });
 
 afterAll(() => {

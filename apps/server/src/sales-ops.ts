@@ -2,7 +2,7 @@ import {
   calcBill, calcLine, financialYear, parseScaled, roundDiv, toMilli, toPaise, todayIST, withDefaults, type LineAmounts, type SupplyType,
 } from '@tula/core';
 import { all, getSettings, insert, nowIso, one, softDelete, update, type Db, type Exec } from '@tula/db';
-import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { Router, Req } from './http';
 import { z } from 'zod';
 import { accountId, partyAccountId, partyBalance, post } from './accounts';
 import { nextNumber } from './bills';
@@ -647,9 +647,9 @@ async function receiptDetail(ex: Exec, id: string) {
 // Routes
 // ---------------------------------------------------------------------
 
-export function registerSalesOps(app: FastifyInstance, db: Db, deviceId: string): void {
-  const ctxOf = (req: FastifyRequest): Ctx => ({ deviceId, userId: req.user!.id });
-  const idParam = (req: FastifyRequest) => z.object({ id: z.string().min(1) }).parse(req.params).id;
+export function registerSalesOps(app: Router, db: Db, deviceId: string): void {
+  const ctxOf = (req: Req): Ctx => ({ deviceId, userId: req.user!.id });
+  const idParam = (req: Req) => z.object({ id: z.string().min(1) }).parse(req.params).id;
   const Range = z.object({ from: isoDate.optional(), to: isoDate.optional() });
   const Reason = z.object({ reason: z.string().trim().min(1, 'Give a reason').max(300) });
 

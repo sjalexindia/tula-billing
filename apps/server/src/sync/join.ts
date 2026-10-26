@@ -10,8 +10,10 @@ export interface JoinOptions {
   mode: JoinMode;
   /** replace: the device id this computer takes over (TULA_JOIN_DEVICE) */
   replaceDeviceId?: string;
-  /** new: name shown on the Devices screen (TULA_DEVICE_NAME), default "Computer 2" etc. */
+  /** new: name shown on the Devices screen (TULA_DEVICE_NAME), default "Computer 2" / "Phone 1" etc. */
   name?: string;
+  /** new: a phone gets an M series (M1, M2…), a computer a C series (C2, C3…). Default computer. */
+  kind?: 'computer' | 'phone';
   log?: (msg: string) => void;
 }
 
@@ -21,11 +23,20 @@ const COPY_PAGE = 1000;
 
 /** Series codes for extra computers: C2…C9 then CA…CZ — two characters, so invoice numbers stay within 16. */
 export function nextComputerCode(used: Iterable<string>): string {
+  return nextCode(used, 'C', '23456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'computer');
+}
+
+/** Series codes for phones that bill on their own: M1…M9 then MA…MZ. */
+export function nextPhoneCode(used: Iterable<string>): string {
+  return nextCode(used, 'M', '123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'phone');
+}
+
+function nextCode(used: Iterable<string>, letter: string, chars: string, what: string): string {
   const taken = new Set(used);
-  for (const ch of '23456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
-    if (!taken.has(`C${ch}`)) return `C${ch}`;
+  for (const ch of chars) {
+    if (!taken.has(`${letter}${ch}`)) return `${letter}${ch}`;
   }
-  throw new SyncError('OTHER', 'No free series code left for another computer');
+  throw new SyncError('OTHER', `No free series code left for another ${what}`);
 }
 
 /**
@@ -59,8 +70,9 @@ export async function joinFromHub(db: Db, hub: Hub, opts: JoinOptions): Promise<
     name = String(target.name);
   } else {
     deviceId = '';
-    seriesCode = nextComputerCode(devices.map((d) => String(d.series_code)));
-    name = opts.name?.trim() || `Computer ${seriesCode.slice(1)}`;
+    const used = devices.map((d) => String(d.series_code));
+    seriesCode = opts.kind === 'phone' ? nextPhoneCode(used) : nextComputerCode(used);
+    name = opts.name?.trim() || `${opts.kind === 'phone' ? 'Phone' : 'Computer'} ${seriesCode.slice(1)}`;
   }
 
   const cursor = Number((await hub.client.execute('SELECT COALESCE(MAX(seq), 0) FROM sync_log')).rows[0]?.[0] ?? 0);
@@ -105,7 +117,7 @@ export async function joinFromHub(db: Db, hub: Hub, opts: JoinOptions): Promise<
   }
   await push(db, hub, deviceId);
   log(opts.mode === 'new'
-    ? `sync: joined the business from ${hub.label} as a NEW computer "${name}" (device ${deviceId}, invoice series code ${seriesCode}); copied ${copied} rows.`
+    ? `sync: joined the business from ${hub.label} as a NEW ${opts.kind ?? 'computer'} "${name}" (device ${deviceId}, invoice series code ${seriesCode}); copied ${copied} rows.`
     : `sync: this computer REPLACED device "${name}" (${deviceId}${seriesCode ? `, series ${seriesCode}` : ', main series'}) from ${hub.label}; copied ${copied} rows. Do not switch the old computer back on.`);
   return { deviceId, seriesCode, name, mode: opts.mode, rows: copied, cursor };
 }

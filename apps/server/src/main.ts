@@ -1,4 +1,4 @@
-import { openDb } from '@tula/db';
+import { openDb } from '@tula/db/node';
 import { mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';

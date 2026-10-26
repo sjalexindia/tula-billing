@@ -30,6 +30,8 @@ export interface NavItem {
   screen: ComponentType<ScreenProps>;
   /** reachable by link only, not shown in the menu (e.g. a statement) */
   hidden?: boolean;
+  /** needs the shop computer itself (files, backups); left out when Tula runs on a phone */
+  computerOnly?: boolean;
 }
 
 const ALL: Role[] = ['owner', 'billing', 'viewer'];
@@ -62,7 +64,7 @@ export const NAV: NavItem[] = [
   { route: 'customers', label: 'nav.customers', group: 'masters', roles: ALL, screen: Customers },
 
   { route: 'settings', label: 'nav.settings', group: 'settings', roles: OWNER, screen: SettingsScreen },
-  { route: 'backup', label: 'nav.backup', group: 'settings', roles: OWNER, screen: Backup },
+  { route: 'backup', label: 'nav.backup', group: 'settings', roles: OWNER, screen: Backup, computerOnly: true },
   { route: 'devices', label: 'nav.devices', group: 'settings', roles: OWNER, screen: Devices },
 ];
 

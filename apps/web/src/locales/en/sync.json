@@ -56,12 +56,13 @@
       "app": "Using the Tula Android app instead? Type the address shown under the code once; the app remembers it."
     },
     "devices": {
-      "title": "Computers sharing this data",
-      "help": "Each computer has its own bill number series. Phones open Tula from a computer, so they are not listed here.",
+      "title": "Computers and phones sharing this data",
+      "help": "Each computer, and each phone that works on its own, has its own bill number series. Phones that open Tula from a computer are not listed.",
       "name": "Name",
       "series": "Bill series",
       "mainSeries": "Main",
       "thisOne": "This computer",
+      "thisPhone": "This phone",
       "lost": "Lost",
       "added": "Added: {{when}}",
       "rename": "Rename",

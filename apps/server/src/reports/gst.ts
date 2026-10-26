@@ -1,7 +1,6 @@
 import { roundDiv, stateName } from '@tula/core';
 import { all, type Exec } from '@tula/db';
-import { businessOf, n, type Col, type ColType, type Report, type Row, type Table } from './common';
-import { posLabel } from './xlsx';
+import { businessOf, n, posLabel, type Col, type ColType, type Report, type Row, type Table } from './common';
 
 /**
  * B2C (Large) threshold: inter-state invoices to unregistered buyers above this value are reported invoice-wise.

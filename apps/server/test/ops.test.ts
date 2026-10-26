@@ -1,5 +1,6 @@
 import { createClient } from '@libsql/client';
-import { insert, openDb, type Db } from '@tula/db';
+import { insert, type Db } from '@tula/db';
+import { openDb } from '@tula/db/node';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

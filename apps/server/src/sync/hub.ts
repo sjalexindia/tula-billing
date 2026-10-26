@@ -1,6 +1,5 @@
-import { createClient, type Client } from '@libsql/client';
-import { migrate } from '@tula/db';
-import { basename } from 'node:path';
+import type { Client } from '@libsql/client';
+import { migrate, type Migration } from '@tula/db';
 import { syncedTables, type TableInfo } from './schema';
 
 /**
@@ -18,18 +17,20 @@ export interface Hub {
 
 export interface HubConfig { url: string; token?: string }
 
-/** Read TULA_SYNC_URL / TULA_SYNC_TOKEN. Tokens live only in the environment. */
-export function hubConfigFromEnv(env: NodeJS.ProcessEnv = process.env): HubConfig | null {
-  const url = env.TULA_SYNC_URL?.trim();
-  if (!url) return null;
-  return { url, token: env.TULA_SYNC_TOKEN?.trim() || undefined };
+/**
+ * How this runtime reaches a hub: the shop computer uses @libsql/client (sync/node-hub.ts), the
+ * phone app @libsql/client/web over HTTPS. Both bring the hub up to the same migrations.
+ */
+export interface HubDriver {
+  connect(cfg: HubConfig): Client;
+  migrations(): Migration[];
 }
 
 /** What to show for the hub: "my-shop-x.turso.io", or "file hub.db" in tests. Never secrets. */
 export function hubLabel(url: string): string {
   try {
     const u = new URL(url);
-    if (u.protocol === 'file:') return `file ${basename(u.pathname)}`;
+    if (u.protocol === 'file:') return `file ${u.pathname.split(/[\\/]/).pop()}`;
     return u.hostname;
   } catch {
     return 'invalid address';
@@ -51,10 +52,10 @@ export const HUB_SCHEMA = [
 ];
 
 /** Connect, bring the hub's schema up to this version of Tula (same migrations), and read its tables. */
-export async function openHub(cfg: HubConfig): Promise<Hub> {
-  const client = createClient({ url: cfg.url, authToken: cfg.token });
+export async function openHub(cfg: HubConfig, driver: HubDriver): Promise<Hub> {
+  const client = driver.connect(cfg);
   try {
-    await migrate(client);
+    await migrate(client, driver.migrations());
     for (const sql of HUB_SCHEMA) await client.execute(sql);
     const tables = await syncedTables(client);
     return { client, label: hubLabel(cfg.url), tables, close: () => client.close() };

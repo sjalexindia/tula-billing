@@ -1,5 +1,5 @@
 /** Usage: npm run apply-profile -w apps/server -- path/to/profile.json   (uses TULA_DB like the server) */
-import { openDb } from '@tula/db';
+import { openDb } from '@tula/db/node';
 import { join, resolve } from 'node:path';
 import { applyProfile, readProfile, setup } from './setup';
 

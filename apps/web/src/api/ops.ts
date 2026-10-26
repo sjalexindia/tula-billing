@@ -1,4 +1,5 @@
 import { req } from '../api';
+import { apiFetch } from '../platform';
 
 export type BackupKind = 'scheduled' | 'manual' | 'safety';
 export interface BackupItem { file: string; sizeBytes: number; createdAt: string; kind: BackupKind; appVersion: string | null; checked: boolean; where: 'chosen' | 'local' }
@@ -29,7 +30,7 @@ export const opsApi = {
   /** true when the server answers (used while it restarts after a restore) */
   alive: async () => {
     try {
-      const r = await fetch('/api/health', { cache: 'no-store' });
+      const r = await apiFetch('/api/health', { cache: 'no-store' });
       return r.ok;
     } catch {
       return false;

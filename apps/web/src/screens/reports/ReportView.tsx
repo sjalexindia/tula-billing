@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../api';
 import { reportsApi, reportUrl, type Report, type ReportDef } from '../../api/reports';
+import { runsLocally } from '../../platform';
 import { Field } from '../../components/Field';
 import { nameIn } from '../../i18n';
 import { ReportTable, showDate } from './ReportTable';
@@ -109,7 +110,7 @@ export function ReportView({ def, onBack }: { def: ReportDef; onBack: () => void
           <p className="report-period">{period}</p>
         </div>
         <div className="report-actions no-print">
-          <a className="btn" href={reportUrl(def, params, true)} download>{t('reports.downloadExcel')}</a>
+          {!runsLocally && <a className="btn" href={reportUrl(def, params, true)} download>{t('reports.downloadExcel')}</a>}
           <button type="button" className="btn primary" onClick={() => window.print()} disabled={!report}>{t('reports.print')}</button>
         </div>
       </header>

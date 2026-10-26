@@ -1,15 +1,13 @@
 import { all, insert, nowIso, one, update, type Db, type Exec } from '@tula/db';
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { createHash, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { scrypt } from '@noble/hashes/scrypt.js';
+import { sha256 as sha256Bytes } from '@noble/hashes/sha2.js';
+import { bytesToHex, hexToBytes, randomBytes, utf8ToBytes } from '@noble/hashes/utils.js';
 import { z } from 'zod';
 import { UserError } from './context';
+import type { Reply, Req, Router } from './http';
 
 export type Role = 'owner' | 'billing' | 'viewer';
 export interface SessionUser { id: string; name: string; role: Role; lang: string | null; mustChangePin: boolean }
-
-declare module 'fastify' {
-  interface FastifyRequest { user?: SessionUser }
-}
 
 const COOKIE = 'tula_session';
 const SESSION_DAYS = 14;
@@ -17,17 +15,26 @@ const MAX_FAILS = 5;
 const LOCK_MINUTES = 5;
 
 // ---------- PINs ----------
+// scrypt N=2^14, r=8, p=1: Node's scryptSync defaults, which made the hashes already stored.
+// The phone app uses @noble/hashes (pure JS); the shop computer plugs in Node's native scrypt,
+// which is about twice as fast (app.ts). Both give the same bytes.
+type ScryptFn = (pin: Uint8Array, salt: Uint8Array, dkLen: number) => Uint8Array;
+let scryptImpl: ScryptFn = (pin, salt, dkLen) => scrypt(pin, salt, { N: 2 ** 14, r: 8, p: 1, dkLen });
+export const useScrypt = (fn: ScryptFn) => { scryptImpl = fn; };
+
 export function hashPin(pin: string): string {
   const salt = randomBytes(16);
-  return `scrypt$${salt.toString('hex')}$${scryptSync(pin, salt, 32).toString('hex')}`;
+  return `scrypt$${bytesToHex(salt)}$${bytesToHex(scryptImpl(utf8ToBytes(pin), salt, 32))}`;
 }
 
 export function verifyPin(pin: string, stored: string): boolean {
   const [scheme, saltHex, hashHex] = stored.split('$');
   if (scheme !== 'scrypt' || !saltHex || !hashHex) return false;
-  const expected = Buffer.from(hashHex, 'hex');
-  const actual = scryptSync(pin, Buffer.from(saltHex, 'hex'), expected.length);
-  return timingSafeEqual(expected, actual);
+  const expected = hexToBytes(hashHex);
+  const actual = scryptImpl(utf8ToBytes(pin), hexToBytes(saltHex), expected.length);
+  let diff = 0; // constant time
+  for (let i = 0; i < expected.length; i++) diff |= expected[i]! ^ actual[i]!;
+  return diff === 0;
 }
 
 export const PinSchema = z.string().regex(/^\d{4,6}$/, 'PIN must be 4 to 6 digits');
@@ -56,12 +63,17 @@ function recordFailure(userId: string) {
 }
 
 // ---------- Sessions ----------
-const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
+const sha256 = (s: string) => bytesToHex(sha256Bytes(utf8ToBytes(s)));
+const base64url = (b: Uint8Array) => btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const header = (req: Req, name: string) => {
+  const v = req.headers[name];
+  return typeof v === 'string' ? v : undefined;
+};
 
-function tokenFrom(req: FastifyRequest): string | null {
-  const auth = req.headers.authorization;
+function tokenFrom(req: Req): string | null {
+  const auth = header(req, 'authorization');
   if (auth?.startsWith('Bearer ')) return auth.slice(7);
-  const cookie = req.headers.cookie ?? '';
+  const cookie = header(req, 'cookie') ?? '';
   const m = new RegExp(`(?:^|;\\s*)${COOKIE}=([^;]+)`).exec(cookie);
   return m ? decodeURIComponent(m[1]!) : null;
 }
@@ -103,7 +115,7 @@ export function canWrite(role: Role, method: string, path: string) {
   return role === 'billing' && matches(BILLING_WRITES, method, path);
 }
 
-export function requireOwner(req: FastifyRequest) {
+export function requireOwner(req: Req) {
   if (req.user?.role !== 'owner') throw new UserError('Only the owner can do this', 'FORBIDDEN', 403);
 }
 
@@ -112,8 +124,8 @@ async function countOwners(ex: Exec, excludingId?: string) {
   return Number(r?.n ?? 0);
 }
 
-export function registerAuth(app: FastifyInstance, db: Db, deviceId: string) {
-  app.addHook('onRequest', async (req: FastifyRequest, reply: FastifyReply) => {
+export function registerAuth(app: Router, db: Db, deviceId: string) {
+  app.addHook('onRequest', async (req: Req, reply: Reply) => {
     const path = req.url.split('?')[0]!;
     if (!path.startsWith('/api/') || matches(PUBLIC, req.method, path)) return;
     const token = tokenFrom(req);
@@ -143,7 +155,7 @@ export function registerAuth(app: FastifyInstance, db: Db, deviceId: string) {
       throw new UserError('Wrong PIN', 'BAD_LOGIN', 401);
     }
     failures.delete(u.id);
-    const token = randomBytes(32).toString('base64url');
+    const token = base64url(randomBytes(32));
     const expires = new Date(Date.now() + SESSION_DAYS * 86400000).toISOString();
     await db.execute({ sql: 'INSERT INTO sessions (token_hash, user_id, created_at, expires_at, last_seen) VALUES (?,?,?,?,?)', args: [sha256(token), u.id, nowIso(), expires, nowIso()] });
     await insert(db, 'audit_log', deviceId, { at: nowIso(), user_id: u.id, entity: 'users', entity_id: u.id, action: 'login' });

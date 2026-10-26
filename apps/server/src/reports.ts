@@ -1,6 +1,6 @@
 import { todayIST, toPaise, withDefaults } from '@tula/core';
 import { getSettings, type Db } from '@tula/db';
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { Router, Reply, Req } from './http';
 import { z } from 'zod';
 import { cashBook, dayBook } from './reports/books';
 import { monthRange, period, PeriodQuery, requireReportRole, type Report } from './reports/common';
@@ -9,10 +9,11 @@ import { profitBy, profitLoss } from './reports/profit';
 import { rateGroupReport, rateGroupsList } from './reports/rates';
 import { purchaseRegister, salesRegister } from './reports/registers';
 import { stockSummary } from './reports/stock';
-import { reportWorkbook, xlsxFilename } from './reports/xlsx';
 
-async function send(req: FastifyRequest, reply: FastifyReply, r: Report) {
+async function send(req: Req, reply: Reply, r: Report) {
   if ((req.query as { format?: string }).format !== 'xlsx') return r;
+  // loaded on demand: exceljs is large and the phone app does not offer Excel downloads
+  const { reportWorkbook, xlsxFilename } = await import('./reports/xlsx');
   const buf = await reportWorkbook(r);
   const name = xlsxFilename(r);
   const ascii = name.replace(/[^\x20-\x7e]/g, '_').replace(/"/g, '');
@@ -27,7 +28,7 @@ const MonthQuery = PeriodQuery.extend({ month: z.string().optional() });
 const monthPeriod = (q: z.infer<typeof MonthQuery>) => monthRange(q.month ?? (q.from ?? todayIST()).slice(0, 7));
 
 /** Registers, day book, stock valuation, profit and loss, profit by bill/customer/item, GST return exports. */
-export function registerReports(app: FastifyInstance, db: Db, _deviceId: string): void {
+export function registerReports(app: Router, db: Db, _deviceId: string): void {
   const route = <Q extends z.ZodTypeAny>(path: string, schema: Q, build: (q: z.infer<Q>) => Promise<Report>) => {
     app.get(`/api/reports/${path}`, async (req, reply) => {
       requireReportRole(req);

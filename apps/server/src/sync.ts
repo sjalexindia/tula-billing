@@ -1,7 +1,11 @@
 import type { Db } from '@tula/db';
 import type { FastifyInstance } from 'fastify';
-import { hubConfigFromEnv, hubLabel, openHub, type HubConfig } from './sync/hub';
+import { networkInterfaces } from 'node:os';
+import { requireOwner } from './auth';
+import type { Router } from './http';
+import { hubLabel, openHub, type HubConfig } from './sync/hub';
 import { joinFromHub, type JoinMode } from './sync/join';
+import { hubConfigFromEnv, nodeHubDriver } from './sync/node-hub';
 import { registerSyncRoutes } from './sync/routes';
 import { getState } from './sync/state';
 import { SyncWorker, type WorkerOptions } from './sync/worker';
@@ -13,14 +17,36 @@ import { SyncWorker, type WorkerOptions } from './sync/worker';
  *   sync/engine.ts  push (outbox → hub) and pull (hub sync_log → local, last-writer-wins)
  *   sync/join.ts    set up a new/replacement computer from the hub
  *   sync/worker.ts  background loop with backoff
- *   sync/routes.ts  /api/sync/*, /api/devices, /api/network
+ *   sync/routes.ts  /api/sync/*, /api/devices (shared with the phone app)
+ *   this file       shop-computer wiring: env settings, TULA_JOIN, the worker, /api/network
  */
 
 /** One worker per open database (tests run several in one process). */
 const workers = new WeakMap<Db, SyncWorker>();
 
 export function registerSync(app: FastifyInstance, db: Db, deviceId: string): void {
-  registerSyncRoutes(app, db, deviceId, () => workers.get(db));
+  registerSyncRoutes(app as unknown as Router, db, deviceId, () => workers.get(db));
+
+  app.get('/api/network', async (req) => {
+    requireOwner(req);
+    const addr = app.server.address();
+    const port = addr && typeof addr === 'object' ? addr.port : Number(process.env.TULA_PORT ?? 5000);
+    return { port, addresses: lanAddresses(port) };
+  });
+}
+
+const PRIVATE = /^(10.|192.168.|172.(1[6-9]|2d|3[01]).)/;
+
+/** This computer's IPv4 addresses on the local network, private (Wi-Fi/LAN) ones first. */
+export function lanAddresses(port: number) {
+  const out: Array<{ name: string; address: string; url: string; private: boolean }> = [];
+  for (const [name, list] of Object.entries(networkInterfaces())) {
+    for (const a of list ?? []) {
+      if (a.family !== 'IPv4' || a.internal || a.address.startsWith('169.254.')) continue;
+      out.push({ name, address: a.address, url: `http://${a.address}:${port}`, private: PRIVATE.test(a.address) });
+    }
+  }
+  return out.sort((a, b) => Number(b.private) - Number(a.private));
 }
 
 export interface JoinEnvOptions {
@@ -46,7 +72,7 @@ export async function maybeJoin(db: Db, opts: JoinEnvOptions = {}): Promise<bool
   }
   const cfg = hubConfigFromEnv(env);
   if (!cfg) throw new Error('TULA_JOIN needs the cloud copy: set TULA_SYNC_URL (and TULA_SYNC_TOKEN) as well.');
-  const hub = await openHub(cfg);
+  const hub = await openHub(cfg, nodeHubDriver);
   try {
     log(`sync: joining from the cloud copy at ${hub.label} (mode: ${mode})…`);
     await joinFromHub(db, hub, { mode: mode as JoinMode, replaceDeviceId: env.TULA_JOIN_DEVICE?.trim(), name: env.TULA_DEVICE_NAME, log });
@@ -66,7 +92,7 @@ export function startSync(db: Db, opts: StartSyncOptions = {}): () => void {
   const cfg = opts.config === undefined ? hubConfigFromEnv() : opts.config;
   if (!cfg) return () => {};
   workers.get(db)?.stop();
-  const w = new SyncWorker(db, cfg, opts).start();
+  const w = new SyncWorker(db, cfg, nodeHubDriver, opts).start();
   workers.set(db, w);
   (opts.log ?? console.log)(`sync: copying changes to the cloud copy at ${hubLabel(cfg.url)}`);
   return () => {

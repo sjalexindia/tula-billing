@@ -3,10 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "start": "tsx src/main.ts",
     "test": "vitest run",
+    "test:phone": "vitest run --config vitest.phone.config.ts",
     "apply-profile": "tsx src/apply-profile.ts",
     "supervise": "tsx src/supervisor.ts",
     "backup": "tsx src/cli/backup.ts",
@@ -21,12 +25,13 @@
   },
   "dependencies": {
     "@fastify/static": "^10.1.7",
+    "@libsql/client": "^0.18.0",
+    "@noble/hashes": "^2.4.0",
     "@tula/core": "^0.1.0",
     "@tula/db": "^0.1.0",
     "exceljs": "^4.4.0",
     "fastify": "^5.12.7",
-    "zod": "^4.6.7",
     "tsx": "^4.23.15",
-    "@libsql/client": "^0.18.0"
+    "zod": "^4.6.7"
   }
 }

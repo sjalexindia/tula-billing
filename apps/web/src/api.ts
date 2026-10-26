@@ -1,3 +1,5 @@
+import { apiFetch } from './platform';
+
 export interface CatalogUnit { code: string; nameEn: string; nameTa: string | null; factorMilli: number; theoretical: boolean; onBill: boolean }
 export interface CatalogItem {
   id: string; sku: string; nameEn: string; nameTa: string | null; hsn: string | null; gstBp: number;
@@ -75,7 +77,7 @@ export interface OpeningRow { product_id: string; sku: string; name_en: string; 
 export async function req<T>(method: string, url: string, body?: unknown, allow409 = false): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(url, { method, headers: body ? { 'content-type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined });
+    res = await apiFetch(url, { method, headers: body ? { 'content-type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined });
   } catch {
     throw new ApiError('network', 0, 'NETWORK');
   }

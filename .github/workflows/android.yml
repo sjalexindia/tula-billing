@@ -1,4 +1,5 @@
-# Builds the thin Tula Android app (debug APK) and attaches it to the run as an artifact.
+# Builds the Tula Android app (debug APK): Tula on the phone itself, plus the connect page for
+# opening it from the shop computer. Attaches the APK to the run as an artifact.
 # Uses the Android SDK that comes preinstalled on GitHub's Ubuntu 24.04 runner
 # (android-actions/setup-android failed on the newer ubuntu-latest image). See docs/07-sync-and-phones.md.
 name: Android APK
@@ -36,7 +37,10 @@ jobs:
         working-directory: .
         run: npm ci
 
-      - name: Copy the connect shell and config into the Android project
+      - name: Build the phone app (Tula on the phone + the connect page)
+        run: npm run build:phone
+
+      - name: Copy the phone app and config into the Android project
         run: |
           if [ ! -d android ]; then npx cap add android; fi
           npx cap sync android

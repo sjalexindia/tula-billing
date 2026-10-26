@@ -1,11 +1,10 @@
 import { insert, nowIso, one, update, type Db } from '@tula/db';
-import type { FastifyInstance } from 'fastify';
-import { networkInterfaces } from 'node:os';
+import type { Router } from '../http';
 import { z } from 'zod';
 import { requireOwner } from '../auth';
 import { UserError } from '../context';
 import { pendingCount } from './engine';
-import { hubConfigFromEnv, hubLabel } from './hub';
+import { hubLabel } from './hub';
 import { rows } from './schema';
 import { getStates } from './state';
 import type { SyncWorker } from './worker';
@@ -27,7 +26,7 @@ export interface SyncStatus {
 
 export async function syncStatus(db: Db, deviceId: string, worker: SyncWorker | undefined): Promise<SyncStatus> {
   const s = await getStates(db, 'sync.');
-  const cfg = worker?.cfg ?? hubConfigFromEnv();
+  const cfg = worker?.cfg;
   const dev = await one<{ name: string; series_code: string; revoked: number }>(db, 'SELECT name, series_code, revoked FROM devices WHERE id = ?', [deviceId]);
   const rejected = await one<{ n: number }>(db, 'SELECT COUNT(*) n FROM sync_rejects');
   return {
@@ -45,21 +44,7 @@ export async function syncStatus(db: Db, deviceId: string, worker: SyncWorker | 
   };
 }
 
-const PRIVATE = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/;
-
-/** This computer's IPv4 addresses on the local network, private (Wi-Fi/LAN) ones first. */
-export function lanAddresses(port: number) {
-  const out: Array<{ name: string; address: string; url: string; private: boolean }> = [];
-  for (const [name, list] of Object.entries(networkInterfaces())) {
-    for (const a of list ?? []) {
-      if (a.family !== 'IPv4' || a.internal || a.address.startsWith('169.254.')) continue;
-      out.push({ name, address: a.address, url: `http://${a.address}:${port}`, private: PRIVATE.test(a.address) });
-    }
-  }
-  return out.sort((a, b) => Number(b.private) - Number(a.private));
-}
-
-export function registerSyncRoutes(app: FastifyInstance, db: Db, deviceId: string, workerOf: () => SyncWorker | undefined) {
+export function registerSyncRoutes(app: Router, db: Db, deviceId: string, workerOf: () => SyncWorker | undefined) {
   app.get('/api/sync/status', async (req) => {
     requireOwner(req);
     return syncStatus(db, deviceId, workerOf());
@@ -101,12 +86,5 @@ export function registerSyncRoutes(app: FastifyInstance, db: Db, deviceId: strin
       throw e;
     }
     return { ok: true };
-  });
-
-  app.get('/api/network', async (req) => {
-    requireOwner(req);
-    const addr = app.server.address();
-    const port = addr && typeof addr === 'object' ? addr.port : Number(process.env.TULA_PORT ?? 5000);
-    return { port, addresses: lanAddresses(port) };
   });
 }

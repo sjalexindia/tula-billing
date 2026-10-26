@@ -1,117 +1,61 @@
-import { createClient, type Client, type InValue, type Transaction } from '@libsql/client';
-import { AsyncLocalStorage } from 'node:async_hooks';
-import { randomBytes } from 'node:crypto';
-import { readdirSync, readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import type { Client, InValue, Transaction } from '@libsql/client';
+
+/*
+ * Runtime-neutral database helpers: they run on the shop computer (Node) and inside the phone app
+ * (WebView). Nothing here may import node:* — opening a database file and reading the migrations
+ * folder live in ./node.ts (`@tula/db/node`).
+ */
 
 export type Db = Client;
 export type Tx = Transaction;
 export type Exec = Pick<Client, 'execute'> | Pick<Transaction, 'execute'>;
 export type Row = Record<string, unknown>;
 
-const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'migrations');
+/** One SQL migration file: name (e.g. "0001_init.sql", the sort key) and its text. */
+export interface Migration { name: string; sql: string }
 
-/** Open (or create) the local SQLite database. url examples: "file:tula.db", ":memory:" */
-export async function openDb(url: string): Promise<Db> {
-  // One connection: the client otherwise pools several, and per-connection settings (foreign keys,
-  // busy timeout) would only apply to the first. Requests queue on it, which suits one shop computer.
-  const db = queued(createClient({ url, concurrency: 1, timeout: 5000 }));
-  if (url !== ':memory:') await db.execute('PRAGMA journal_mode = WAL');
-  await db.execute('PRAGMA foreign_keys = ON');
-  await db.execute('PRAGMA busy_timeout = 5000');
-  await migrate(db);
-  return db;
-}
-
-const inTx = new AsyncLocalStorage<boolean>();
-
-/**
- * With one connection, a statement sent while a transaction is open is refused (TRANSACTION_ACTIVE).
- * This wrapper makes such statements, and further transactions, wait their turn instead, so a GET
- * arriving while a bill is being saved simply waits a few milliseconds. Code running inside the
- * transaction's own async context is passed straight through (it should use the transaction).
- */
-export function queued(client: Client): Client {
-  let busy: Promise<void> | null = null;
-  const turn = async () => {
-    if (inTx.getStore()) return;
-    while (busy) await busy;
-  };
-  const wrap = <A extends unknown[], R>(fn: (...a: A) => Promise<R>) => async (...a: A): Promise<R> => {
-    await turn();
-    return fn(...a);
-  };
-  const transaction = async (...a: Parameters<Client['transaction']>): Promise<Transaction> => {
-    await turn();
-    let release!: () => void;
-    const mine = new Promise<void>((r) => { release = r; });
-    busy = mine;
-    let done = false;
-    const end = () => {
-      if (done) return;
-      done = true;
-      if (busy === mine) busy = null;
-      release();
-    };
-    let tx: Transaction;
-    try {
-      tx = await inTx.run(true, () => client.transaction(...a));
-    } catch (e) {
-      end();
-      throw e;
-    }
-    const after = <F extends (...x: never[]) => unknown>(f: F) => ((...x: Parameters<F>) => {
-      const r = f.apply(tx, x);
-      return Promise.resolve(r).finally(end);
-    }) as unknown as F;
-    return new Proxy(tx, {
-      get(target, prop) {
-        if (prop === 'commit' || prop === 'rollback') return after(target[prop] as never);
-        if (prop === 'close') return () => { try { target.close(); } finally { end(); } };
-        const v = Reflect.get(target, prop);
-        return typeof v === 'function' ? v.bind(target) : v;
-      },
-    });
-  };
-  return new Proxy(client, {
-    get(target, prop) {
-      if (prop === 'transaction') return transaction;
-      if (prop === 'execute' || prop === 'batch' || prop === 'executeMultiple' || prop === 'migrate') {
-        return wrap((target[prop] as (...x: unknown[]) => Promise<unknown>).bind(target));
-      }
-      const v = Reflect.get(target, prop);
-      return typeof v === 'function' ? v.bind(target) : v;
-    },
-  });
-}
-
-export async function migrate(db: Db): Promise<string[]> {
+/** Apply the migrations this database has not had yet, in name order. Returns the names applied. */
+export async function migrate(db: Pick<Client, 'execute' | 'executeMultiple'>, migrations: Migration[]): Promise<string[]> {
   await db.execute('CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)');
   const done = new Set((await db.execute('SELECT name FROM schema_migrations')).rows.map((r) => String(r.name)));
-  const files = readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith('.sql')).sort();
   const applied: string[] = [];
-  for (const f of files) {
-    if (done.has(f)) continue;
-    const sql = readFileSync(join(MIGRATIONS_DIR, f), 'utf8');
-    await db.executeMultiple(`BEGIN;\n${sql}\nINSERT INTO schema_migrations VALUES ('${f}', '${nowIso()}');\nCOMMIT;`);
-    applied.push(f);
+  for (const m of [...migrations].sort((a, b) => a.name.localeCompare(b.name))) {
+    if (done.has(m.name)) continue;
+    await db.executeMultiple(`BEGIN;\n${m.sql}\nINSERT INTO schema_migrations VALUES ('${m.name}', '${nowIso()}');\nCOMMIT;`);
+    applied.push(m.name);
   }
   return applied;
 }
 
-/** UUIDv7: time-ordered, so ids sort by creation time and index well. */
-export function uuidv7(now = Date.now()): string {
-  const b = randomBytes(16);
+let lastMs = 0;
+let seq = 0;
+
+/**
+ * UUIDv7: time-ordered, so ids sort by creation time and index well. Ids made in the same
+ * millisecond still sort in the order they were made: the 12 bits after the version hold a
+ * counter (RFC 9562 §6.2, method 1), so "ORDER BY created_at, id" is the order things happened.
+ */
+export function uuidv7(): string {
+  let now = Date.now();
+  if (now <= lastMs) {
+    now = lastMs;
+    if (++seq > 0xfff) { now = ++lastMs; seq = 0; }
+  } else {
+    lastMs = now;
+    seq = 0;
+  }
+  const b = new Uint8Array(16);
+  globalThis.crypto.getRandomValues(b);
   b[0] = Math.floor(now / 2 ** 40) & 0xff;
   b[1] = Math.floor(now / 2 ** 32) & 0xff;
   b[2] = Math.floor(now / 2 ** 24) & 0xff;
   b[3] = Math.floor(now / 2 ** 16) & 0xff;
   b[4] = Math.floor(now / 2 ** 8) & 0xff;
   b[5] = now & 0xff;
-  b[6] = (b[6]! & 0x0f) | 0x70;
+  b[6] = 0x70 | (seq >> 8);
+  b[7] = seq & 0xff;
   b[8] = (b[8]! & 0x3f) | 0x80;
-  const h = b.toString('hex');
+  const h = Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 

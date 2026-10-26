@@ -1,0 +1,57 @@
+{
+  "phone": {
+    "loading": "Opening Tula…",
+    "choose": {
+      "title": "How will this phone use Tula?",
+      "anywhere": "Work on this phone",
+      "anywhereHelp": "Bill anywhere, even with no internet and the shop computer switched off. Bills and changes go to the cloud copy whenever there is internet.",
+      "computer": "Connect to the shop computer",
+      "computerHelp": "Open Tula from the shop computer over the shop Wi-Fi. Works only in the shop, while that computer is on."
+    },
+    "setup": {
+      "title": "Set up this phone",
+      "lead": "This phone copies the business from the cloud copy once. Only this step needs internet.",
+      "url": "Cloud address",
+      "urlHint": "Starts with libsql://. It is TULA_SYNC_URL in the shop computer's settings file, or shown in Turso.",
+      "token": "Access token",
+      "tokenHint": "The same token as the shop computer (TULA_SYNC_TOKEN). It is a password: paste it here only, never on WhatsApp.",
+      "name": "Name for this phone",
+      "namePlaceholder": "For example: Owner's phone",
+      "start": "Copy the business to this phone",
+      "working": "Copying… keep Tula open",
+      "back": "Back",
+      "required": "Fill in the cloud address and the access token."
+    },
+    "errors": {
+      "OFFLINE": "No internet. Turn on Wi-Fi or mobile data and try again.",
+      "AUTH": "The cloud refused the access token. Check it and try again.",
+      "BAD_URL": "The cloud address is not correct. It looks like libsql://name-yourname.turso.io",
+      "EMPTY_HUB": "The cloud copy is empty. Turn on the cloud copy on the shop computer first, then set up this phone.",
+      "OTHER": "This phone could not be set up: {{detail}}",
+      "noStorage": "This phone cannot store Tula's data. Update \"Android System WebView\" from the Play Store, then open Tula again."
+    }
+  },
+  "sync": {
+    "phoneLead": {
+      "ok": "Every bill and change on this phone is also in the cloud copy, so the shop computer has it too.",
+      "starting": "The first copy will be sent in a few seconds.",
+      "problem": "Billing still works on this phone. Changes wait here and are sent when there is internet."
+    },
+    "phoneErrors": {
+      "OFFLINE": "No internet on this phone. Billing keeps working; changes are sent when the internet is back.",
+      "AUTH": "The cloud refused the access token. If it was changed on the shop computer, enter the new one below.",
+      "BAD_URL": "The cloud address is not correct. Enter it again below.",
+      "REVOKED": "This phone was marked as lost, so it no longer sends or receives data."
+    },
+    "thisPhone": {
+      "title": "This phone",
+      "series": "This phone's bills are numbered in series {{series}}.",
+      "token": "Change the access token",
+      "tokenHelp": "Do this after a new token was made in Turso (for example when a phone was lost). Tula restarts afterwards.",
+      "save": "Check and save",
+      "shopComputer": "Use the shop computer instead",
+      "shopComputerHelp": "Opens Tula from the shop computer over the shop Wi-Fi. This phone's data stays here; you can come back to it from the connect screen.",
+      "pending": "{{count}} change(s) on this phone are not in the cloud copy yet. Connect to the internet and tap Sync now first."
+    }
+  }
+}

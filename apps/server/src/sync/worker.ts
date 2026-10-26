@@ -1,5 +1,5 @@
 import type { Db } from '@tula/db';
-import { openHub, type Hub, type HubConfig } from './hub';
+import { openHub, type Hub, type HubConfig, type HubDriver } from './hub';
 import { pendingCount, syncOnce } from './engine';
 import { getState, recordError, setState } from './state';
 
@@ -26,7 +26,7 @@ export interface RunResult { ok: boolean; pushed?: number; pulled?: number; reje
 export class SyncWorker {
   readonly cfg: HubConfig;
   private hub: Hub | null = null;
-  private timer: NodeJS.Timeout | null = null;
+  private timer: ReturnType<typeof setInterval> | null = null;
   private current: Promise<RunResult> | null = null;
   private stopped = false;
   private failures = 0;
@@ -36,7 +36,7 @@ export class SyncWorker {
   private lastLogged = '';
   private readonly o: Required<Omit<WorkerOptions, 'log'>> & { log: (m: string) => void };
 
-  constructor(private db: Db, cfg: HubConfig, opts: WorkerOptions = {}) {
+  constructor(private db: Db, cfg: HubConfig, private driver: HubDriver, opts: WorkerOptions = {}) {
     this.cfg = cfg;
     this.o = {
       intervalMs: opts.intervalMs ?? 30_000,
@@ -54,7 +54,7 @@ export class SyncWorker {
 
   start() {
     this.timer = setInterval(() => void this.tick(), this.o.pollMs);
-    this.timer.unref?.();
+    (this.timer as { unref?: () => void }).unref?.();
     void this.tick();
     return this;
   }
@@ -84,7 +84,7 @@ export class SyncWorker {
     try {
       const deviceId = await getState(this.db, 'device_id');
       if (!deviceId) return { ok: false, error: 'not set up' };
-      if (!this.hub) this.hub = await openHub(this.cfg);
+      if (!this.hub) this.hub = await openHub(this.cfg, this.driver);
       const r = await syncOnce(this.db, this.hub, deviceId);
       if (this.failures) this.o.log(`sync: working again (${this.hub.label})`);
       this.failures = 0;

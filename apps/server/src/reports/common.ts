@@ -1,6 +1,6 @@
-import { roundDiv, todayIST, withDefaults, type Settings } from '@tula/core';
+import { roundDiv, stateName, todayIST, withDefaults, type Settings } from '@tula/core';
 import { getSettings, type Exec } from '@tula/db';
-import type { FastifyRequest } from 'fastify';
+import type { Req } from '../http';
 import { z } from 'zod';
 import { UserError } from '../context';
 
@@ -90,7 +90,7 @@ export function period(q: { from?: string; to?: string }): { from: string; to: s
 }
 
 /** Reports are for the owner and viewers (family, CA). Counter staff may not see profit. */
-export function requireReportRole(req: FastifyRequest) {
+export function requireReportRole(req: Req) {
   if (!req.user || req.user.role === 'billing') throw new UserError('Reports are for the owner and viewers', 'FORBIDDEN', 403);
 }
 
@@ -146,3 +146,6 @@ export const DOC_TYPES = ['INV', 'CN', 'RCPT', 'PAY', 'PUR', 'DN', 'EXP', 'ADJ',
 
 /** Safe filename part: keeps letters in any script, digits, spaces, - and _. */
 export const fileSafe = (s: string) => s.replace(/[^\p{L}\p{M}\p{N} _-]+/gu, ' ').replace(/\s+/g, ' ').trim();
+
+/** Place of supply as GST portals show it: "33-Tamil Nadu". */
+export const posLabel = (code: string) => (code ? `${code}-${stateName(code)}` : '');

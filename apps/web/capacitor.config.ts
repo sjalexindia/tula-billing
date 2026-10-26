@@ -1,9 +1,10 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 /**
- * Tula Android app (thin shell). The APK holds only the connect page in ./shell; the real app
- * is served by the shop computer over the shop Wi-Fi (http://192.168.x.x:5000), so the app
- * must be allowed to load plain-http pages on private LAN addresses.
+ * Tula Android app. The APK holds the phone build of the web app (npm run build:phone →
+ * dist-phone): Tula running on the phone itself, synced through the cloud copy. It can also open
+ * Tula from the shop computer over the shop Wi-Fi (http://192.168.x.x:5000, the connect page in
+ * dist-phone/connect), so the app must be allowed to load plain-http pages on private LAN addresses.
  * Build: see .github/workflows/android.yml and docs/07-sync-and-phones.md.
  */
 const privateLan = [
@@ -16,14 +17,14 @@ const privateLan = [
 const config: CapacitorConfig = {
   appId: 'in.tula.app',
   appName: 'Tula',
-  webDir: 'shell',
+  webDir: 'dist-phone',
   server: {
     // the shop computer speaks plain http on the LAN
     cleartext: true,
     // open the shop computer's pages inside the app instead of handing them to Chrome
     allowNavigation: privateLan,
     // shown when the shop computer stops answering; links back to the connect page
-    errorPath: 'error.html',
+    errorPath: 'connect/error.html',
   },
   android: {
     // the shell is served from https://localhost inside the app; the shop computer is http

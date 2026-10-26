@@ -1,11 +1,14 @@
 import QRCode from 'qrcode';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Field } from '../components/Field';
 import { syncApi, type DeviceRow, type NetworkInfo, type SyncStatus } from '../api/sync';
 import type { ScreenProps } from '../nav';
+import { runsLocally } from '../platform';
 import '../styles/sync.css';
 
 const ERROR_CODES = ['OFFLINE', 'AUTH', 'BAD_URL', 'UPDATE_APP', 'REVOKED', 'EMPTY_HUB'];
+const PHONE_ERROR_CODES = ['OFFLINE', 'AUTH', 'BAD_URL', 'REVOKED'];
 
 /** Owner screen: is the cloud copy working, which computers share the data, and how to open Tula on a phone. */
 export function Devices(_props: ScreenProps) {
@@ -28,7 +31,7 @@ export function Devices(_props: ScreenProps) {
 
   useEffect(() => {
     void load();
-    syncApi.network().then(setNet).catch(() => setNet({ port: 0, addresses: [] }));
+    if (!runsLocally) syncApi.network().then(setNet).catch(() => setNet({ port: 0, addresses: [] }));
     const timer = setInterval(() => void syncApi.status().then(setStatus).catch(() => {}), 5000);
     return () => clearInterval(timer);
   }, [load]);
@@ -72,7 +75,8 @@ export function Devices(_props: ScreenProps) {
         <div className="page-head"><h1>{t('nav.devices')}</h1></div>
         {status ? <StatusCard status={status} busy={busy} onSyncNow={syncNow} /> : <p className="empty">{t('sync.loading')}</p>}
         {msg && <p className={msg.ok ? 'saved-note' : 'field-error'} role={msg.ok ? 'status' : 'alert'}>{msg.text}</p>}
-        <details className="sync-setup" open={status ? !status.configured : false}>
+        {runsLocally && status && <ThisPhoneCard status={status} />}
+        {!runsLocally && <details className="sync-setup" open={status ? !status.configured : false}>
           <summary>{t('sync.setup.title')}</summary>
           <ol>
             <li>{t('sync.setup.step1')}</li>
@@ -84,10 +88,10 @@ export function Devices(_props: ScreenProps) {
             <li>{t('sync.setup.step4')}</li>
           </ol>
           <p className="hint">{t('sync.setup.secret')} {t('sync.setup.doc')} <code>docs/07-sync-and-phones.md</code></p>
-        </details>
+        </details>}
       </section>
 
-      <PhoneCard net={net} />
+      {!runsLocally && <PhoneCard net={net} />}
 
       <section className="page">
         <h2>{t('sync.devices.title')}</h2>
@@ -99,7 +103,7 @@ export function Devices(_props: ScreenProps) {
               <tr key={d.id} className={d.revoked ? 'inactive' : ''}>
                 <td>
                   <b>{d.name}</b>
-                  {d.this_device && <span className="sync-tag">{t('sync.devices.thisOne')}</span>}
+                  {d.this_device && <span className="sync-tag">{t(runsLocally ? 'sync.devices.thisPhone' : 'sync.devices.thisOne')}</span>}
                   {!!d.revoked && <span className="sync-tag lost">{t('sync.devices.lost')}</span>}
                   <span className="sub">{t('sync.devices.added', { when: fmtTime(d.created_at, t) })}</span>
                 </td>
@@ -143,12 +147,12 @@ function StatusCard({ status, busy, onSyncNow }: { status: SyncStatus; busy: boo
         <span className="sync-dot" aria-hidden="true" />
         <div>
           <h2>{t(`sync.state.${state}`)}</h2>
-          <p className="sync-lead">{t(`sync.lead.${state}`)}</p>
+          <p className="sync-lead">{t(runsLocally && state !== 'off' ? `sync.phoneLead.${state}` : `sync.lead.${state}`)}</p>
         </div>
       </div>
       {err && (
         <div className="sync-error" role="alert">
-          <p>{ERROR_CODES.includes(err.code) ? t(`sync.errors.${err.code}`) : err.message}</p>
+          <p>{runsLocally && PHONE_ERROR_CODES.includes(err.code) ? t(`sync.phoneErrors.${err.code}`) : ERROR_CODES.includes(err.code) ? t(`sync.errors.${err.code}`) : err.message}</p>
           {err.at && <p className="hint">{t('sync.since', { when: fmtTime(err.at, t) })}</p>}
         </div>
       )}
@@ -208,5 +212,53 @@ function PhoneCard({ net }: { net: NetworkInfo | null }) {
       {shown.length > 1 && <p className="hint">{t('sync.phone.several')}</p>}
       <p className="hint">{t('sync.phone.app')}</p>
     </section>
+  );
+}
+
+/** Only when Tula runs on this phone: its bill series, a new access token, and going back to the shop computer. */
+function ThisPhoneCard({ status }: { status: SyncStatus }) {
+  const { t } = useTranslation();
+  const [url, setUrl] = useState('');
+  const [token, setToken] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const phone = () => import.meta.env.MODE === 'phone' ? import('../local/phone') : Promise.reject(new Error('phone build only'));
+  const saveToken = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      await (await phone()).changeHub({ url: url.trim(), token: token.trim() });
+    } catch (e) {
+      setError((e as Error).message);
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="sync-phone">
+      <h2>{t('sync.thisPhone.title')}</h2>
+      <p>{t('sync.thisPhone.series', { series: status.device.seriesCode })}</p>
+      <details>
+        <summary>{t('sync.thisPhone.token')}</summary>
+        <p className="hint">{t('sync.thisPhone.tokenHelp')}</p>
+        <form className="form-grid" onSubmit={(e) => { e.preventDefault(); void saveToken(); }}>
+          <Field id="hub-url" label={t('phone.setup.url')}>
+            <input id="hub-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder={`libsql://${status.hub ?? ''}`} autoCapitalize="off" spellCheck={false} />
+          </Field>
+          <Field id="hub-token" label={t('phone.setup.token')}>
+            <input id="hub-token" type="password" value={token} onChange={(e) => setToken(e.target.value)} autoComplete="off" />
+          </Field>
+          {error && <p className="field-error wide" role="alert">{error}</p>}
+          <div className="form-actions"><button type="submit" className="btn" disabled={busy || !url.trim() || !token.trim()}>{t('sync.thisPhone.save')}</button></div>
+        </form>
+      </details>
+      <details>
+        <summary>{t('sync.thisPhone.shopComputer')}</summary>
+        <p className="hint">{t('sync.thisPhone.shopComputerHelp')}</p>
+        {status.pending > 0 && <p className="notice">{t('sync.thisPhone.pending', { count: status.pending })}</p>}
+        <button type="button" className="btn" onClick={() => void phone().then((p) => p.useShopComputer())}>{t('sync.thisPhone.shopComputer')}</button>
+      </details>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import { financialYear, parseScaled, roundDiv, stateFromGstin, STATES, todayIST, toMilli, toPaise, withDefaults } from '@tula/core';
 import { all, getSettings, insert, nowIso, one, softDelete, update, type Db, type Exec } from '@tula/db';
-import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { Router, Req } from './http';
 import { z } from 'zod';
 import { accountId, partyAccountId, partyBalance, post } from './accounts';
 import { requireOwner } from './auth';
@@ -12,7 +12,7 @@ export const GST_RATES = ['0', '0.1', '0.25', '1.5', '3', '5', '12', '18', '28',
 const dec = z.union([z.string(), z.number()]).transform((v) => String(v).trim());
 const optDec = dec.optional().nullable();
 const code = z.string().trim().min(1).max(12).transform((s) => s.toUpperCase()).refine((s) => /^[A-Z0-9-]+$/.test(s), 'Use letters, digits and - only');
-const idOf = (req: FastifyRequest) => z.object({ id: z.string().min(1) }).parse(req.params).id;
+const idOf = (req: Req) => z.object({ id: z.string().min(1) }).parse(req.params).id;
 
 async function unitId(ex: Exec, c: string) {
   const u = await one<{ id: string }>(ex, 'SELECT id FROM units WHERE code = ? AND deleted = 0', [c]);
@@ -20,7 +20,7 @@ async function unitId(ex: Exec, c: string) {
   return u.id;
 }
 
-async function audit(ex: Exec, dev: string, req: FastifyRequest, entity: string, entityId: string, action: string, after?: unknown) {
+async function audit(ex: Exec, dev: string, req: Req, entity: string, entityId: string, action: string, after?: unknown) {
   await insert(ex, 'audit_log', dev, { at: nowIso(), user_id: req.user?.id, entity, entity_id: entityId, action, after_json: after ?? null });
 }
 
@@ -170,7 +170,7 @@ async function saveParty(ex: Exec, dev: string, b: PartyBody, existingId?: strin
   return id;
 }
 
-export function registerMasters(app: FastifyInstance, db: Db, dev: string) {
+export function registerMasters(app: Router, db: Db, dev: string) {
   // ---------- Lookups ----------
   app.get('/api/units', async () => all(db, 'SELECT id, code, name_en, name_ta, gst_uqc FROM units WHERE deleted = 0 ORDER BY code'));
   app.post('/api/units', async (req, reply) => {

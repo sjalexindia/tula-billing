@@ -45,13 +45,15 @@ export function describeError(e: unknown, token?: string): { code: SyncErrorCode
   const text = `${err?.code ?? ''} ${err?.message ?? String(e)} ${err?.cause?.code ?? ''} ${err?.cause?.message ?? ''}`;
   let code: SyncErrorCode = 'OTHER';
   let message = 'Copying to the cloud failed. Tula will keep trying.';
+  // Turso answers 400 to a token it cannot read and 401 to an expired or invalidated one. No internet is
+  // "fetch failed" in Node and "Failed to fetch" / "NetworkError" / "Load failed" in browsers (the phone app).
   if (/URL_INVALID|URL_SCHEME|Invalid URL|unsupported.*scheme/i.test(text)) {
     code = 'BAD_URL';
     message = 'The cloud address (TULA_SYNC_URL) is not valid. Check it in the shop computer\'s settings file.';
-  } else if (/\b401\b|\b403\b|unauthori[sz]ed|forbidden|auth.*token|jwt|SERVER_ERROR.*auth/i.test(text)) {
+  } else if (/\b401\b|\b403\b|HTTP status 400|unauthori[sz]ed|forbidden|auth.*token|jwt|SERVER_ERROR.*auth/i.test(text)) {
     code = 'AUTH';
     message = 'The cloud refused the access token. Create a new token and put it in TULA_SYNC_TOKEN.';
-  } else if (/fetch failed|ENOTFOUND|ECONNREFUSED|ECONNRESET|ETIMEDOUT|EAI_AGAIN|ENETUNREACH|EHOSTUNREACH|network|socket|timed? ?out|unable to open database|SQLITE_CANTOPEN/i.test(text)) {
+  } else if (/fetch failed|Failed to fetch|NetworkError|Load failed|ENOTFOUND|ECONNREFUSED|ECONNRESET|ETIMEDOUT|EAI_AGAIN|ENETUNREACH|EHOSTUNREACH|network|socket|timed? ?out|unable to open database|SQLITE_CANTOPEN/i.test(text)) {
     code = 'OFFLINE';
     message = 'Cannot reach the cloud copy. Check the internet connection; Tula will keep trying.';
   }

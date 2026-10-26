@@ -3,7 +3,7 @@ import {
   withDefaults, type Settings, type SupplyType,
 } from '@tula/core';
 import { all, getSettings, insert, nowIso, one, softDelete, update, type Db, type Exec } from '@tula/db';
-import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { Router, Req } from './http';
 import { z } from 'zod';
 import { accountId, partyAccountId, partyBalance, post } from './accounts';
 import { nextNumber } from './bills';
@@ -20,7 +20,7 @@ const payMode = z.enum(['cash', 'upi', 'bank', 'cheque']);
 type PayMode = z.infer<typeof payMode>;
 /** Where money goes out from, per payment mode. A cheque clears through the bank. */
 const CASH_ACCOUNT: Record<PayMode, string> = { cash: 'CASH', upi: 'UPI', bank: 'BANK', cheque: 'BANK' };
-const idOf = (req: FastifyRequest) => z.object({ id: z.string().min(1) }).parse(req.params).id;
+const idOf = (req: Req) => z.object({ id: z.string().min(1) }).parse(req.params).id;
 const has = (v: string | undefined | null): v is string => v != null && v !== '';
 
 async function inTx<T>(db: Db, fn: (tx: Exec) => Promise<T>): Promise<T> {
@@ -795,15 +795,15 @@ async function stockLedger(ex: Exec, productId: string, from?: string, to?: stri
 // Routes
 // =====================================================================
 const Range = z.object({ from: isoDate.optional(), to: isoDate.optional() });
-function rangeOf(req: FastifyRequest) {
+function rangeOf(req: Req) {
   const q = Range.parse(req.query);
   const today = todayIST();
   return { from: q.from ?? addDays(today, -30), to: q.to ?? today };
 }
 
 /** Purchase bills, purchase returns (debit notes), supplier payments, expenses, stock corrections. */
-export function registerPurchases(app: FastifyInstance, db: Db, deviceId: string): void {
-  const ctxOf = (req: FastifyRequest): Ctx => ({ deviceId, userId: req.user!.id });
+export function registerPurchases(app: Router, db: Db, deviceId: string): void {
+  const ctxOf = (req: Req): Ctx => ({ deviceId, userId: req.user!.id });
 
   // ---------- Purchase bills ----------
   app.post('/api/purchases/preview', async (req) => {

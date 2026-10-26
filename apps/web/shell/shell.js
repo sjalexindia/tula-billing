@@ -1,7 +1,8 @@
 /*
- * Tula Android app: connect shell. The APK contains only this page. It asks once for the
- * shop computer's address, checks GET <address>/api/health, remembers it, and then opens
- * Tula from the shop computer inside the app. No build step: plain script.
+ * Tula Android app: connect page, for a phone that opens Tula from the shop computer (the app's
+ * other mode runs Tula on the phone itself, see src/local). It asks once for the shop computer's
+ * address, checks GET <address>/api/health, remembers it, and then opens Tula from the shop
+ * computer inside the app. The phone build copies it to connect/. No build step: plain script.
  */
 (function () {
   'use strict';
@@ -29,7 +30,8 @@
       helpTitle: 'Where do I find the address?',
       help1: 'On the shop computer, open Tula and sign in as the owner.',
       help2: 'Go to Settings → Devices & sync.',
-      help3: 'Under "Open on a phone", the address is written below the QR code.'
+      help3: 'Under "Open on a phone", the address is written below the QR code.',
+      ownPhone: 'Work on this phone instead (no shop computer needed)'
     },
     ta: {
       intro: 'கடைக் கணினியின் முகவரியை டைப் செய்யுங்கள். அந்தக் கணினியில் அமைப்புகள் → சாதனங்கள் & ஒத்திசைவு → போனில் திறக்க என்பதில் இது இருக்கும்.',
@@ -50,7 +52,8 @@
       helpTitle: 'முகவரி எங்கே கிடைக்கும்?',
       help1: 'கடைக் கணினியில் Tula திறந்து உரிமையாளராக உள்ளே செல்லுங்கள்.',
       help2: 'அமைப்புகள் → சாதனங்கள் & ஒத்திசைவு செல்லுங்கள்.',
-      help3: '"போனில் திறக்க" பகுதியில் QR குறியீட்டின் கீழே முகவரி இருக்கும்.'
+      help3: '"போனில் திறக்க" பகுதியில் QR குறியீட்டின் கீழே முகவரி இருக்கும்.',
+      ownPhone: 'பதிலாக இந்த போனிலேயே வேலை செய் (கடைக் கணினி தேவையில்லை)'
     }
   };
 

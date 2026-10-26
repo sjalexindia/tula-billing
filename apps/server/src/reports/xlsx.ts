@@ -1,5 +1,4 @@
 import ExcelJS from 'exceljs';
-import { stateName } from '@tula/core';
 import type { Col, Report, Row, Table } from './common';
 import { fileSafe, n } from './common';
 
@@ -166,7 +165,7 @@ export function xlsxFilename(r: Report): string {
   return `${name} - ${fileSafe(r.title)} - ${span}.xlsx`;
 }
 
-export const posLabel = (code: string) => (code ? `${code}-${stateName(code)}` : '');
+export { posLabel } from './common';
 
 /** Rows/values helpers used by GST sheets */
 export const yesNo = (b: unknown) => (b ? 'Yes' : 'No');

@@ -8,12 +8,22 @@ How Tula is built, and the rules every change follows. Read this before writing 
 apps/web  (React)  ──HTTP /api──►  apps/server (Fastify)  ──►  SQLite file (libSQL)
      │                                   │                          │
      └── uses packages/core              └── uses packages/core     └── sync_outbox ──► Turso replica
+
+Android app, working on its own (phone build of apps/web):
+apps/web (React) ──apiFetch──► in-app router + the same API routes ──► SQLite WebAssembly ──► Turso replica
 ```
 
 - **packages/core**: pure TypeScript, no I/O. Money, quantity, GST, numbering, words, settings registry. Shared by server and web, so a number is calculated the same way everywhere.
-- **packages/db**: opening the database, migrations, and the only functions that write rows (`insert`, `update`, `softDelete`, `setSetting`).
-- **apps/server**: business rules and the HTTP API. One module per area, each exporting `registerX(app, db, deviceId)`.
-- **apps/web**: screens. One file per screen in `src/screens`, registered in `src/nav.tsx`.
+- **packages/db**: migrations and the only functions that write rows (`insert`, `update`, `softDelete`, `setSetting`). Opening a database file is in `@tula/db/node`.
+- **apps/server**: business rules and the HTTP API. One module per area, each exporting `registerX(app, db, deviceId)`. `src/api.ts` registers everything the phone can run too; `src/app.ts` adds Fastify and the computer-only parts.
+- **apps/web**: screens. One file per screen in `src/screens`, registered in `src/nav.tsx`. `src/local` is Tula running on a phone (phone build only).
+
+### Code that also runs on the phone
+The Android app runs the server's route modules, the sync engine and `packages/db` inside the WebView. So:
+- Route modules use only the `Router` / `Req` / `Reply` types in `apps/server/src/http.ts`, never Fastify features directly. Fastify satisfies them on the computer; `apps/web/src/local/router.ts` on the phone.
+- No `node:*` imports, `Buffer`, `process` or `NodeJS.*` types in `packages/db/src/index.ts`, `packages/core`, `apps/server/src/api.ts` or anything it imports, or `apps/server/src/sync/{engine,hub,join,routes,schema,state,worker}.ts`. Node-only code lives in `@tula/db/node`, `app.ts`, `ops*`, `setup.ts`, `sync.ts`, `sync/node-hub.ts`, the CLI and the supervisor.
+- A computer-only screen sets `computerOnly: true` in `src/nav.tsx`; a computer-only control checks `runsLocally` from `src/platform.ts`.
+- `npm run typecheck` (the web project compiles the shared server modules without Node types) and `npm run build:phone -w apps/web` catch most slips.
 
 ## 2. Numbers
 
@@ -85,6 +95,7 @@ Nothing about one business lives in code. Business facts are **settings** (regis
 - `packages/core`: unit tests for every calculation (vitest).
 - `apps/server`: API tests with an in-memory database via `bootSignedIn()` in `test/helpers.ts`. Test the rule, the refusal, and that the ledger still balances (`SUM(debit) = SUM(credit)`).
 - Run `npm test` and `npx tsc --noEmit -p <package>` before every commit. A change isn't done until its tests pass.
+- `npm run test:phone -w apps/server` runs the business tests again on the phone's stack (SQLite WebAssembly behind the libSQL-compatible client, the in-app router); `test/phone.test.ts` covers joining from the cloud copy, billing offline and syncing. A change to shared code passes both.
 - Browser checks: build the web app, start the server on a scratch database, and drive it with Playwright.
 
 ## 9. Git

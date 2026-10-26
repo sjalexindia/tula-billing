@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { api, ApiError, setSignedOutHandler, type Me, type RateGroup, type Role, type SettingsState } from './api';
 import { hasSavedLang, isLang, nameIn, setLang, type Lang } from './i18n';
 import { GROUP_ORDER, NAV } from './nav';
+import { runsLocally } from './platform';
 import { ChangePin, SignIn } from './screens/Auth';
 import { Invoice } from './screens/Invoice';
 
@@ -80,7 +81,7 @@ export function App() {
   }
   if (route.name === 'print' && route.id) return <AppCtx.Provider value={ctx}><Invoice key={route.id} id={route.id} /></AppCtx.Provider>;
 
-  const allowed = NAV.filter((n) => n.roles.includes(me.role));
+  const allowed = NAV.filter((n) => n.roles.includes(me.role) && !(runsLocally && n.computerOnly));
   // A screen that exists but isn't for this role (e.g. a clerk opening #/purchases from a link): say so, don't silently show another screen.
   const blocked = route.name !== '' && !allowed.some((n) => n.route === route.name) && NAV.some((n) => n.route === route.name);
   const currentItem = allowed.find((n) => n.route === route.name) ?? allowed[0]!;

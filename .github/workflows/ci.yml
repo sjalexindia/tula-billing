@@ -15,4 +15,6 @@ jobs:
       - run: npm ci
       - run: npx tsc --noEmit -p packages/core && npx tsc --noEmit -p packages/db && npx tsc --noEmit -p apps/server && npx tsc --noEmit -p apps/web
       - run: npm test
+      - run: npm run test:phone -w apps/server
       - run: npm run build -w apps/web
+      - run: npm run build:phone -w apps/web
