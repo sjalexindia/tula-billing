@@ -20,11 +20,11 @@ async function unitId(ex: Exec, c: string) {
   return u.id;
 }
 
-async function audit(ex: Exec, dev: string, req: Req, entity: string, entityId: string, action: string, after?: unknown) {
+export async function audit(ex: Exec, dev: string, req: Req, entity: string, entityId: string, action: string, after?: unknown) {
   await insert(ex, 'audit_log', dev, { at: nowIso(), user_id: req.user?.id, entity, entity_id: entityId, action, after_json: after ?? null });
 }
 
-async function inTx<T>(db: Db, fn: (tx: Exec) => Promise<T>): Promise<T> {
+export async function inTx<T>(db: Db, fn: (tx: Exec) => Promise<T>): Promise<T> {
   const tx = await db.transaction('write');
   try {
     const r = await fn(tx);
@@ -37,7 +37,7 @@ async function inTx<T>(db: Db, fn: (tx: Exec) => Promise<T>): Promise<T> {
 }
 
 // ---------------- Products ----------------
-const ProductBody = z.object({
+export const ProductBody = z.object({
   sku: z.string().trim().min(1).max(20).transform((v) => v.toUpperCase()).refine((v) => /^[A-Z0-9-]+$/.test(v), 'Item code: letters, digits and - only'),
   name_en: z.string().trim().min(1).max(120),
   name_ta: z.string().trim().max(120).nullable().optional(),
@@ -56,9 +56,9 @@ const ProductBody = z.object({
   attrs: z.record(z.string(), z.unknown()).optional(),
   units: z.array(z.object({ unit: code, factor: dec, onBill: z.boolean().default(true), theoretical: z.boolean().default(false) })).max(6).default([]),
 });
-type ProductBody = z.infer<typeof ProductBody>;
+export type ProductBody = z.infer<typeof ProductBody>;
 
-async function saveProduct(ex: Exec, dev: string, b: ProductBody, existingId?: string) {
+export async function saveProduct(ex: Exec, dev: string, b: ProductBody, existingId?: string) {
   const dupe = await one<{ id: string }>(ex, 'SELECT id FROM products WHERE sku = ? AND deleted = 0', [b.sku]);
   if (dupe && dupe.id !== existingId) throw new UserError(`Item code ${b.sku} is already used`, 'DUPLICATE');
   if (!(await one(ex, 'SELECT id FROM categories WHERE id = ? AND deleted = 0', [b.categoryId]))) throw new UserError('Pick a category', 'BAD_CATEGORY');
@@ -103,7 +103,7 @@ async function saveProduct(ex: Exec, dev: string, b: ProductBody, existingId?: s
 }
 
 // ---------------- Parties ----------------
-const PartyBody = z.object({
+export const PartyBody = z.object({
   partyType: z.enum(['customer', 'supplier', 'both']).default('customer'),
   name_en: z.string().trim().min(1).max(100),
   name_ta: z.string().trim().max(100).nullable().optional(),
@@ -118,7 +118,7 @@ const PartyBody = z.object({
   openingBalance: optDec, // + the party owes us, - we owe the party
   active: z.boolean().default(true),
 });
-type PartyBody = z.infer<typeof PartyBody>;
+export type PartyBody = z.infer<typeof PartyBody>;
 
 async function postOpeningBalance(ex: Exec, dev: string, partyId: string, amountPaise: number) {
   // Opening balances are set-up data: replace any earlier opening entry for this party.
@@ -132,7 +132,7 @@ async function postOpeningBalance(ex: Exec, dev: string, partyId: string, amount
   });
 }
 
-async function saveParty(ex: Exec, dev: string, b: PartyBody, existingId?: string) {
+export async function saveParty(ex: Exec, dev: string, b: PartyBody, existingId?: string) {
   const s = withDefaults(await getSettings(ex));
   const fromGstin = stateFromGstin(b.gstin);
   if (fromGstin && b.stateCode && b.stateCode !== fromGstin) throw new UserError("The GSTIN's state doesn't match the state chosen", 'STATE_MISMATCH');
@@ -320,34 +320,37 @@ export function registerMasters(app: Router, db: Db, dev: string) {
   /** Set opening stock per item (quantity in base unit and cost per base unit). Replaces earlier opening figures for those items. */
   app.put('/api/stock/opening', async (req) => {
     const b = z.object({ lines: z.array(z.object({ productId: z.string(), qty: dec, cost: dec })).min(1).max(2000) }).parse(req.body);
-    const today = todayIST();
-    return inTx(db, async (tx) => {
-      const fy = financialYear(today);
-      const n0 = await one<{ n: number }>(tx, "SELECT COUNT(*) n FROM stock_adjustments WHERE fy = ? AND reason = 'opening'", [fy]);
-      const adj = await insert(tx, 'stock_adjustments', dev, { doc_no: `OPEN-${Number(n0?.n ?? 0) + 1}`, doc_date: today, fy, reason: 'opening', notes: 'Opening stock', created_by: req.user!.id, approved_by: req.user!.id });
-      let n = 0;
-      for (const l of b.lines) {
-        const p = await one<{ track_stock: number }>(tx, 'SELECT track_stock FROM products WHERE id = ? AND deleted = 0', [l.productId]);
-        if (!p) throw new UserError('Unknown item', 'NOT_FOUND', 404);
-        if (!p.track_stock) throw new UserError('This item does not keep stock', 'NO_STOCK');
-        const qty = toMilli(l.qty);
-        const cost = parseScaled(l.cost, 2, 'cost');
-        if (qty < 0 || cost < 0) throw new UserError('Opening quantity and cost cannot be negative', 'BAD_VALUE');
-        // replace earlier opening figures for this item
-        const old = await all<{ id: string; adjustment_id: string }>(tx, `SELECT l.id, l.adjustment_id FROM stock_adjustment_lines l JOIN stock_adjustments a ON a.id = l.adjustment_id
-          WHERE l.product_id = ? AND a.reason = 'opening' AND l.deleted = 0`, [l.productId]);
-        for (const o of old) {
-          await update(tx, 'stock_adjustment_lines', dev, o.id, { deleted: 1 });
-          await softDelete(tx, 'stock_moves', dev, "source_type = 'ADJ' AND source_line_id = ?", [o.id]);
-        }
-        if (qty > 0) {
-          const line = await insert(tx, 'stock_adjustment_lines', dev, { adjustment_id: adj, product_id: l.productId, qty_milli: qty, cost_per_base_paise: cost });
-          await insert(tx, 'stock_moves', dev, { move_date: today, product_id: l.productId, qty_milli: qty, value_paise: roundDiv(qty * cost, 1000), source_type: 'ADJ', source_id: adj, source_line_id: line });
-        }
-        n += 1;
-      }
-      await audit(tx, dev, req, 'stock_adjustments', adj, 'create', { opening: n });
-      return { ok: true, items: n };
-    });
+    return inTx(db, (tx) => setOpeningStock(tx, dev, req, b.lines));
   });
+}
+
+/** Opening stock for some items; replaces their earlier opening figures. Used by the Opening stock screen and Excel import. */
+export async function setOpeningStock(tx: Exec, dev: string, req: Req, lines: Array<{ productId: string; qty: string; cost: string }>) {
+  const today = todayIST();
+  const fy = financialYear(today);
+  const n0 = await one<{ n: number }>(tx, "SELECT COUNT(*) n FROM stock_adjustments WHERE fy = ? AND reason = 'opening'", [fy]);
+  const adj = await insert(tx, 'stock_adjustments', dev, { doc_no: `OPEN-${Number(n0?.n ?? 0) + 1}`, doc_date: today, fy, reason: 'opening', notes: 'Opening stock', created_by: req.user!.id, approved_by: req.user!.id });
+  let n = 0;
+  for (const l of lines) {
+    const p = await one<{ track_stock: number }>(tx, 'SELECT track_stock FROM products WHERE id = ? AND deleted = 0', [l.productId]);
+    if (!p) throw new UserError('Unknown item', 'NOT_FOUND', 404);
+    if (!p.track_stock) throw new UserError('This item does not keep stock', 'NO_STOCK');
+    const qty = toMilli(l.qty);
+    const cost = parseScaled(l.cost, 2, 'cost');
+    if (qty < 0 || cost < 0) throw new UserError('Opening quantity and cost cannot be negative', 'BAD_VALUE');
+    // replace earlier opening figures for this item
+    const old = await all<{ id: string; adjustment_id: string }>(tx, `SELECT l.id, l.adjustment_id FROM stock_adjustment_lines l JOIN stock_adjustments a ON a.id = l.adjustment_id
+      WHERE l.product_id = ? AND a.reason = 'opening' AND l.deleted = 0`, [l.productId]);
+    for (const o of old) {
+      await update(tx, 'stock_adjustment_lines', dev, o.id, { deleted: 1 });
+      await softDelete(tx, 'stock_moves', dev, "source_type = 'ADJ' AND source_line_id = ?", [o.id]);
+    }
+    if (qty > 0) {
+      const line = await insert(tx, 'stock_adjustment_lines', dev, { adjustment_id: adj, product_id: l.productId, qty_milli: qty, cost_per_base_paise: cost });
+      await insert(tx, 'stock_moves', dev, { move_date: today, product_id: l.productId, qty_milli: qty, value_paise: roundDiv(qty * cost, 1000), source_type: 'ADJ', source_id: adj, source_line_id: line });
+    }
+    n += 1;
+  }
+  await audit(tx, dev, req, 'stock_adjustments', adj, 'create', { opening: n });
+  return { ok: true, items: n };
 }

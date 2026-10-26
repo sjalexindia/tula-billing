@@ -1,0 +1,11 @@
+/* Excel import & export screen */
+.excel-screen { display: flex; flex-direction: column; gap: 16px; }
+.excel-screen h2 { font-size: 18px; margin: 0 0 6px; }
+.excel-steps { padding-left: 22px; margin: 8px 0 0; }
+.excel-steps li { margin: 4px 0; }
+.excel-card label.btn { cursor: pointer; }
+.excel-card label.btn.disabled { opacity: 0.5; pointer-events: none; }
+.excel-result { margin-top: 12px; }
+.excel-table { max-height: 360px; overflow: auto; border: 1px solid var(--rule); border-radius: var(--radius); margin: 8px 0; }
+.excel-table td span { display: block; }
+.excel-bad td { background: var(--danger-soft); }

@@ -141,7 +141,7 @@ function addTable(wb: ExcelJS.Workbook, r: Report, t: Table, used: Set<string>) 
   return ws;
 }
 
-export async function reportWorkbook(r: Report): Promise<Buffer> {
+export async function reportWorkbook(r: Report): Promise<Uint8Array> {
   const wb = new ExcelJS.Workbook();
   wb.creator = 'Tula';
   wb.created = new Date();
@@ -156,7 +156,7 @@ export async function reportWorkbook(r: Report): Promise<Buffer> {
     for (const code of r.notes ?? []) ws.getCell(i++, 1).value = noteText(code);
     for (const w of r.warnings ?? []) ws.getCell(i++, 1).value = `Check: ${w.code}${w.detail ? ` — ${w.detail}` : ''}`;
   }
-  return Buffer.from(await wb.xlsx.writeBuffer());
+  return new Uint8Array(await wb.xlsx.writeBuffer());
 }
 
 export function xlsxFilename(r: Report): string {

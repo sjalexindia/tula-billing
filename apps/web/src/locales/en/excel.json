@@ -1,0 +1,78 @@
+{
+  "nav": { "excel": "Excel import & export" },
+  "excel": {
+    "title": "Excel import & export",
+    "lead": "Enter items, customers and opening stock in Excel instead of one by one, or keep a copy of them in Excel.",
+    "step1": "Download the list. It has everything already in Tula, so it is also the form to fill.",
+    "step2": "Add or change rows in Excel. Keep the headings in the first row as they are. Item codes and mobile numbers find the rows that already exist.",
+    "step3": "Choose the file here. Tula checks every row first and shows what it will add or change; nothing is saved until you press Save.",
+    "download": "Download Excel",
+    "choose": "Import from Excel…",
+    "working": "Preparing…",
+    "checking": "Checking…",
+    "saving": "Saving…",
+    "save": "Save {{count}} row(s)",
+    "saved": "Saved: {{created}} added, {{updated}} changed.",
+    "ready": "{{created}} to add, {{updated}} to change, {{skipped}} left as they are. Check the list, then save.",
+    "hasErrors": "{{count}} row(s) have mistakes. Nothing will be saved until they are fixed.",
+    "fixAndRetry": "Fix these rows in Excel, save the file, and choose it again.",
+    "row": "Row",
+    "what": "Item / name",
+    "result": "What happens",
+    "action": { "create": "Will be added", "update": "Will be changed", "skip": "Left as it is" },
+    "sheet": {
+      "NOT_XLSX": "This is not an Excel workbook (.xlsx). In Excel, use Save As → Excel Workbook.",
+      "EMPTY": "The first sheet has no rows under the headings.",
+      "TOO_MANY": "At most 2000 rows at a time. Split the sheet into smaller files."
+    },
+    "kinds": {
+      "items": {
+        "title": "Items",
+        "file": "Tula items",
+        "about": "Item code, names in English and Tamil, category, HSN, GST, units, rates and minimum stock.",
+        "help": [
+          ["Item code", "Short code, letters, digits and - (TMT-12). An existing code changes that item; a new code adds one."],
+          ["Name (English)", "Required."],
+          ["Name (Tamil)", "Optional. Shown on Tamil bills."],
+          ["Category", "Category name. A new name adds the category."],
+          ["HSN/SAC", "4, 6 or 8 digits."],
+          ["GST %", "0, 0.1, 0.25, 1.5, 3, 5, 12, 18, 28 or 40."],
+          ["Base unit", "Unit stock is kept in: KG, NOS, BAG, MTR…"],
+          ["Other units", "Bigger units and how many base units make one: BDL=10; BOX=12. Use ~ for a theoretical weight: ROD~10.667."],
+          ["Sale rate", "Rate per base unit, in rupees. Leave empty for items on a daily rate."],
+          ["Daily rate group", "For items priced by the day's rate (TMT). Leave empty for a fixed sale rate."],
+          ["Rate extra", "Added to the daily rate for this item, in rupees."],
+          ["Min stock", "Warn below this quantity (base unit)."],
+          ["Keep stock", "Yes or No (No for services and charges)."],
+          ["Active", "Yes or No."]
+        ]
+      },
+      "parties": {
+        "title": "Customers and suppliers",
+        "file": "Tula customers and suppliers",
+        "about": "Names, mobile numbers, GSTIN, credit terms and opening balances.",
+        "help": [
+          ["Type", "Customer, Supplier or Both. Empty means Customer."],
+          ["Name (English)", "Required. With no mobile number, the same name finds an existing row."],
+          ["Mobile", "10 digits. The same number finds an existing customer."],
+          ["GSTIN", "15 characters. The state is taken from it."],
+          ["State code", "2 digits (33 = Tamil Nadu), when there is no GSTIN. Empty means the state of the shop."],
+          ["Credit limit", "Rupees. 0 or empty for no limit."],
+          ["Credit days", "Days allowed before a bill is overdue."],
+          ["Opening balance", "What they owed on the go-live date, in rupees; minus if you owed them. Empty keeps the balance as it is."],
+          ["Active", "Yes or No."]
+        ]
+      },
+      "opening-stock": {
+        "title": "Opening stock",
+        "file": "Tula opening stock",
+        "about": "The stock counted on the go-live date and its cost, for every item that keeps stock.",
+        "help": [
+          ["Item code", "Must be an item already in Tula (import items first)."],
+          ["Quantity", "In the base unit shown. Empty rows are left as they are."],
+          ["Cost per unit", "Purchase cost per base unit, in rupees, before GST."]
+        ]
+      }
+    }
+  }
+}

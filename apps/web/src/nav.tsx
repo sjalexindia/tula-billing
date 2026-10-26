@@ -5,6 +5,7 @@ import { Bills } from './screens/Bills';
 import { Customers } from './screens/Customers';
 import { Devices } from './screens/Devices';
 import { Adjustments } from './screens/Adjustments';
+import { Excel } from './screens/Excel';
 import { Expenses } from './screens/Expenses';
 import { Items } from './screens/Items';
 import { NewBill } from './screens/NewBill';
@@ -62,6 +63,7 @@ export const NAV: NavItem[] = [
 
   { route: 'items', label: 'nav.items', group: 'masters', roles: ALL, screen: Items },
   { route: 'customers', label: 'nav.customers', group: 'masters', roles: ALL, screen: Customers },
+  { route: 'excel', label: 'nav.excel', group: 'masters', roles: OWNER, screen: Excel },
 
   { route: 'settings', label: 'nav.settings', group: 'settings', roles: OWNER, screen: SettingsScreen },
   { route: 'backup', label: 'nav.backup', group: 'settings', roles: OWNER, screen: Backup, computerOnly: true },

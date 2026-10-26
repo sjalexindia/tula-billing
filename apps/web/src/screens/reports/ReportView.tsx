@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../api';
 import { reportsApi, reportUrl, type Report, type ReportDef } from '../../api/reports';
+import { saveFile, XLSX } from '../../files';
 import { runsLocally } from '../../platform';
 import { Field } from '../../components/Field';
 import { nameIn } from '../../i18n';
@@ -110,7 +111,9 @@ export function ReportView({ def, onBack }: { def: ReportDef; onBack: () => void
           <p className="report-period">{period}</p>
         </div>
         <div className="report-actions no-print">
-          {!runsLocally && <a className="btn" href={reportUrl(def, params, true)} download>{t('reports.downloadExcel')}</a>}
+          {runsLocally
+            ? <button type="button" className="btn" disabled={!report} onClick={() => void excelHere(report!)}>{t('reports.downloadExcel')}</button>
+            : <a className="btn" href={reportUrl(def, params, true)} download>{t('reports.downloadExcel')}</a>}
           <button type="button" className="btn primary" onClick={() => window.print()} disabled={!report}>{t('reports.print')}</button>
         </div>
       </header>
@@ -193,4 +196,11 @@ export function ReportView({ def, onBack }: { def: ReportDef; onBack: () => void
       )}
     </section>
   );
+}
+
+/** On the phone (no server to download from): make the same workbook here and hand it to the share sheet. */
+async function excelHere(report: Report) {
+  const { reportWorkbook, xlsxFilename } = await import('@tula/server/reports/xlsx');
+  const r = report as unknown as Parameters<typeof reportWorkbook>[0];
+  await saveFile(xlsxFilename(r), await reportWorkbook(r), XLSX);
 }

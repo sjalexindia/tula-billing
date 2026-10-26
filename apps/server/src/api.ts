@@ -13,6 +13,7 @@ import { registerMasters } from './masters';
 import { registerPurchases } from './purchases';
 import { registerReports } from './reports';
 import { registerSalesOps } from './sales-ops';
+import { registerExcel } from './excel';
 
 /*
  * The API shared by the shop computer (app.ts, Fastify) and the phone app (apps/web/src/local).
@@ -50,6 +51,7 @@ export function registerApi(app: Router, db: Db, deviceId: string): void {
   registerMasters(app, db, deviceId);
   registerSalesOps(app, db, deviceId);
   registerPurchases(app, db, deviceId);
+  registerExcel(app, db, deviceId);
   registerReports(app, db, deviceId);
 
   // ---------- Settings ----------
