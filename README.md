@@ -7,7 +7,7 @@ Runs on the shop's own computer without internet, syncs to phones, backs up to G
 *Tula (तुला / துலாம்) means the weighing scale, and a balanced book.*
 
 ## Status
-**Milestone 1 done.** PIN sign-in with roles, items, customers with special rates, opening stock and balances, on top of Milestone 0's billing. Every business detail is configurable. See [docs/04-milestone-1.md](docs/04-milestone-1.md).
+**Phase 1 done.** A full shop day: billing, returns, receipts, purchases, expenses, stock, reports and GST returns, roles, backups, auto-start and sync. See [docs/08-phase-1.md](docs/08-phase-1.md).
 
 | Doc | What it covers |
 |---|---|
@@ -18,6 +18,7 @@ Runs on the shop's own computer without internet, syncs to phones, backs up to G
 | [docs/05-engineering-guide.md](docs/05-engineering-guide.md) | How Tula is built: numbers, data rules, accounting conventions, API, web, tests |
 | [docs/06-install-and-run.md](docs/06-install-and-run.md) | Installing on the shop PC, auto-start, backups and restore, troubleshooting |
 | [docs/07-sync-and-phones.md](docs/07-sync-and-phones.md) | Cloud copy (Turso), phones and other computers |
+| [docs/08-phase-1.md](docs/08-phase-1.md) | What Phase 1 delivered, how it was verified, known gaps |
 | [packages/db/migrations/](packages/db/migrations/) | SQLite schema |
 
 ## Run it
