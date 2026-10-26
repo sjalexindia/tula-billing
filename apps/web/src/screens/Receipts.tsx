@@ -257,8 +257,8 @@ function NewReceipt({ partyId }: { partyId?: string }) {
                   <tr>
                     <td>{t('sales.receipts.opening')}<span className="sub">{t('sales.receipts.openingHelp')}</span></td>
                     <td className="r">—</td>
-                    <td className="r owed">{formatRs(open.openingDuePaise)}</td>
-                    <td className="r">{preview ? formatRs(preview.toOpeningPaise) : '—'}</td>
+                    <td className="r owed"><span className="m-label">{t('sales.receipts.left')}: </span>{formatRs(open.openingDuePaise)}</td>
+                    <td className="r"><span className="m-label">{t('sales.receipts.against')}: </span>{preview ? formatRs(preview.toOpeningPaise) : '—'}</td>
                   </tr>
                 )}
                 {bills.map((b) => (
@@ -268,8 +268,8 @@ function NewReceipt({ partyId }: { partyId?: string }) {
                       <span className="sub">{dmy(b.date)} · {b.overdueDays > 0 ? <span className="late">{t('sales.receipts.late', { n: b.overdueDays })}</span> : (b.daysOld === 0 ? t('sales.receipts.today') : t('sales.receipts.daysOld', { count: b.daysOld }))}</span>
                     </td>
                     <td className="r">{formatRs(b.totalPaise)}{(b.paidPaise > 0 || b.returnedPaise > 0) && <span className="sub">{t('sales.receipts.paidSoFar', { amount: formatRs(b.paidPaise + b.returnedPaise) })}</span>}</td>
-                    <td className="r">{formatRs(b.balancePaise)}</td>
-                    <td className="r"><input className="num" inputMode="decimal" aria-label={t('sales.receipts.againstBill', { no: b.docNo })} value={allocFor(b.id)} placeholder="0.00" onChange={(e) => setAlloc(b.id, e.target.value)} /></td>
+                    <td className="r"><span className="m-label">{t('sales.receipts.left')}: </span>{formatRs(b.balancePaise)}</td>
+                    <td className="r"><span className="m-label">{t('sales.receipts.against')}: </span><input className="num" inputMode="decimal" aria-label={t('sales.receipts.againstBill', { no: b.docNo })} value={allocFor(b.id)} placeholder="0.00" onChange={(e) => setAlloc(b.id, e.target.value)} /></td>
                   </tr>
                 ))}
               </tbody>

@@ -303,8 +303,9 @@ function ReturnGoods({ row, onClose, onDone }: { row: RegisterRow; onClose: () =
                 <tr key={l.lineId} className={l.returnableMilli <= 0 ? 'inactive' : ''}>
                   <td>{l.description}<span className="sub">{formatRs(l.ratePaise)} / {unitName(l)}{l.inclusive ? ` · ${t('sales.ret.inclGst')}` : ''}</span></td>
                   <td className="r nowrap">{formatQty(l.soldMilli, { trimZeros: true })} {unitName(l)}{l.returnedMilli > 0 && <span className="sub">{t('sales.ret.already', { qty: formatQty(l.returnedMilli, { trimZeros: true }) })}</span>}</td>
-                  <td className="r nowrap">{formatQty(l.returnableMilli, { trimZeros: true })}</td>
+                  <td className="r nowrap"><span className="m-label">{t('sales.ret.canReturn')}: </span>{formatQty(l.returnableMilli, { trimZeros: true })}</td>
                   <td className="r">
+                    <span className="m-label">{t('sales.ret.qty')}: </span>
                     <input className={`num${over ? ' bad' : ''}`} inputMode="decimal" aria-label={t('sales.ret.qtyFor', { item: l.description })} disabled={l.returnableMilli <= 0}
                       value={qty[l.lineId] ?? ''} placeholder="0" onChange={(e) => setQty((x) => ({ ...x, [l.lineId]: e.target.value.replace(/[^\d.]/g, '') }))} />
                     {l.returnableMilli > 0 && (
