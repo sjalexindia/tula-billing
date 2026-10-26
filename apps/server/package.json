@@ -11,7 +11,8 @@
     "supervise": "tsx src/supervisor.ts",
     "backup": "tsx src/cli/backup.ts",
     "restore": "tsx src/cli/restore.ts",
-    "status": "tsx src/cli/status.ts"
+    "status": "tsx src/cli/status.ts",
+    "reset-pin": "tsx src/cli/reset-pin.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

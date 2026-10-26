@@ -135,7 +135,7 @@ shows whether it is running, the addresses, the last backup, network/firewall pr
 | Backup screen says the folder cannot be reached | USB drive unplugged, or the Google Drive folder is the **G:** drive (not visible to Tula). Use the Mirror files folder under `C:\Users\<name>\My Drive` (section 5). |
 | Printing: wrong size or blank margins | In the print dialog choose the right printer and paper (A4/A5 as set in Settings → Invoice), Margins: *Default*, Scale: *100*, and turn **off** *Headers and footers*. Set the printer as Windows' default so Tula's print button picks it first. |
 | PIN locked ("Too many wrong PINs") | Wait 5 minutes and try again (a restart of Tula also clears it). |
-| Owner forgot the PIN | Another owner can reset it in Settings → Users. If there is no other owner, contact the person who installed Tula: restoring needs an owner PIN, so keep a second owner account for this reason. |
+| Owner forgot the PIN | Another owner can reset it in Settings → People. With no other owner, on the shop PC (as administrator): `reset-pin.ps1` lists people, `reset-pin.ps1 -Name "Owner"` sets the temporary PIN 1234; they choose a new one at sign-in. |
 | "This backup was made by a newer version of Tula" | Update Tula on this computer (section 7), then restore. |
 | Tula keeps restarting (log shows "starting again in 60 s") | Read the error just above that line in the log. If it started after an update, re-run `update.ps1` with the previous version, or restore the "Before restore or update" backup. |
 
