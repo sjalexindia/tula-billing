@@ -152,7 +152,8 @@
       "cancelTitle": "Cancel payment {{no}}",
       "cancelHelp": "The amount goes back to what we owe the supplier.",
       "cancelReasonPh": "e.g. cheque bounced",
-      "cancelDo": "Cancel this payment"
+      "cancelDo": "Cancel this payment",
+      "pickSupplier": "Choose the supplier"
     },
     "exp": {
       "title": "Expenses",
