@@ -38,7 +38,7 @@ export interface ReceiptDetail {
 }
 
 export interface ReturnableLine {
-  lineId: string; lineNo: number; description: string; rateUnit: string; rateUnitEn: string; rateUnitTa: string | null; ratePaise: number;
+  lineId: string; lineNo: number; description: string; nameEn: string; nameTa: string | null; rateUnit: string; rateUnitEn: string; rateUnitTa: string | null; ratePaise: number;
   inclusive: boolean; gstBp: number; lineTotalPaise: number; soldMilli: number; returnedMilli: number; returnableMilli: number;
 }
 export interface Returnable {

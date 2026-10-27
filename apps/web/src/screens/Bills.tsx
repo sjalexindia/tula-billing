@@ -302,7 +302,8 @@ function ReturnGoods({ row, onClose, onDone }: { row: RegisterRow; onClose: () =
               try { over = !!qty[l.lineId]?.trim() && toMilli(qty[l.lineId]!) > l.returnableMilli; } catch { over = true; }
               return (
                 <tr key={l.lineId} className={l.returnableMilli <= 0 ? 'inactive' : ''}>
-                  <td>{l.description}<span className="sub">{formatRs(l.ratePaise)} / {unitName(l)}{l.inclusive ? ` · ${t('sales.ret.inclGst')}` : ''}</span></td>
+                  {/* the item in the screen's language (the bill's own text is in the bill's language) */}
+                  <td>{nameIn(ui, l.nameEn, l.nameTa) || l.description}<span className="sub">{formatRs(l.ratePaise)} / {unitName(l)}{l.inclusive ? ` · ${t('sales.ret.inclGst')}` : ''}</span></td>
                   <td className="r nowrap">{formatQty(l.soldMilli, { trimZeros: true })} {unitName(l)}{l.returnedMilli > 0 && <span className="sub">{t('sales.ret.already', { qty: formatQty(l.returnedMilli, { trimZeros: true }) })}</span>}</td>
                   <td className="r nowrap"><span className="m-label">{t('sales.ret.canReturn')}: </span>{formatQty(l.returnableMilli, { trimZeros: true })}</td>
                   <td className="r">

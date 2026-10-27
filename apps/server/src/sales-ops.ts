@@ -311,7 +311,7 @@ interface InvLine {
   id: string; line_no: number; product_id: string; description: string; hsn: string | null; base_qty_milli: number; rate_unit_id: string;
   rate_unit_code: string; rate_unit_en: string; rate_unit_ta: string | null; rate_qty_milli: number; rate_paise: number; rate_inclusive: number;
   discount_paise: number; taxable_paise: number; gst_bp: number; cgst_paise: number; sgst_paise: number; igst_paise: number; line_total_paise: number;
-  cost_per_base_paise: number | null; track_stock: number;
+  cost_per_base_paise: number | null; track_stock: number; product_en: string; product_ta: string | null;
   ret_rate_qty: number; ret_base_qty: number; ret_discount: number; ret_taxable: number; ret_cgst: number; ret_sgst: number; ret_igst: number; ret_total: number;
 }
 
@@ -321,7 +321,7 @@ async function returnableLines(ex: Exec, billId: string): Promise<InvLine[]> {
   const rows = await all<InvLine>(ex, `
     SELECT l.id, l.line_no, l.product_id, l.description, l.hsn, l.base_qty_milli, l.rate_unit_id, u.code AS rate_unit_code, u.name_en AS rate_unit_en,
       u.name_ta AS rate_unit_ta, l.rate_qty_milli, l.rate_paise, l.rate_inclusive, l.discount_paise, l.taxable_paise, l.gst_bp, l.cgst_paise,
-      l.sgst_paise, l.igst_paise, l.line_total_paise, l.cost_per_base_paise, p.track_stock,
+      l.sgst_paise, l.igst_paise, l.line_total_paise, l.cost_per_base_paise, p.track_stock, p.name_en AS product_en, p.name_ta AS product_ta,
       ${sumRet('rate_qty_milli')} AS ret_rate_qty, ${sumRet('base_qty_milli')} AS ret_base_qty, ${sumRet('discount_paise')} AS ret_discount,
       ${sumRet('taxable_paise')} AS ret_taxable, ${sumRet('cgst_paise')} AS ret_cgst, ${sumRet('sgst_paise')} AS ret_sgst,
       ${sumRet('igst_paise')} AS ret_igst, ${sumRet('line_total_paise')} AS ret_total
@@ -672,7 +672,7 @@ export function registerSalesOps(app: Router, db: Db, deviceId: string): void {
       bill: { id: bill.id, docNo: bill.doc_no, date: bill.doc_date, status: bill.status, totalPaise: Number(bill.total_paise) },
       creditNotes: await activeCreditNotes(db, id),
       lines: lines.map((l) => ({
-        lineId: l.id, lineNo: l.line_no, description: l.description, rateUnit: l.rate_unit_code, rateUnitEn: l.rate_unit_en, rateUnitTa: l.rate_unit_ta,
+        lineId: l.id, lineNo: l.line_no, description: l.description, nameEn: l.product_en, nameTa: l.product_ta, rateUnit: l.rate_unit_code, rateUnitEn: l.rate_unit_en, rateUnitTa: l.rate_unit_ta,
         ratePaise: l.rate_paise, inclusive: !!l.rate_inclusive, gstBp: l.gst_bp, lineTotalPaise: l.line_total_paise,
         soldMilli: l.rate_qty_milli, returnedMilli: l.ret_rate_qty, returnableMilli: l.rate_qty_milli - l.ret_rate_qty,
       })),

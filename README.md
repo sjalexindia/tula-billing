@@ -9,7 +9,7 @@ Runs on the shop's own computer without internet, syncs to phones, backs up to G
 ## Status
 **Phase 1 done.** A full shop day: billing, returns, receipts, purchases, expenses, stock, reports and GST returns, roles, backups, auto-start and sync. See [docs/08-phase-1.md](docs/08-phase-1.md).
 
-**Phones that work anywhere.** The Android app can run Tula on the phone itself: it bills with no internet and the shop computer off, and syncs through the cloud copy. See [docs/07-sync-and-phones.md](docs/07-sync-and-phones.md) §5.
+**Phase 2 done.** Phones that work anywhere, Excel import and export, quotations, recycle bin, Share as picture or PDF, Google Drive backups, Tamil throughout, backup and restore on Windows. See [docs/12-phase-2.md](docs/12-phase-2.md) and the [user guide](docs/USER-GUIDE.md).
 
 | Doc | What it covers |
 |---|---|
@@ -25,6 +25,7 @@ Runs on the shop's own computer without internet, syncs to phones, backs up to G
 | [docs/09-excel.md](docs/09-excel.md) | Excel import and export of items, customers and suppliers, opening stock |
 | [docs/10-quotations.md](docs/10-quotations.md) | Quotations: make, print or share, turn into a bill |
 | [docs/11-recycle-bin.md](docs/11-recycle-bin.md) | Recycle bin, settings that save what they can, stock in larger units |
+| [docs/12-phase-2.md](docs/12-phase-2.md) | What Phase 2 delivered, how it was verified, known gaps |
 | [packages/db/migrations/](packages/db/migrations/) | SQLite schema |
 
 ## Run it

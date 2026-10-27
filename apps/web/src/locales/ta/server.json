@@ -2,6 +2,7 @@
   "serverText": {
     "Unknown rate group {{group}}": "{{group}} என்ற விலைக் குழு இல்லை",
     "Rate cannot be negative": "விலை கழித்தல் (-) ஆக இருக்கக் கூடாது",
+    "The request could not be read": "கோரிக்கையைப் படிக்க முடியவில்லை. மீண்டும் முயலுங்கள்.",
     "Something went wrong": "ஏதோ தவறு நடந்தது. மீண்டும் முயலுங்கள்.",
     "Choose a PIN that is harder to guess": "எளிதில் ஊகிக்க முடியாத PIN-ஐத் தேர்ந்தெடுங்கள்",
     "Too many wrong PINs. Try again in {{mins}} minute{{s}}.": "பலமுறை தவறான PIN. {{mins}} நிமிடம் கழித்து மீண்டும் முயலுங்கள்.",
