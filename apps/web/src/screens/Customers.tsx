@@ -1,4 +1,4 @@
-import { formatRs, stateFromGstin, STATES } from '@tula/core';
+import { formatRs, stateFromGstin, stateName, STATES } from '@tula/core';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api, type CatalogItem, type Party, type PartyInput } from '../api';
@@ -138,13 +138,13 @@ function PartyEditor({ id }: { id?: string }) {
             <Field id="pname_ta" label={t('parties.nameTa')} wide><input id="pname_ta" lang="ta" value={f.name_ta ?? ''} maxLength={100} onChange={(e) => set('name_ta', e.target.value)} /></Field>
             {!walkIn && <>
               <Field id="mobile" label={t('parties.mobile')}><input id="mobile" inputMode="tel" value={f.mobile ?? ''} onChange={(e) => set('mobile', e.target.value)} /></Field>
-              <Field id="gstin" label={t('parties.gstin')} hint={gstState ? `${t('parties.gstinHelp')}: ${STATES[gstState]?.name}` : undefined}>
+              <Field id="gstin" label={t('parties.gstin')} hint={gstState ? `${t('parties.gstinHelp')}: ${stateName(gstState, i18n.language)}` : undefined}>
                 <input id="gstin" className="mono" value={f.gstin ?? ''} maxLength={15} onChange={(e) => set('gstin', e.target.value.toUpperCase())} />
               </Field>
               {!gstState && (
                 <Field id="state" label={t('parties.state')}>
                   <select id="state" value={f.stateCode || settings?.values['business.state_code'] || ''} onChange={(e) => set('stateCode', e.target.value)}>
-                    {Object.entries(STATES).map(([c, s]) => <option key={c} value={c}>{c} — {s.name}</option>)}
+                    {Object.entries(STATES).map(([c, s]) => <option key={c} value={c}>{c} — {i18n.language === 'ta' ? s.name_ta : s.name}</option>)}
                   </select>
                 </Field>
               )}

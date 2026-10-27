@@ -35,7 +35,14 @@ export const BillInput = z.object({
 export type BillInput = z.input<typeof BillInput>;
 
 /** EWAY and RATE_MISSING are information only; LOW_STOCK and CREDIT_LIMIT need confirmation (or block, per settings). */
-export interface BillWarning { code: 'LOW_STOCK' | 'CREDIT_LIMIT' | 'RATE_MISSING' | 'EWAY'; message: string; productId?: string; thresholdPaise?: number }
+/**
+ * `message` is English; the screens write the warning from `code` and `params` in the person's language
+ * (quantities in thousandths, money in paise, names looked up from productId).
+ */
+export interface BillWarning {
+  code: 'LOW_STOCK' | 'CREDIT_LIMIT' | 'RATE_MISSING' | 'EWAY'; message: string; productId?: string; thresholdPaise?: number;
+  params?: Record<string, string | number>;
+}
 const INFO_ONLY = new Set<BillWarning['code']>(['RATE_MISSING', 'EWAY']);
 
 /** Default prefixes for documents other than invoices (the invoice prefix is a setting). */
@@ -127,7 +134,7 @@ export async function priceBill(ex: Exec, raw: BillInput) {
 
     const auto = await resolveRate(ex, p, party.id, date);
     const ratePaise = l.rate !== undefined && l.rate !== '' ? toPaise(l.rate) : auto.ratePaise;
-    if (ratePaise === 0 && auto.source === 'missing_daily_rate') warnings.push({ code: 'RATE_MISSING', message: `Today's ${p.rate_group} rate is not set`, productId: p.id });
+    if (ratePaise === 0 && auto.source === 'missing_daily_rate') warnings.push({ code: 'RATE_MISSING', message: `Today's ${p.rate_group} rate is not set`, productId: p.id, params: { group: String(p.rate_group) } });
 
     let amounts: LineAmounts;
     try {
@@ -138,7 +145,7 @@ export async function priceBill(ex: Exec, raw: BillInput) {
 
     if (p.track_stock && stockCheck !== 'off') {
       const onHand = await stockOnHand(ex, p.id);
-      if (baseQty > onHand) warnings.push({ code: 'LOW_STOCK', message: `${p.name_en}: billing ${baseQty / 1000}, stock ${onHand / 1000}`, productId: p.id });
+      if (baseQty > onHand) warnings.push({ code: 'LOW_STOCK', message: `${p.name_en}: billing ${baseQty / 1000}, stock ${onHand / 1000}`, productId: p.id, params: { billingMilli: baseQty, stockMilli: onHand } });
     }
     lines.push({
       lineNo: i + 1, product: p, entryJson: Object.fromEntries(Object.entries(l.entry).filter(([, v]) => v !== '' && v !== '0')),
@@ -152,7 +159,7 @@ export async function priceBill(ex: Exec, raw: BillInput) {
   const paid = input.payment ? toPaise(input.payment.amount) : 0;
   const limit = Number(party.credit_limit_paise);
   if (creditCheck !== 'off' && limit > 0 && balanceBefore + totals.total - paid > limit) {
-    warnings.push({ code: 'CREDIT_LIMIT', message: `Outstanding would be ${(balanceBefore + totals.total - paid) / 100} against limit ${limit / 100}` });
+    warnings.push({ code: 'CREDIT_LIMIT', message: `Outstanding would be ${(balanceBefore + totals.total - paid) / 100} against limit ${limit / 100}`, params: { outstandingPaise: balanceBefore + totals.total - paid, limitPaise: limit } });
   }
   if (paid > totals.total) throw new UserError('Payment is more than the bill total. Record the extra as a separate receipt.');
 
@@ -161,7 +168,7 @@ export async function priceBill(ex: Exec, raw: BillInput) {
     const goodsValue = lines.filter((l) => l.product.track_stock).reduce((a, l) => a + l.total, 0);
     const threshold = toPaise(settings[supply === 'inter' ? 'eway.threshold_inter' : 'eway.threshold_intra']);
     if (threshold > 0 && goodsValue > threshold) {
-      warnings.push({ code: 'EWAY', message: `Goods worth more than ${threshold / 100}: an e-way bill is needed if they are transported`, thresholdPaise: threshold });
+      warnings.push({ code: 'EWAY', message: `Goods worth more than ${threshold / 100}: an e-way bill is needed if they are transported`, thresholdPaise: threshold, params: { thresholdPaise: threshold } });
     }
   }
   const blocked = warnings.some((w) => (w.code === 'LOW_STOCK' && stockCheck === 'block') || (w.code === 'CREDIT_LIMIT' && creditCheck === 'block'));

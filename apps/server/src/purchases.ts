@@ -343,13 +343,13 @@ async function cancelPurchase(db: Db, ctx: Ctx, id: string, raw: unknown) {
       if (dn) throw new UserError(`Cancel debit note ${dn.doc_no} first`, 'HAS_RETURNS');
     }
     // Stock check: removing goods that came in may take stock below zero (they may already be sold).
-    const moves = await all<{ product_id: string; q: number; sku: string; name_en: string }>(tx, `
-      SELECT m.product_id, SUM(m.qty_milli) q, p.sku, p.name_en FROM stock_moves m JOIN products p ON p.id = m.product_id
+    const moves = await all<{ product_id: string; q: number; sku: string; name_en: string; name_ta: string | null }>(tx, `
+      SELECT m.product_id, SUM(m.qty_milli) q, p.sku, p.name_en, p.name_ta FROM stock_moves m JOIN products p ON p.id = m.product_id
       WHERE m.source_type = ? AND m.source_id = ? AND m.deleted = 0 GROUP BY m.product_id`, [doc.doc_type, id]);
     const warnings = [];
     for (const m of moves) {
       const after = (await stockOnHand(tx, m.product_id)) - Number(m.q);
-      if (after < 0) warnings.push({ code: 'LOW_STOCK', productId: m.product_id, message: `${m.name_en}: stock would be ${after / 1000} after cancelling` });
+      if (after < 0) warnings.push({ code: 'LOW_STOCK', productId: m.product_id, message: `${m.name_en}: stock would be ${after / 1000} after cancelling`, params: { afterMilli: after, name_en: m.name_en, name_ta: m.name_ta ?? '' } });
     }
     if (warnings.length && !b.confirmWarnings) return { saved: false as const, warnings };
 

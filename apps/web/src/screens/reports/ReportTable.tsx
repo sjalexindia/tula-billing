@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Cell, Col, Row, Table } from '../../api/reports';
 import { nameIn } from '../../i18n';
+import { serverText } from '../../server-text';
 
 const NUMERIC = new Set(['money', 'qty', 'int', 'pct', 'rate']);
 
@@ -39,7 +40,8 @@ export function useCellText() {
           const [y, m] = String(v).split('-').map(Number);
           return new Intl.DateTimeFormat(`${lang}-IN`, { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(y!, m! - 1, 1)));
         }
-        return c.translate ? t(`reports.values.${String(v)}`, { defaultValue: String(v) }) : String(v);
+        if (c.translate) return t(`reports.values.${String(v)}`, { defaultValue: String(v) });
+        return c.type === 'text' ? serverText(String(v), lang) : String(v);
     }
   };
 }

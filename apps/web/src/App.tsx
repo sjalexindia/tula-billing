@@ -104,7 +104,7 @@ export function App() {
       <div className="shell">
         <header className="topbar">
           <div className="brand"><span className="brand-name">{businessName}</span></div>
-          <nav className="tabs" aria-label="Main">
+          <nav className="tabs" aria-label={t('nav.main')}>
             {groups.map((g) => {
               const first = allowed.find((n) => n.group === g && !n.hidden)!;
               return <a key={g} href={`#/${first.route}`} aria-current={currentItem.group === g ? 'page' : undefined}>{t(`nav.groups.${g}`)}</a>;
@@ -112,7 +112,7 @@ export function App() {
           </nav>
           <RatesBar key={ratesVersion} canEdit={me.role === 'owner'} onChanged={() => setRatesVersion((n) => n + 1)} />
           {langs.length > 1 && (
-            <div className="lang-switch" role="group" aria-label="Language">
+            <div className="lang-switch" role="group" aria-label={t('lang.label')}>
               {langs.map((l) => (
                 <button key={l} type="button" aria-pressed={i18n.language === l} onClick={() => setLang(l)}>{t(`lang.${l}`)}</button>
               ))}

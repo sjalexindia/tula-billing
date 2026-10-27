@@ -10,6 +10,7 @@ import { useApp } from '../App';
 import { nameIn } from '../i18n';
 import type { ScreenProps } from '../nav';
 import '../styles/purchases.css';
+import { warningText } from '../server-text';
 
 export function Purchases({ id }: ScreenProps) {
   if (id === 'new') return <NewPurchase />;
@@ -573,7 +574,7 @@ export function CancelDialog(props: {
         {warnings && (
           <div className="held" role="alert">
             <strong>{t('purchases.common.stockWarn')}</strong>
-            <ul>{warnings.map((w, i) => <li key={i}>{w.message}</li>)}</ul>
+            <ul>{warnings.map((w, i) => <li key={i}>{warningText(w)}</li>)}</ul>
           </div>
         )}
         {error && <p className="field-error" role="alert">{error}</p>}

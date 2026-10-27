@@ -121,7 +121,7 @@ function Card({ children }: { children: ReactNode }) {
     <div className="signin phone-start">
       <div className="signin-card">
         <p className="signin-business">{t('app.title')}</p>
-        <div className="lang-switch" role="group" aria-label="Language">
+        <div className="lang-switch" role="group" aria-label={t('lang.label')}>
           {(['en', 'ta'] as const).map((l) => (
             <button key={l} type="button" aria-pressed={i18n.language === l} onClick={() => setLang(l)}>{t(`lang.${l}`)}</button>
           ))}

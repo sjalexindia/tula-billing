@@ -6,6 +6,7 @@ import { useApp } from '../App';
 import { dmy } from '../api/sales';
 import { quotesApi, type ConvertPreview, type QuoteInfo, type QuoteRow, type QuoteState } from '../api/quotes';
 import { nameIn } from '../i18n';
+import { warningText } from '../server-text';
 import type { ScreenProps } from '../nav';
 import { NewBill } from './NewBill';
 import { RangePicker, rangeFor, Sheet, type Range } from './Bills';
@@ -126,7 +127,7 @@ export function ConvertSheet({ id, docNo, onClose }: { id: string; docNo: string
     setError('');
     try {
       const r = await quotesApi.convert(id, keep, confirm);
-      if (!r.saved) { setHeld({ warnings: r.warnings.map((w) => w.message), blocked: !!r.blocked }); return; }
+      if (!r.saved) { setHeld({ warnings: r.warnings.map((w) => warningText(w)), blocked: !!r.blocked }); return; }
       location.hash = `#/print/${r.id}`;
     } catch (e) {
       setError(e instanceof ApiError ? e.message : (e as Error).message);

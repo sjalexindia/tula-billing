@@ -257,7 +257,8 @@ export function registerExcel(app: Router, db: Db, dev: string): void {
       rows: z.array(z.record(z.string(), z.union([z.string(), z.number(), z.null()]))).max(MAX_ROWS, `At most ${MAX_ROWS} rows at a time`),
     }).parse(req.body);
     const missing = b.rows.length ? REQUIRED[kind].filter((c) => !(c in b.rows[0]!)) : [];
-    if (missing.length) throw new UserError(`The sheet has no column ${missing.map((m) => `"${m}"`).join(', ')}. Start from the downloaded workbook.`, 'BAD_SHEET');
+    const columns = missing.map((m) => `"${m}"`).join(', ');
+    if (missing.length) throw new UserError(`The sheet has no column ${columns}. Start from the downloaded workbook.`, 'BAD_SHEET');
     return importRows(db, dev, req, kind, b.rows, b.apply);
   });
 }

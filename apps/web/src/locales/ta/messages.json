@@ -1,0 +1,66 @@
+{
+  "msg": {
+    "warn": {
+      "LOW_STOCK": "{{name}}: பில் {{billing}} {{unit}}, இருப்பு {{stock}} {{unit}} மட்டுமே",
+      "LOW_STOCK_AFTER_CANCEL": "{{name}}: ரத்து செய்த பிறகு இருப்பு {{after}} ஆகும்",
+      "CREDIT_LIMIT": "நிலுவை {{outstanding}} ஆகும் — கடன் வரம்பு {{limit}}-ஐத் தாண்டுகிறது",
+      "RATE_MISSING": "இன்றைய {{group}} விலை போடப்படவில்லை",
+      "EWAY": "{{threshold}}-க்கு மேல் மதிப்புள்ள சரக்கு: வண்டியில் அனுப்பினால் e-way பில் தேவை"
+    },
+    "fields": {
+      "name": "பெயர்",
+      "name_en": "பெயர் (ஆங்கிலம்)",
+      "name_ta": "பெயர் (தமிழ்)",
+      "mobile": "மொபைல்",
+      "address": "முகவரி",
+      "gstin": "GSTIN",
+      "stateCode": "மாநிலம்",
+      "partyType": "வகை",
+      "creditLimit": "கடன் வரம்பு",
+      "creditDays": "கடன் நாட்கள்",
+      "openingBalance": "தொடக்க இருப்புத் தொகை",
+      "sku": "பொருள் குறியீடு",
+      "hsn": "HSN/SAC",
+      "gst": "GST %",
+      "baseUnit": "அடிப்படை அலகு",
+      "categoryId": "வகை",
+      "brand": "பிராண்ட்",
+      "saleRate": "விற்பனை விலை",
+      "rateExtra": "கூடுதல் விலை",
+      "minStock": "குறைந்தபட்ச இருப்பு",
+      "units": "அலகுகள்",
+      "rateGroup": "விலைக் குழு",
+      "partyId": "வாடிக்கையாளர்",
+      "supplierId": "சப்ளையர்",
+      "lines": "பொருட்கள்",
+      "payment": "செலுத்தல்",
+      "amount": "தொகை",
+      "mode": "செலுத்தும் முறை",
+      "rate": "விலை",
+      "qty": "அளவு",
+      "date": "தேதி",
+      "reason": "காரணம்",
+      "notes": "குறிப்பு",
+      "supplierBillNo": "சப்ளையர் பில் எண்",
+      "pin": "PIN",
+      "newPin": "புதிய PIN",
+      "currentPin": "தற்போதைய PIN",
+      "role": "பங்கு",
+      "code": "குறியீடு",
+      "unit": "அலகு",
+      "folder": "ஃபோல்டர்",
+      "time": "நேரம்"
+    }
+  },
+  "lang": {
+    "label": "மொழி"
+  },
+  "nav": {
+    "main": "முதன்மை மெனு"
+  },
+  "reports": {
+    "cols": {
+      "tax": "மொத்த வரி"
+    }
+  }
+}

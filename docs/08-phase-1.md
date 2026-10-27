@@ -25,7 +25,6 @@ Phase 1 covers everything a building-materials shop does in a day, on the shop c
 - The automated tests also pass on Windows (October 2026). Running them there found that backups left temp files and restore could not replace the database, because the libSQL client keeps a file open after close() until garbage collection; backup files are now checked in memory (`ops/dbfile.ts`) and `closeDb()` lets go of a file at once.
 
 ## Known gaps (Phase 2 backlog)
-- Some English remains in Tamil mode: server warnings, cash-book entry text, state names, GSTR-1 terms.
 - Return screen item names follow the bill's language.
 - A lost phone can't be cut off at once without changing every device's token: Turso can't revoke one token. Each phone gets its own token that expires (30 days suggested), and Devices & sync warns before it runs out (docs/07 §2).
 

@@ -1,0 +1,66 @@
+{
+  "msg": {
+    "warn": {
+      "LOW_STOCK": "{{name}}: billing {{billing}} {{unit}}, only {{stock}} {{unit}} in stock",
+      "LOW_STOCK_AFTER_CANCEL": "{{name}}: stock would be {{after}} after cancelling",
+      "CREDIT_LIMIT": "Outstanding would be {{outstanding}}, over the credit limit of {{limit}}",
+      "RATE_MISSING": "Today's {{group}} rate is not set",
+      "EWAY": "Goods worth more than {{threshold}}: an e-way bill is needed if they are transported"
+    },
+    "fields": {
+      "name": "Name",
+      "name_en": "Name (English)",
+      "name_ta": "Name (Tamil)",
+      "mobile": "Mobile",
+      "address": "Address",
+      "gstin": "GSTIN",
+      "stateCode": "State",
+      "partyType": "Type",
+      "creditLimit": "Credit limit",
+      "creditDays": "Credit days",
+      "openingBalance": "Opening balance",
+      "sku": "Item code",
+      "hsn": "HSN/SAC",
+      "gst": "GST %",
+      "baseUnit": "Base unit",
+      "categoryId": "Category",
+      "brand": "Brand",
+      "saleRate": "Sale rate",
+      "rateExtra": "Rate extra",
+      "minStock": "Min stock",
+      "units": "Units",
+      "rateGroup": "Rate group",
+      "partyId": "Customer",
+      "supplierId": "Supplier",
+      "lines": "Items",
+      "payment": "Payment",
+      "amount": "Amount",
+      "mode": "Payment mode",
+      "rate": "Rate",
+      "qty": "Quantity",
+      "date": "Date",
+      "reason": "Reason",
+      "notes": "Notes",
+      "supplierBillNo": "Supplier bill no.",
+      "pin": "PIN",
+      "newPin": "New PIN",
+      "currentPin": "Current PIN",
+      "role": "Role",
+      "code": "Code",
+      "unit": "Unit",
+      "folder": "Folder",
+      "time": "Time"
+    }
+  },
+  "lang": {
+    "label": "Language"
+  },
+  "nav": {
+    "main": "Main menu"
+  },
+  "reports": {
+    "cols": {
+      "tax": "Total tax"
+    }
+  }
+}

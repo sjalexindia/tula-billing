@@ -6,6 +6,7 @@ import { dmy, MODES, monthStartOf, rupeesText, sales, todayLocal, type Mode, typ
 import { nameIn } from '../i18n';
 import type { ScreenProps } from '../nav';
 import '../styles/sales.css';
+import { serverText } from '../server-text';
 
 // ---------------------------------------------------------------------
 // Pieces shared by the sales screens (bills, receipts, outstanding, statement)
@@ -210,7 +211,7 @@ function CancelBill({ row, onClose, onDone }: { row: RegisterRow; onClose: () =>
     <Sheet title={t('sales.cancel.title', { no: row.docNo })} onClose={onClose}>
       <p className="sheet-sub">{nameIn(i18n.language, row.name_en, row.name_ta)} · {dmy(row.date)} · {formatRs(row.totalPaise)}</p>
       {check?.earlierMonth && <p className="notice warn" role="alert">{t('sales.cancel.earlierMonth')}</p>}
-      {check && !check.canCancel && <p className="field-error" role="alert">{check.blocker?.code === 'HAS_RETURN' ? t('sales.cancel.hasReturn') : check.blocker?.message}</p>}
+      {check && !check.canCancel && <p className="field-error" role="alert">{check.blocker?.code === 'HAS_RETURN' ? t('sales.cancel.hasReturn') : serverText(check.blocker?.message ?? '')}</p>}
       <p className="hint">{t('sales.cancel.help')}</p>
       {row.paidPaise > 0 && <p className="hint">{t('sales.cancel.paidHelp', { amount: formatRs(row.paidPaise) })}</p>}
       <div className="field">
