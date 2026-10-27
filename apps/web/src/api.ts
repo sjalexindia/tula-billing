@@ -1,4 +1,5 @@
 import { apiFetch } from './platform';
+import { errorText } from './server-text';
 
 export interface CatalogUnit { code: string; nameEn: string; nameTa: string | null; factorMilli: number; theoretical: boolean; onBill: boolean }
 export interface CatalogItem {
@@ -19,10 +20,11 @@ export interface SettingsState { values: Record<string, string>; missingForBilli
 export interface SettingsSchema {
   settings: Array<{ key: string; group: string; default: string; requiredForBilling?: boolean; kind: { type: string; values?: string[]; max?: number } }>;
   languages: string[];
-  states: Array<{ code: string; name: string }>;
+  states: Array<{ code: string; name: string; name_ta: string }>;
 }
 export interface Totals { taxable: number; cgst: number; sgst: number; igst: number; beforeRoundOff: number; roundOff: number; total: number }
-export interface Warning { code: string; message: string; productId?: string; thresholdPaise?: number }
+/** `message` is English; show it with warningText() (server-text.ts), which writes it from code + params. */
+export interface Warning { code: string; message: string; productId?: string; thresholdPaise?: number; params?: Record<string, string | number> }
 export interface Preview {
   supply: 'intra' | 'inter'; docKind: 'tax_invoice' | 'bill_of_supply'; lang: string; totals: Totals; balanceBefore: number; warnings: Warning[]; blocked: boolean;
   lines: Array<{ lineNo: number; productId: string; baseQtyMilli: number; rateQtyMilli: number; ratePaise: number; inclusive: boolean; rateSource: string; taxable: number; total: number }>;
@@ -85,7 +87,7 @@ export async function req<T>(method: string, url: string, body?: unknown, allow4
   if (res.status === 401 && !url.startsWith('/api/auth/login')) onSignedOut();
   if (!res.ok && !(allow409 && res.status === 409 && (data as { saved?: boolean })?.saved === false)) {
     const d = data as { message?: string; error?: string } | null;
-    throw new ApiError(d?.message ?? res.statusText, res.status, d?.error);
+    throw new ApiError(d?.message ? errorText(d.error, d.message) : res.statusText, res.status, d?.error);
   }
   return data as T;
 }

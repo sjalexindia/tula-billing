@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { api, ApiError, type BillInput, type CatalogItem, type Party, type Preview, type Warning } from '../api';
 import { useApp } from '../App';
 import { nameIn } from '../i18n';
+import { warningText } from '../server-text';
 
 interface LineState {
   key: number;
@@ -263,7 +264,7 @@ export function NewBill({ ratesVersion }: { ratesVersion: number }) {
           {held && (
             <div className="held" role="alert">
               <strong>{held.blocked ? t('bill.blocked') : t('bill.checkFirst')}</strong>
-              <ul>{held.warnings.map((w, i) => <li key={i}>{w.message}</li>)}</ul>
+              <ul>{held.warnings.map((w, i) => <li key={i}>{warningText(w, catalog)}</li>)}</ul>
               {held.blocked && <p>{t('bill.blockedHelp')}</p>}
             </div>
           )}

@@ -65,7 +65,7 @@ export function registerApi(app: Router, db: Db, deviceId: string): void {
   app.get('/api/settings/schema', async () => ({
     settings: Object.entries(SETTINGS).map(([key, def]) => ({ key, ...def })),
     languages: SUPPORTED_LANGS,
-    states: Object.entries(STATES).map(([code, s]) => ({ code, name: s.name })),
+    states: Object.entries(STATES).map(([code, s]) => ({ code, name: s.name, name_ta: s.name_ta })),
   }));
 
   app.put('/api/settings', async (req) => {

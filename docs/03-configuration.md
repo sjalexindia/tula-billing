@@ -61,7 +61,9 @@ Keep real profiles **out of this repository**. Never put sync tokens in a profil
 | `TULA_SYNC_URL`, `TULA_SYNC_TOKEN` | unset | Cloud sync (Milestone 5). Secrets live only in the environment of the shop computer |
 
 ## Adding a language
-1. Add `apps/web/src/locales/<code>.json` (copy `en.json`; a test-style check confirms keys match).
-2. Register it in `apps/web/src/i18n.ts` and `SUPPORTED_LANGS` in `packages/core/src/settings.ts`.
+1. Add the folder `apps/web/src/locales/<code>/` with the same files as `en/` (every file in a folder is merged; each feature owns a file).
+2. Register it in `LANGS` in `apps/web/src/i18n.ts` and `SUPPORTED_LANGS` in `packages/core/src/settings.ts`.
 3. Amount-in-words: add the language in `packages/core/src/words.ts` (falls back to English otherwise).
-4. Product and party names currently have English and Tamil columns; a third language will need a translations table (planned when a customer needs it).
+4. Server messages (errors, validation, ledger narrations, GST row descriptions) are English sentences, and the English sentence is the key. Translate them in `locales/<code>/server.json`: `serverText` maps each English template to its translation, keeping the `{{name}}` values; `serverTextZod` covers the validation library's own messages. See `ta/server.json`. `apps/server/test/server-messages.ts` reads every message from the server's source, and `test/i18n.test.ts` fails when a Tamil template is missing or stale; extend it for the new language. Warnings are written from `code` + `params` (`msg.warn.*` in `messages.json`), so names, quantities and amounts read naturally.
+5. State names: add the language's names in `packages/core/src/states.ts` (`stateName(code, lang)`). GST returns and their Excel/JSON files stay in English (portal format).
+6. Product and party names currently have English and Tamil columns; a third language will need a translations table (planned when a customer needs it).

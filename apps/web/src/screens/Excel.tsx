@@ -4,6 +4,7 @@ import { ApiError } from '../api';
 import { downloadWorkbook, excelApi, readWorkbook, SheetError, type Cell, type ExcelKind, type ImportResult } from '../api/excel';
 import type { ScreenProps } from '../nav';
 import '../styles/excel.css';
+import { serverText } from '../server-text';
 
 const KINDS: ExcelKind[] = ['items', 'parties', 'opening-stock'];
 
@@ -124,7 +125,7 @@ function KindCard({ kind }: { kind: ExcelKind }) {
                       <td>{r.line}</td>
                       <td>{r.key}</td>
                       <td>
-                        {r.errors.length ? r.errors.map((m) => <span key={m} className="field-error">{m}</span>) : t(`excel.action.${r.action}`)}
+                        {r.errors.length ? r.errors.map((m) => <span key={m} className="field-error">{sheetError(m)}</span>) : t(`excel.action.${r.action}`)}
                         {r.notes.map((n) => <span key={n} className="sub">{n}</span>)}
                       </td>
                     </tr>
@@ -145,4 +146,12 @@ function KindCard({ kind }: { kind: ExcelKind }) {
       )}
     </section>
   );
+}
+
+/** "GST %: …" (a sheet heading, kept as in the workbook, then the message) or a whole message, in the person's language. */
+function sheetError(m: string): string {
+  const whole = serverText(m);
+  if (whole !== m) return whole;
+  const i = m.indexOf(': ');
+  return i > 0 ? `${m.slice(0, i)}: ${serverText(m.slice(i + 2))}` : m;
 }

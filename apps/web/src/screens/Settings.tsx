@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { api, ApiError, type SettingsSchema } from '../api';
 import { useApp } from '../App';
 import { UsersPanel } from './Users';
+import { serverText } from '../server-text';
 
 /** Generated from the settings registry, so new settings appear without new screen code. */
 export function SettingsScreen() {
@@ -66,7 +67,7 @@ export function SettingsScreen() {
               control = (
                 <select id={id} value={value} onChange={(e) => set(e.target.value)}>
                   <option value="">{t('settings.pickState')}</option>
-                  {schema.states.map((st) => <option key={st.code} value={st.code}>{st.code} — {st.name}</option>)}
+                  {schema.states.map((st) => <option key={st.code} value={st.code}>{st.code} — {i18n.language === 'ta' ? st.name_ta : st.name}</option>)}
                 </select>
               );
             } else if (s.kind.type === 'langs') {
@@ -101,7 +102,7 @@ export function SettingsScreen() {
       ))}
       <div className="settings-actions">
         {message && <p className={message.kind === 'ok' ? 'saved-note' : 'field-error'} role={message.kind === 'ok' ? 'status' : 'alert'}>{message.text}</p>}
-        {settings.issues.map((i) => <p key={i} className="field-error">{i}</p>)}
+        {settings.issues.map((i) => <p key={i} className="field-error">{serverText(i)}</p>)}
         <button type="submit" className="btn primary" disabled={saving || !Object.keys(changed).length}>{t('settings.save')}</button>
       </div>
     </form>

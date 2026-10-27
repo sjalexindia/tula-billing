@@ -78,7 +78,7 @@ export function SignIn({ onSignedIn, networkError }: { onSignedIn: (u: Me) => vo
         {!userId && error && <p className="field-error" role="alert">{error}</p>}
         {users.length === 1 && <p className="hint">{t('auth.firstRun')}</p>}
         {langs.length > 1 && (
-          <div className="lang-switch light" role="group" aria-label="Language">
+          <div className="lang-switch light" role="group" aria-label={t('lang.label')}>
             {langs.map((l) => <button key={l} type="button" aria-pressed={i18n.language === l} onClick={() => setLang(l)}>{t(`lang.${l}`)}</button>)}
           </div>
         )}

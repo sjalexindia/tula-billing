@@ -6,6 +6,7 @@ import { syncApi, type DeviceRow, type NetworkInfo, type SyncStatus } from '../a
 import type { ScreenProps } from '../nav';
 import { runsLocally } from '../platform';
 import '../styles/sync.css';
+import { serverText } from '../server-text';
 
 const ERROR_CODES = ['OFFLINE', 'AUTH', 'BAD_URL', 'UPDATE_APP', 'REVOKED', 'EMPTY_HUB'];
 const PHONE_ERROR_CODES = ['OFFLINE', 'AUTH', 'BAD_URL', 'REVOKED'];
@@ -152,7 +153,7 @@ function StatusCard({ status, busy, onSyncNow }: { status: SyncStatus; busy: boo
       </div>
       {err && (
         <div className="sync-error" role="alert">
-          <p>{runsLocally && PHONE_ERROR_CODES.includes(err.code) ? t(`sync.phoneErrors.${err.code}`) : ERROR_CODES.includes(err.code) ? t(`sync.errors.${err.code}`) : err.message}</p>
+          <p>{runsLocally && PHONE_ERROR_CODES.includes(err.code) ? t(`sync.phoneErrors.${err.code}`) : ERROR_CODES.includes(err.code) ? t(`sync.errors.${err.code}`) : serverText(err.message)}</p>
           {err.at && <p className="hint">{t('sync.since', { when: fmtTime(err.at, t) })}</p>}
         </div>
       )}

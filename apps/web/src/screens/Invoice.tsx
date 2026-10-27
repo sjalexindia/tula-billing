@@ -51,7 +51,7 @@ export function Invoice({ id }: { id: string }) {
   const terms = [...new Set(labelLangs.map((l) => s[`invoice.terms_${l}`]).filter(Boolean))];
   const anyInclusive = lines.some((l) => l.rate_inclusive);
   const legal = s['business.legal_name'];
-  const stateLabel = (code: string) => `${stateName(code)} (${code})`;
+  const stateLabel = (code: string) => `${stateName(code, lang)} (${code})`;
   const unitLabel = (code: string) => {
     const u = units.find((x) => x.code === code);
     return u ? nameIn(lang, u.name_en, u.name_ta) : code;
