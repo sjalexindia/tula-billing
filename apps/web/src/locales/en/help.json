@@ -1,0 +1,204 @@
+{
+  "nav": { "help": "Help" },
+  "help": {
+    "title": "Help",
+    "open": "Help",
+    "lead": "What to tap and what happens, for the owner and counter staff. Grey chips like [Billing > New bill] are the menu to open; boxed words like {Save bill} are buttons.",
+    "find": "Find in help",
+    "findPlaceholder": "For example: receipt, backup, PIN, quotation",
+    "nothing": "Nothing in help matches that. Try a shorter word, like bill, stock or backup.",
+    "contents": "Contents",
+    "part": "Part {{n}}",
+    "groups": { "start": "Start", "daily": "Every day", "stock": "Buying and stock", "safe": "Keeping data safe" },
+    "sections": [
+      {
+        "id": "signin", "group": "start", "title": "Signing in",
+        "blocks": [
+          { "steps": [
+            "Open Tula. On the shop computer: the Tula icon, or `http://localhost:5000`.",
+            "Tap your name and type your PIN.",
+            "The first time, choose your own PIN: 4 to 6 digits. Easy PINs like 1234 are refused."
+          ] },
+          { "p": "Five wrong PINs lock that person out for 5 minutes. Forgot the owner PIN? See [[pin|part 14]]." },
+          { "p": "Language: tap {English} / {தமிழ்} at the top. Each person's language is remembered." }
+        ]
+      },
+      {
+        "id": "roles", "group": "start", "title": "Who can do what",
+        "blocks": [
+          { "table": { "head": ["Role", "Can"], "rows": [
+            ["Owner", "Everything"],
+            ["Billing", "Make bills and quotations, take payments, add customers (without credit terms), look up items, stock and customers"],
+            ["View only", "Look at bills, stock, items, customers and reports"]
+          ] } },
+          { "p": "The owner adds people in [Settings], under **People who use Tula**." }
+        ]
+      },
+      {
+        "id": "golive", "group": "start", "title": "Before the first bill (go-live)",
+        "blocks": [
+          { "steps": [
+            "[Settings] Business name in English and Tamil, address, GSTIN, state, phone, bank and UPI ID, invoice numbering. A yellow line at the top says what is still missing. Saving keeps every valid change and marks any that were refused, with the reason.",
+            "[Items & customers > Items] Add items one by one, or many at once with Excel ([[excel|part 11]]).",
+            "[Stock > Opening stock] The counted stock and its cost, or with Excel.",
+            "**Customers and suppliers**, with what they owed on the go-live day (opening balance), credit limit and credit days.",
+            "**Next bill number:** if you continue a paper bill book, set the numbering in Settings before the first bill of the year."
+          ] },
+          { "note": "Order for an Excel go-live: items first, then opening stock, then customers and suppliers with their opening balances." }
+        ]
+      },
+      {
+        "id": "rates", "group": "daily", "title": "Every morning: today's rates",
+        "blocks": [
+          { "p": "The rate chips at the top, for example {TMT bars ₹60.00/kg}, are the day's rates. The owner taps a chip, types the new rate and taps {Save}." },
+          { "p": "Items that follow the day's rate use it from then on. Each size's extra (for example +₹3 for 8 mm) is added automatically." }
+        ]
+      },
+      {
+        "id": "bill", "group": "daily", "title": "Making a bill",
+        "blocks": [
+          { "p": "[Billing > New bill]" },
+          { "steps": [
+            "Pick the customer: type a name or mobile number. Not found? {+ New customer} adds them right there. For walk-in customers, leave it on the walk-in account.",
+            "Add items: type the code or name. Enter the quantity in any unit the item has, for example 10 bundles + 4 rods, or 147.35 kg weighed. The rate fills itself: the customer's special rate, else the day's rate, else the item's rate.",
+            "Optional: site, vehicle number, discount, bill language.",
+            "Payment now: cash, UPI, bank or cheque, any amount. The rest stays on credit.",
+            "{Save bill}. Warnings (low stock, credit limit) ask you to confirm. The owner decides in Settings whether they only warn or block."
+          ] },
+          { "p": "After saving: {Print / Save as PDF} (A4 or A5, set in Settings), {Share} (a picture of the bill for WhatsApp or a printer app) or {Share as PDF}. A bill with an amount due shows a UPI QR code the customer can scan." },
+          { "note": "**E-way bill:** above the limit, Tula reminds you to make one. The e-way bill itself is made on the government portal." }
+        ]
+      },
+      {
+        "id": "quotes", "group": "daily", "title": "Quotations",
+        "blocks": [
+          { "p": "A price for a customer who hasn't bought yet. Nothing changes: no stock goes out, nobody owes anything, and it is not in any register or GST return." },
+          { "steps": [
+            "[Billing > Quotations > New quotation] The bill screen without the payment box, with an optional **Valid until** date.",
+            "{Save quotation}, then print it, {Share} it or {Share as PDF}. It is numbered `QT/26-27/0001`.",
+            "When the customer buys: {Make bill} on the quotation. It shows the quoted rate next to the day's rate. Tick **Keep the quoted rates** to bill at the quoted price. The quotation then shows *Billed* with the bill number, and can't become a second bill."
+          ] },
+          { "p": "{Cancel} a quotation the customer won't take." }
+        ]
+      },
+      {
+        "id": "mistakes", "group": "daily", "title": "Mistakes on a bill",
+        "blocks": [
+          { "list": [
+            "{Cancel} on the bill (owner, same day): the bill stays in the list marked *Cancelled*, its number is never reused, and stock and accounts are reversed. A bill from an earlier month is corrected with a return instead.",
+            "{Return} on the bill (sales return, credit note): pick what came back and tap {Make credit note}. Stock comes back and the customer's balance goes down."
+          ] }
+        ]
+      },
+      {
+        "id": "receipts", "group": "daily", "title": "Money in: receipts",
+        "blocks": [
+          { "p": "[Billing > Receipts > New receipt] Pick the customer, the amount and how they paid, then {Save receipt}. Tula settles the opening balance first, then the oldest bills; you can change which bills it goes to. Money with no bill becomes an advance and is used on later bills." },
+          { "list": [
+            "[Billing > Outstanding] Who owes what, by age (overdue in red). {WhatsApp} opens a reminder in the customer's language with the amount and your UPI ID.",
+            "**Statement**: a customer's account for a period, to print or share."
+          ] }
+        ]
+      },
+      {
+        "id": "purchases", "group": "stock", "title": "Purchases, supplier payments, expenses",
+        "blocks": [
+          { "list": [
+            "[Purchases > Purchases] Enter the supplier's bill: items, quantity as per the mill weight, rate, GST, freight. Stock goes up and the average cost is updated. Mark *no ITC* when the GST can't be claimed. Goods sent back: {Return} on the purchase.",
+            "[Purchases > Supplier payments] Pay against their bills or on account.",
+            "[Purchases > Expenses] Rent, wages, electricity, loading, fuel… by head, with GST where there is a GST bill."
+          ] }
+        ]
+      },
+      {
+        "id": "stock", "group": "stock", "title": "Stock",
+        "blocks": [
+          { "list": [
+            "[Stock > Stock] Live stock and its value per item, also in the largest unit, for example *46 Bundle + 13.35 Kg* (≈ in front for calculated steel weights). Low and out-of-stock items stand out.",
+            "[Stock > Stock corrections] Weighbridge difference, scrap, damage, count correction, always with a reason (owner).",
+            "[Stock > Opening stock] The go-live figures."
+          ] }
+        ]
+      },
+      {
+        "id": "excel", "group": "stock", "title": "Excel import and export",
+        "blocks": [
+          { "p": "[Items & customers > Excel import & export] (owner)" },
+          { "steps": [
+            "{Download Excel} for items, customers and suppliers, or opening stock. The file is today's list, so it is also the form to fill. Its *How to fill* sheet explains each column.",
+            "Change or add rows in Excel. Keep the headings in row 1.",
+            "{Import from Excel…} and choose the file. Tula checks every row and shows what it will add, change or leave alone, and any mistake with its row and column.",
+            "{Save} keeps all rows, or none if any row has a mistake."
+          ] },
+          { "p": "Every report also has {Download Excel}." }
+        ]
+      },
+      {
+        "id": "reports", "group": "stock", "title": "Reports and GST",
+        "blocks": [
+          { "p": "[Reports] Day book, cash and bank book, sales and purchase registers, steel sales against the day's rate, stock summary, profit and loss, profit by bill / customer / item, GSTR-1 (Excel and JSON for your CA), GSTR-3B, CMP-08." },
+          { "p": "Pick the period, then {Print} or {Download Excel}." }
+        ]
+      },
+      {
+        "id": "backups", "group": "safe", "title": "Backups",
+        "blocks": [
+          { "p": "Tula makes a checked backup every night (the time is set on the Backup screen) and keeps a month of them. Tap {Back up now} before anything risky." },
+          { "h": "Copy backups to Google Drive (free)" },
+          { "steps": [
+            "On the shop computer, install Google Drive for desktop and sign in with the shop's Google account.",
+            "In Google Drive's settings, choose **Mirror files**.",
+            "[Settings > Backup] On the card *Copy backups to Google Drive*, tap {Back up to this folder}, then {Back up now}.",
+            "Check once that the backup shows up in drive.google.com."
+          ] },
+          { "h": "Restore" },
+          { "p": "[Settings > Backup] Pick a backup, tap {Restore} and type the owner PIN. Tula first saves a safety copy of today's data, then restarts with the backup." }
+        ]
+      },
+      {
+        "id": "pin", "group": "safe", "title": "Forgot the owner PIN",
+        "blocks": [
+          { "p": "Another owner can reset it in [Settings], under **People who use Tula** ({Reset PIN}). With no other owner: on the shop computer, run the `reset-pin` tool as administrator. It sets the temporary PIN 1234, and the owner chooses a new one at sign-in." },
+          { "p": "Other people's PINs: the owner resets them the same way." }
+        ]
+      },
+      {
+        "id": "phones", "group": "safe", "title": "Phones",
+        "blocks": [
+          { "table": { "head": ["Way", "What it does"], "rows": [
+            ["Work on this phone (Android app)", "Tula runs on the phone with its own copy of the data. Bill anywhere, without internet or the shop computer; changes go to the cloud copy when there is internet. Set up once with the cloud address and access token. The phone's bills have their own series (M1, M2…)."],
+            ["Connect to the shop computer (Android app or any phone browser)", "Opens Tula from the shop computer. Only on the shop Wi-Fi, while the computer is on."]
+          ] } },
+          { "p": "On the phone, {Share} and {Share as PDF} replace Print." },
+          { "note": "Each phone's access token can have an end date. [Settings > Devices & sync] warns a week before it runs out; make a new one before then." },
+          { "warn": "Uninstalling the app or clearing its storage deletes the phone's copy, including bills that never reached the cloud. Check that *Changes waiting to send* is 0 first." }
+        ]
+      },
+      {
+        "id": "cloud", "group": "safe", "title": "Cloud copy and other computers",
+        "blocks": [
+          { "p": "[Settings > Devices & sync] shows whether the cloud copy is up to date, the changes waiting to send, and which computers and phones share the data." },
+          { "p": "For a stolen computer or phone: {Mark as lost} on another device, then make a new access token and enter it on every device." }
+        ]
+      },
+      {
+        "id": "recycle", "group": "safe", "title": "Recycle bin",
+        "blocks": [
+          { "p": "Items, customers and suppliers, categories and expense heads that were **never used** can be deleted ({Delete} on their screen; owner). Anything already on a bill, purchase, stock or balance can't be deleted: mark it inactive instead." },
+          { "p": "Deleted things wait in [Settings > Recycle bin], with who deleted them and when. {Restore} puts them back as they were; it is refused, with the reason, if it would clash with something added since." }
+        ]
+      },
+      {
+        "id": "trouble", "group": "safe", "title": "When something is wrong",
+        "blocks": [
+          { "table": { "head": ["You see", "Do this"], "rows": [
+            ["\"Cannot reach the shop computer\" on a phone", "Is the computer on, Tula running, and the phone on the shop Wi-Fi?"],
+            ["\"Cloud copy has a problem\"", "The screen says what to do. Billing keeps working meanwhile."],
+            ["A red line at the top of a screen", "Read it: it says what is missing or wrong, and where to fix it."],
+            ["Tula does not open on the shop computer", "Restart the computer; Tula starts on its own. Still not? Ask whoever installed Tula to check the install guide's troubleshooting part."]
+          ] } }
+        ]
+      }
+    ]
+  }
+}

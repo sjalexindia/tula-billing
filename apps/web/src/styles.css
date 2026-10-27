@@ -315,6 +315,8 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .lang-switch.light button[aria-pressed='true'] { background: var(--ink); color: #fff; }
 
 .user-menu { position: relative; }
+.help-link { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid #4a5966; border-radius: 50%; color: #fff; font-weight: 700; font-size: 17px; text-decoration: none; }
+.help-link:hover, .help-link[aria-current='page'] { background: var(--mark); border-color: var(--mark); color: var(--ink); }
 .user-btn { display: grid; text-align: right; background: transparent; border: 1px solid #4a5966; border-radius: var(--radius); color: #fff; font: inherit; padding: 4px 10px; cursor: pointer; }
 .user-btn .user-role { color: #c9d3da; }
 .menu { position: absolute; right: 0; top: calc(100% + 6px); background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: 0 6px 18px rgba(30, 42, 51, 0.18); display: grid; min-width: 170px; z-index: 10; }
@@ -349,7 +351,7 @@ td.owed, .page-sum.owed { color: var(--danger); }
 .quick-customer input { font: inherit; padding: 6px 8px; border: 1px solid var(--rule); border-radius: var(--radius); width: 170px; }
 .add-user { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-top: 14px; }
 .add-user .field { min-width: 160px; }
-@media (max-width: 700px) { .form-grid .field.wide { grid-column: auto; } .user-menu { margin-left: auto; } }
+@media (max-width: 700px) { .form-grid .field.wide { grid-column: auto; } .help-link { margin-left: auto; } }
 /* Below wide desktop widths the menu gets its own row, so long (e.g. Tamil) labels never push the account button around. */
 @media (max-width: 1500px) {
   .topbar { row-gap: 8px; }

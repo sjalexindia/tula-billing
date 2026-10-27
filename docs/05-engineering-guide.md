@@ -103,6 +103,7 @@ Where things live, for the features added after Phase 1:
 | Quotations | `quotes.ts`, `bills.ts` (`createBill(…, { fromQuote })`) | `screens/Quotes.tsx`, `NewBill mode="quote"` | 10 |
 | Recycle bin, partial settings save | `recycle.ts`, `settings-save.ts` | `screens/RecycleBin.tsx` | 11 |
 | Share as picture / PDF | — | `components/PrintShare.tsx`, `files.ts` | 07 |
+| In-app Help (the user guide) | — | `screens/Help.tsx`, `locales/*/help.json` (`test/help.test.ts` keeps Tamil in step) | USER-GUIDE |
 | Google Drive backup folder | `ops/drive.ts` | Backup screen | 06 |
 | Expiring phone tokens | `sync/routes.ts` | Devices screen | 07 |
 

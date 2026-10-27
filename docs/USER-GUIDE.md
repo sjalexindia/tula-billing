@@ -2,6 +2,8 @@
 
 For the shop owner and counter staff. Each part says what to tap and what happens. Screen names are as they appear in English; in Tamil mode the same screens are in the same places.
 
+The same guide is inside Tula, in English and Tamil: tap **?** at the top of any screen (or **Help** in your name's menu). It comes from `apps/web/src/locales/<lang>/help.json`; change it there and here together.
+
 Technical details are in the other documents in this folder (see the README).
 
 ---

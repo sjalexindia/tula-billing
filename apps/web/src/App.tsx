@@ -118,6 +118,7 @@ export function App() {
               ))}
             </div>
           )}
+          <a className="help-link" href="#/help" title={t('help.open')} aria-label={t('help.open')} aria-current={current === 'help' ? 'page' : undefined}>?</a>
           <div className="user-menu">
             <button type="button" className="user-btn" aria-expanded={menuOpen} onClick={() => setMenuOpen((o) => !o)}>
               <span className="user-name">{me.name}</span>
@@ -125,6 +126,7 @@ export function App() {
             </button>
             {menuOpen && (
               <div className="menu" role="menu">
+                <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); location.hash = '#/help'; }}>{t('help.open')}</button>
                 <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); setChangingPin(true); }}>{t('auth.changePin')}</button>
                 <button type="button" role="menuitem" onClick={() => void signOut()}>{t('auth.signOut')}</button>
               </div>

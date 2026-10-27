@@ -1,0 +1,33 @@
+/* Help screen: the user guide inside Tula */
+.help-screen { display: flex; flex-direction: column; gap: 16px; }
+.help-find { max-width: 420px; margin-top: 8px; }
+.help-find input { width: 100%; }
+.help-body { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 20px; align-items: start; }
+.help-toc { position: sticky; top: 12px; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: 12px; font-size: 14px; max-height: calc(100vh - 24px); overflow: auto; }
+.help-toc h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--steel); margin: 10px 0 4px; }
+.help-toc > div:first-child h2 { margin-top: 0; }
+.help-toc ol { list-style: none; margin: 0; padding: 0; }
+.help-toc a { display: flex; gap: 8px; padding: 4px 6px; border-radius: 6px; text-decoration: none; color: var(--ink); }
+.help-toc a:hover { background: var(--mark-soft); }
+.help-toc a b { min-width: 1.4em; color: var(--steel); font-weight: 600; font-variant-numeric: tabular-nums; }
+.help-parts { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.help-part { scroll-margin-top: 12px; }
+.help-part h2 { display: flex; gap: 10px; align-items: baseline; font-size: 19px; margin: 0 0 8px; }
+.help-n { font-size: 12px; font-weight: 700; background: var(--mark-soft); color: var(--ink); padding: 2px 7px; border-radius: 5px; font-variant-numeric: tabular-nums; }
+.help-part p, .help-part li { max-width: 70ch; line-height: 1.6; }
+.help-part ol, .help-part ul { padding-left: 1.4em; margin: 6px 0 10px; display: grid; gap: 5px; }
+.help-part h3 { font-size: 15px; margin: 12px 0 4px; }
+.help-path { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 3px; vertical-align: 1px; }
+.help-path span { background: var(--ink); color: #fff; font-size: 13px; font-weight: 600; padding: 3px 7px; border-radius: 5px; white-space: nowrap; }
+.help-path i { font-style: normal; color: var(--steel); }
+.help-btn { font-size: 13.5px; font-weight: 600; border: 1px solid var(--rule); border-bottom-width: 2px; background: var(--surface); padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+.help-note { border-left: 4px solid var(--mark); background: var(--mark-soft); padding: 8px 12px; border-radius: 0 var(--radius) var(--radius) 0; }
+.help-note.warn { border-left-color: var(--danger); background: var(--danger-soft); }
+.help-table { margin: 6px 0 10px; }
+.help-table td:first-child { font-weight: 600; }
+@media (max-width: 860px) {
+  .help-body { grid-template-columns: minmax(0, 1fr); }
+  .help-toc { position: static; max-height: none; }
+  .help-toc ol { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+}
+@media print { .help-toc, .help-find { display: none; } .help-body { display: block; } }

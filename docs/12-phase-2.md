@@ -18,7 +18,7 @@ Date: 27 Oct 2026. Branch `feature/phone-anywhere`.
 | Phone tokens | Each phone can have its own expiring token; Devices & sync warns before it runs out. | [07](07-sync-and-phones.md) |
 | Signed APK | The Android workflow also builds a signed release APK when the signing secrets are set. | [07](07-sync-and-phones.md) |
 | Windows | Backup and restore work on Windows (they never had); restore refuses backups from a newer Tula again. | [06](06-install-and-run.md) |
-| Help | [USER-GUIDE.md](USER-GUIDE.md) for the owner and counter staff. | — |
+| Help | The user guide inside Tula in English and Tamil (the **?** button, every role, also in the phone app), with search and links between parts; [USER-GUIDE.md](USER-GUIDE.md) is the same text. | — |
 
 ## Verified
 - Automated: core 30, server 181, and 112 of the server tests again on the phone's stack (SQLite WebAssembly + the in-app router), on Windows. Includes the phone joining from a cloud copy, billing offline and syncing, with every report identical to the computer's.

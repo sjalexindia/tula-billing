@@ -6,6 +6,7 @@ import { Customers } from './screens/Customers';
 import { Devices } from './screens/Devices';
 import { Adjustments } from './screens/Adjustments';
 import { Excel } from './screens/Excel';
+import { Help } from './screens/Help';
 import { Expenses } from './screens/Expenses';
 import { Items } from './screens/Items';
 import { NewBill } from './screens/NewBill';
@@ -28,7 +29,8 @@ export interface NavItem {
   route: string;
   /** translation key for the menu label */
   label: string;
-  group: 'billing' | 'purchases' | 'stock' | 'reports' | 'masters' | 'settings';
+  /** 'help' is no tab: Help opens from the ? button, so no menu group lights up under it */
+  group: 'billing' | 'purchases' | 'stock' | 'reports' | 'masters' | 'settings' | 'help';
   roles: Role[];
   screen: ComponentType<ScreenProps>;
   /** reachable by link only, not shown in the menu (e.g. a statement) */
@@ -73,6 +75,8 @@ export const NAV: NavItem[] = [
   { route: 'backup', label: 'nav.backup', group: 'settings', roles: OWNER, screen: Backup, computerOnly: true },
   { route: 'devices', label: 'nav.devices', group: 'settings', roles: OWNER, screen: Devices },
   { route: 'recycle', label: 'nav.recycle', group: 'settings', roles: OWNER, screen: RecycleBin },
+  // opened from the ? button in the top bar and the user menu, for every role
+  { route: 'help', label: 'nav.help', group: 'help', roles: ALL, screen: Help, hidden: true },
 ];
 
 export const GROUP_ORDER: NavItem['group'][] = ['billing', 'purchases', 'stock', 'reports', 'masters', 'settings'];
