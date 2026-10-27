@@ -24,6 +24,9 @@ export async function buildApp(db: Db, opts: { webDist?: string; logger?: boolea
   app.setErrorHandler((err, _req, reply) => {
     const r = errorReply(err);
     if (r) return reply.status(r.status).send(r.body);
+    // Fastify's own request errors (malformed or empty JSON, body too large…) are the caller's mistake: keep their 4xx
+    const status = (err as { statusCode?: number }).statusCode;
+    if (status && status >= 400 && status < 500) return reply.status(status).send({ error: 'BAD_REQUEST', message: 'The request could not be read' });
     app.log.error(err);
     return reply.status(500).send(INTERNAL_ERROR);
   });

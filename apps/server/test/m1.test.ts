@@ -156,3 +156,12 @@ describe('opening stock', () => {
     expect(svc).toBeUndefined(); // services don't keep stock
   });
 });
+
+describe('request errors', () => {
+  it('a malformed request is a 400, not a server failure', async () => {
+    const b = await bootSignedIn({ preset: 'blank' });
+    const res = await b.app.inject({ method: 'POST', url: '/api/parties', headers: { authorization: `Bearer ${b.token}`, 'content-type': 'application/json' }, payload: '{not json' });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error).not.toBe('INTERNAL'); // Fastify: BAD_REQUEST; the phone's router: VALIDATION
+  });
+});
