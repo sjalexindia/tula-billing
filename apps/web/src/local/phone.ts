@@ -50,6 +50,8 @@ let db: Db | null = null;
 /** Open (or create) the phone's database and bring it up to this version. */
 export async function openPhoneDb(): Promise<Db> {
   if (db) return db;
+  // in a browser, ask that the data never be cleared to free space (the app's own storage is kept anyway)
+  await navigator.storage?.persist?.().catch(() => false);
   const backend = await openWorkerBackend('/tula.db');
   const client = createSqliteClient(backend);
   await prepareDb(client, MIGRATIONS);

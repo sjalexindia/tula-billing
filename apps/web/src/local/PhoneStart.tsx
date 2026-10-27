@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { describeError } from '@tula/server/sync/state';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -38,6 +39,8 @@ export function PhoneStart() {
         await setMode(null);
         history.replaceState(null, '', location.pathname);
       }
+      // In a browser (the web version, e.g. on an iPhone) there is no connect page to offer: Tula runs here.
+      if (!Capacitor.isNativePlatform()) { await runHere(); return; }
       const mode = await getMode();
       if (mode === 'computer') location.href = 'connect/index.html';
       else if (mode === 'anywhere') await runHere();
@@ -49,7 +52,7 @@ export function PhoneStart() {
   if (step === 'ready') return <App />;
   if (step === 'loading') return <Card><p>{t('phone.loading')}</p></Card>;
   if (typeof step === 'object') return <Card><p className="field-error" role="alert">{step.error}</p></Card>;
-  if (step === 'setup') return <Setup onBack={() => setStep('choose')} onDone={async () => { await startOnPhone(); setStep('ready'); }} />;
+  if (step === 'setup') return <Setup onBack={Capacitor.isNativePlatform() ? () => setStep('choose') : undefined} onDone={async () => { await startOnPhone(); setStep('ready'); }} />;
 
   return (
     <Card>
@@ -68,7 +71,7 @@ export function PhoneStart() {
   );
 }
 
-function Setup({ onBack, onDone }: { onBack: () => void; onDone: () => Promise<void> }) {
+function Setup({ onBack, onDone }: { onBack?: () => void; onDone: () => Promise<void> }) {
   const { t } = useTranslation();
   const [url, setUrl] = useState('');
   const [token, setToken] = useState('');
@@ -108,7 +111,7 @@ function Setup({ onBack, onDone }: { onBack: () => void; onDone: () => Promise<v
         {error && <p className="field-error wide" role="alert">{t(error.key, { detail: error.detail })}</p>}
         <div className="form-actions wide">
           <button type="submit" className="btn primary" disabled={busy}>{busy ? t('phone.setup.working') : t('phone.setup.start')}</button>
-          <button type="button" className="btn" disabled={busy} onClick={onBack}>{t('phone.setup.back')}</button>
+          {onBack && <button type="button" className="btn" disabled={busy} onClick={onBack}>{t('phone.setup.back')}</button>}
         </div>
       </form>
     </Card>

@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import QRCode from 'qrcode';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -272,12 +273,13 @@ function ThisPhoneCard({ status }: { status: SyncStatus }) {
           <div className="form-actions"><button type="submit" className="btn" disabled={busy || !url.trim() || !token.trim()}>{t('sync.thisPhone.save')}</button></div>
         </form>
       </details>
-      <details>
+      {/* the Android app can switch to opening Tula from the shop computer; the web version can't (https → http) */}
+      {Capacitor.isNativePlatform() && <details>
         <summary>{t('sync.thisPhone.shopComputer')}</summary>
         <p className="hint">{t('sync.thisPhone.shopComputerHelp')}</p>
         {status.pending > 0 && <p className="notice">{t('sync.thisPhone.pending', { count: status.pending })}</p>}
         <button type="button" className="btn" onClick={() => void phone().then((p) => p.useShopComputer())}>{t('sync.thisPhone.shopComputer')}</button>
-      </details>
+      </details>}
     </div>
   );
 }

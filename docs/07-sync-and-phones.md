@@ -101,6 +101,33 @@ What is different on the phone:
 - **Use the shop computer instead** switches the app to the connect page. The phone's data stays; the connect page has **Work on this phone instead** to come back. Send waiting changes first (the screen warns if there are any).
 - Uninstalling the app or clearing its storage **deletes the phone's copy**, including bills that never reached the cloud copy. Check that "Changes waiting to send" is 0 first.
 
+### iPhone (or any phone): the Tula website
+The phone version of Tula also runs in a browser, so an iPhone uses it from a website instead of the App Store: same as the Android app's "Work on this phone" (own copy of the data, works offline, syncs through the cloud copy). It is hosted free on Cloudflare Pages.
+
+**Put it online (once, by the owner, about 5 minutes):**
+1. Sign up at dash.cloudflare.com (free plan).
+2. **Workers & Pages → Create → Pages → Connect to Git** → choose the `tula-billing` GitHub repository.
+3. Settings:
+   | Setting | Value |
+   |---|---|
+   | Production branch | the branch to publish (`main` once it is merged) |
+   | Framework preset | None |
+   | Build command | `npm run build:phone -w apps/web` |
+   | Build output directory | `apps/web/dist-phone` |
+   | Environment variable | `NODE_VERSION` = `22` |
+4. **Save and Deploy.** The address is `https://<project>.pages.dev` (a custom domain can be added in Cloudflare later). Every push to that branch publishes a new version; phones pick it up the next time they open Tula online.
+
+The site holds no business data and no secrets: each phone types the cloud address and token once, and they stay on that phone.
+
+**On each iPhone:**
+1. Open the address in **Safari** → Share → **Add to Home Screen** → Add.
+2. Open Tula **from the home screen** and set it up as in "Android app: work on this phone" above (cloud address, token, name).
+3. Always open it from the home screen. Safari can clear the data of a website used in a tab after 7 days without use; an app added to the home screen keeps it.
+
+What is different from the Android app: there is no "Connect to the shop computer" choice (an https site cannot open the shop computer's http address; open `http://<shop computer>:5000` in Safari for that). **Share** and **Share as PDF** open the iPhone's share sheet. Everything else is the same.
+
+**How it works (for developers):** the phone build (`vite build --mode phone`) is a static site. Its build also writes `precache.json` (every file but the `.woff` fallbacks, about 4.8 MB) and `_headers` (Cloudflare caching: `/assets/*` immutable, the page, `sw.js` and `precache.json` always revalidated). The service worker (`public/sw.js`) stores everything in `precache.json` at install, so the app opens with no internet; pages are network-first with a 4-second limit, then the stored copy. In a browser `PhoneStart` goes straight to Tula on the phone (`Capacitor.isNativePlatform()` is false), Preferences are `localStorage`, `navigator.storage.persist()` is requested, and `saveFile` uses the Web Share API on touch screens. Checked in headless Chrome: setup opens directly, all 63 files stored, reload with the network off opens Tula and the database. **Not yet checked on a real iPhone.**
+
 ### Browser (any phone)
 1. Connect the phone to the shop Wi-Fi.
 2. Settings → Devices & sync → **Open on a phone** shows a QR code for each network address of the computer. Scan it with the camera; Tula opens in the browser. Sign in with your name and PIN.
@@ -173,4 +200,4 @@ Technical notes: Capacitor 8, app id `in.tula.app`, `webDir` = `apps/web/dist-ph
 
 ## 8. Still to do for phones
 
-Revoking one phone's token at once (Turso can only expire it or invalidate all; see §2), conflict review for masters edited on two devices, a signed release APK, and an https story for full-screen web install from the shop computer.
+Revoking one phone's token at once (Turso can only expire it or invalidate all; see §2), conflict review for masters edited on two devices, running the signed release APK build for the first time, a native iPhone app (App Store; the website covers iPhones meanwhile), and an https story for full-screen web install from the shop computer.

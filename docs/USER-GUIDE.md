@@ -95,6 +95,7 @@ On the shop computer, run the `reset-pin` tool as described in [06-install-and-r
 ## 15. Phones
 Two ways ([07-sync-and-phones.md](07-sync-and-phones.md)):
 - **Work on this phone** (Android app): Tula runs on the phone with its own copy of the data. Bill anywhere, without internet or the shop computer; changes go to the cloud copy when there is internet. Set up once with the cloud address and token. The phone's bills have their own series (M1…).
+- **iPhone (or any phone): the Tula website.** The same as Work on this phone, in Safari, no App Store. Open the shop's Tula web address in Safari → Share → **Add to Home Screen**, then always open Tula from the home screen (Safari may clear a website's data after 7 days unused in a tab). Set it up once like Android.
 - **Connect to the shop computer** (Android app or any phone browser): only on the shop Wi-Fi while the computer is on.
 
 On the phone, **Share** and **Share as PDF** replace Print. Each phone's access token can have an end date; **Devices & sync** warns a week before it runs out (make a new one as in [07-sync-and-phones.md](07-sync-and-phones.md)). **Settings → Devices & sync** shows whether the cloud copy is up to date and the changes waiting to send.

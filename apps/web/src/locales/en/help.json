@@ -167,8 +167,16 @@
         "blocks": [
           { "table": { "head": ["Way", "What it does"], "rows": [
             ["Work on this phone (Android app)", "Tula runs on the phone with its own copy of the data. Bill anywhere, without internet or the shop computer; changes go to the cloud copy when there is internet. Set up once with the cloud address and access token. The phone's bills have their own series (M1, M2…)."],
+            ["iPhone (or any phone): the Tula website", "The same as \"Work on this phone\", in Safari: Tula runs on the phone with its own copy of the data, works offline and syncs through the cloud copy. No App Store needed. The owner gives staff the shop's Tula web address."],
             ["Connect to the shop computer (Android app or any phone browser)", "Opens Tula from the shop computer. Only on the shop Wi-Fi, while the computer is on."]
           ] } },
+          { "h": "iPhone: put Tula on the home screen" },
+          { "steps": [
+            "On the iPhone, open the shop's Tula web address in **Safari** (for example `https://tula-shop.pages.dev`).",
+            "Tap the Share button, then **Add to Home Screen**, then **Add**. Tula appears on the home screen like an app.",
+            "Open Tula **from the home screen** (not from a Safari tab) and set it up once with the cloud address and access token, as on Android.",
+            "Always open it from the home screen: Safari may clear the data of a website used in a tab after 7 days without use; a home-screen app keeps it."
+          ] },
           { "p": "On the phone, {Share} and {Share as PDF} replace Print." },
           { "note": "Each phone's access token can have an end date. [Settings > Devices & sync] warns a week before it runs out; make a new one before then." },
           { "warn": "Uninstalling the app or clearing its storage deletes the phone's copy, including bills that never reached the cloud. Check that *Changes waiting to send* is 0 first." }
