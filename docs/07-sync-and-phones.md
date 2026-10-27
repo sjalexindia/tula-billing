@@ -119,6 +119,8 @@ The phone version of Tula also runs in a browser, so an iPhone uses it from a we
 
 The site holds no business data and no secrets: each phone types the cloud address and token once, and they stay on that phone.
 
+**Or upload from the computer instead of connecting Git** (how the shop's site `royal-enterprises-tula.pages.dev` was first published): build with `npm run build:phone -w apps/web`, then from `apps/web` run `npx wrangler pages deploy dist-phone --project-name royal-enterprises-tula --branch main` (after `npx wrangler login`, or with a `CLOUDFLARE_API_TOKEN` that may edit Pages). Run it again after each change. The project is a classic Pages project: Wrangler 4.150+ hands new Pages projects to Workers unless `pages project create` is run once with `--force`.
+
 **On each iPhone:**
 1. Open the address in **Safari** → Share → **Add to Home Screen** → Add.
 2. Open Tula **from the home screen** and set it up as in "Android app: work on this phone" above (cloud address, token, name).
