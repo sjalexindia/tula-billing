@@ -14,7 +14,7 @@ apps/web (React) ──apiFetch──► in-app router + the same API routes ─
 ```
 
 - **packages/core**: pure TypeScript, no I/O. Money, quantity, GST, numbering, words, settings registry. Shared by server and web, so a number is calculated the same way everywhere.
-- **packages/db**: migrations and the only functions that write rows (`insert`, `update`, `softDelete`, `setSetting`). Opening a database file is in `@tula/db/node`.
+- **packages/db**: migrations and the only functions that write rows (`insert`, `update`, `softDelete`, `setSetting`), `uuidv7` (monotonic within a millisecond). `@tula/db/node`: opening a database file, `loadMigrations`, `closeDb`. `@tula/db/wasm`: a libSQL-compatible client on SQLite WebAssembly (the phone's database, and in-memory copies of backup files on the computer).
 - **apps/server**: business rules and the HTTP API. One module per area, each exporting `registerX(app, db, deviceId)`. `src/api.ts` registers everything the phone can run too; `src/app.ts` adds Fastify and the computer-only parts.
 - **apps/web**: screens. One file per screen in `src/screens`, registered in `src/nav.tsx`. `src/local` is Tula running on a phone (phone build only).
 
@@ -48,7 +48,10 @@ Rules:
 - **Balances are never stored.** A party's balance = its ledger account (`v_party_balance`). Every document posts a **balanced** voucher with `post()` from `apps/server/src/accounts.ts`; it throws if debit ≠ credit.
 - **Multi-step writes run in one transaction** (`db.transaction('write')`, commit, roll back on error).
 - **Schema changes** are new files in `packages/db/migrations/NNNN_name.sql`, never edits to old ones. SQLite cannot change a `CHECK` without rebuilding the table, so prefer new nullable columns.
-- **Masters** (items, customers, settings) may be edited; every change writes `audit_log`.
+- **Masters** (items, customers, settings) may be edited; every change writes `audit_log`. A master is deleted (`deleted = 1` through `update()`) only while nothing uses it, and can be restored from the recycle bin (`recycle.ts`); anything in use is made inactive instead.
+- **Order must not depend on storage.** Every `ORDER BY` that picks or lists rows ends with a unique tie-breaker (id or code). Devices store rows in different orders, so a tie can show different answers on two computers or a phone (two such bugs were found by comparing the phone with the computer).
+- **Quotations** are `sales_docs` with `doc_type = 'QT'`: no stock, ledger or money rows. Reports, registers and balances read only `INV`/`CN`; keep it that way when adding a report.
+- **Database files on Windows.** The libSQL client keeps a file open after `close()` until garbage collection; Windows cannot rename or delete an open file. Close with `closeDb()` when the file must be free (restore, tools), and check or edit backup files as in-memory copies (`ops/dbfile.ts`).
 
 ## 4. Accounting conventions (Phase 1)
 
@@ -91,6 +94,18 @@ Average cost = all inward value ÷ all inward quantity (`v_avg_cost`). Each sale
 Nothing about one business lives in code. Business facts are **settings** (registry in `packages/core/src/settings.ts`, validated, shown automatically on the Settings screen). Catalogues are **presets** (`apps/server/presets/*.json`). A business's real details are a **profile** kept outside the repo. Secrets (sync tokens) are environment variables only.
 
 ## 8. Tests
+
+Where things live, for the features added after Phase 1:
+| Feature | Server | Web | Doc |
+|---|---|---|---|
+| Phones working on their own | `api.ts`, `http.ts`, `sync/*` | `src/local/*`, `platform.ts` | 07 |
+| Excel import / export | `excel.ts` | `api/excel.ts`, `screens/Excel.tsx` | 09 |
+| Quotations | `quotes.ts`, `bills.ts` (`createBill(…, { fromQuote })`) | `screens/Quotes.tsx`, `NewBill mode="quote"` | 10 |
+| Recycle bin, partial settings save | `recycle.ts`, `settings-save.ts` | `screens/RecycleBin.tsx` | 11 |
+| Share as picture / PDF | — | `components/PrintShare.tsx`, `files.ts` | 07 |
+| Google Drive backup folder | `ops/drive.ts` | Backup screen | 06 |
+| Expiring phone tokens | `sync/routes.ts` | Devices screen | 07 |
+
 
 - `packages/core`: unit tests for every calculation (vitest).
 - `apps/server`: API tests with an in-memory database via `bootSignedIn()` in `test/helpers.ts`. Test the rule, the refusal, and that the ledger still balances (`SUM(debit) = SUM(credit)`).
