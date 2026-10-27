@@ -163,22 +163,28 @@ export function missingForBilling(s: Settings): SettingKey[] {
   return missing;
 }
 
-/** Cross-field rule: GSTIN state must match the business state. */
-export function checkSettingsConsistency(s: Settings): string[] {
-  const issues: string[] = [];
+export interface SettingsIssue { message: string; keys: SettingKey[] }
+
+/** Cross-field rules (e.g. the GSTIN's state must match the business state), each with the settings it involves. */
+export function settingsIssues(s: Settings): SettingsIssue[] {
+  const issues: SettingsIssue[] = [];
+  const add = (message: string, ...keys: SettingKey[]) => issues.push({ message, keys });
   const g = stateFromGstin(s['gst.gstin']);
-  if (g && s['business.state_code'] && g !== s['business.state_code']) issues.push('GSTIN state code does not match the business state');
+  if (g && s['business.state_code'] && g !== s['business.state_code']) add('GSTIN state code does not match the business state', 'gst.gstin', 'business.state_code');
   const langs = s['app.languages'].split(',');
-  if (!langs.includes(s['app.default_lang'])) issues.push('Default language must be one of the enabled languages');
-  if (!langs.includes(s['invoice.default_lang'])) issues.push('Default invoice language must be one of the enabled languages');
-  if (s['invoice.label_mode'] === 'bilingual' && langs.length < 2) issues.push('Bilingual bills need two enabled languages');
-  if (s['invoice.number_format'].includes('{prefix}') && !s['invoice.prefix']) issues.push('The number format uses {prefix}, so the invoice prefix cannot be empty');
+  if (!langs.includes(s['app.default_lang'])) add('Default language must be one of the enabled languages', 'app.default_lang', 'app.languages');
+  if (!langs.includes(s['invoice.default_lang'])) add('Default invoice language must be one of the enabled languages', 'invoice.default_lang', 'app.languages');
+  if (s['invoice.label_mode'] === 'bilingual' && langs.length < 2) add('Bilingual bills need two enabled languages', 'invoice.label_mode', 'app.languages');
+  if (s['invoice.number_format'].includes('{prefix}') && !s['invoice.prefix']) add('The number format uses {prefix}, so the invoice prefix cannot be empty', 'invoice.number_format', 'invoice.prefix');
+  const numbering: SettingKey[] = ['invoice.prefix', 'invoice.seq_digits', 'invoice.number_format'];
   try {
     // longest realistic number: phone series code + every digit used
     const sample = formatDocNo({ prefix: s['invoice.prefix'], fy: '26-27', seriesCode: 'M9', pad: Number(s['invoice.seq_digits']), format: s['invoice.number_format'] }, 10 ** Number(s['invoice.seq_digits']) - 1);
-    if (sample.length > DOC_NO_MAX) issues.push(`Invoice numbers would exceed ${DOC_NO_MAX} characters`);
+    if (sample.length > DOC_NO_MAX) add(`Invoice numbers would exceed ${DOC_NO_MAX} characters`, ...numbering);
   } catch (e) {
-    issues.push((e as Error).message);
+    add((e as Error).message, ...numbering);
   }
   return issues;
 }
+
+export const checkSettingsConsistency = (s: Settings): string[] => settingsIssues(s).map((i) => i.message);

@@ -1,5 +1,7 @@
-# Builds the Tula Android app (debug APK): Tula on the phone itself, plus the connect page for
-# opening it from the shop computer. Attaches the APK to the run as an artifact.
+# Builds the Tula Android app: Tula on the phone itself, plus the connect page for opening it from
+# the shop computer. Always a debug APK (artifact tula-android-debug); also a release APK signed with
+# the shop's key (artifact tula-android-release) when the signing secrets are set on GitHub
+# (ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD; docs/07).
 # Uses the Android SDK that comes preinstalled on GitHub's Ubuntu 24.04 runner
 # (android-actions/setup-android failed on the newer ubuntu-latest image). See docs/07-sync-and-phones.md.
 name: Android APK
@@ -19,6 +21,12 @@ jobs:
     defaults:
       run:
         working-directory: apps/web
+    env:
+      # secrets can't be tested in `if:`; this flag can
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      # each run installs over the previous one (Android needs a higher versionCode)
+      TULA_VERSION_CODE: ${{ github.run_number }}
+      TULA_VERSION_NAME: 1.0.${{ github.run_number }}
     steps:
       - uses: actions/checkout@v5
 
@@ -59,6 +67,31 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: tula-android-debug
-          path: apps/web/out/*.apk
+          path: apps/web/out/*-debug.apk
           if-no-files-found: error
           retention-days: 30
+
+      - name: Build release APK signed with the shop's key
+        if: env.HAS_KEYSTORE == 'true'
+        working-directory: apps/web/android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          TULA_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          TULA_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          TULA_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          export TULA_KEYSTORE_FILE="$RUNNER_TEMP/tula-release.keystore"
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$TULA_KEYSTORE_FILE"
+          ./gradlew --no-daemon assembleRelease
+          rm -f "$TULA_KEYSTORE_FILE"
+          APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner"
+          "$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk | head -3
+          cp app/build/outputs/apk/release/app-release.apk "../out/tula-${GITHUB_REF_NAME//\//-}-${GITHUB_SHA::7}-release.apk"
+
+      - uses: actions/upload-artifact@v4
+        if: env.HAS_KEYSTORE == 'true'
+        with:
+          name: tula-android-release
+          path: apps/web/out/*-release.apk
+          if-no-files-found: error
+          retention-days: 90

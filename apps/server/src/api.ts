@@ -1,19 +1,22 @@
 import {
-  checkSettingsConsistency, isSettingKey, missingForBilling, SETTINGS, STATES, SUPPORTED_LANGS, todayIST, toPaise,
-  validateSetting, withDefaults,
+  checkSettingsConsistency, missingForBilling, SETTINGS, STATES, SUPPORTED_LANGS, todayIST, toPaise,
+  withDefaults,
 } from '@tula/core';
-import { all, getSettings, insert, nowIso, one, setSetting, update, type Db } from '@tula/db';
+import { all, getSettings, insert, nowIso, one, update, type Db } from '@tula/db';
 import { z, ZodError } from 'zod';
-import { applyNumberingSettings, createBill, getBill, listBills, priceBill } from './bills';
+import { createBill, getBill, listBills, priceBill } from './bills';
 import { registerAuth } from './auth';
 import { catalog } from './catalog';
 import { UserError, type Ctx } from './context';
 import type { Req, Router } from './http';
 import { registerMasters } from './masters';
 import { registerPurchases } from './purchases';
+import { registerQuotes } from './quotes';
 import { registerReports } from './reports';
 import { registerSalesOps } from './sales-ops';
 import { registerExcel } from './excel';
+import { registerRecycle } from './recycle';
+import { saveSettings } from './settings-save';
 
 /*
  * The API shared by the shop computer (app.ts, Fastify) and the phone app (apps/web/src/local).
@@ -21,8 +24,8 @@ import { registerExcel } from './excel';
  */
 
 /** Status and body for an error thrown by a route; null means an unexpected error (500, logged). */
-export function errorReply(err: unknown): { status: number; body: { error: string; message: string } } | null {
-  if (err instanceof UserError) return { status: err.status, body: { error: err.code, message: err.message } };
+export function errorReply(err: unknown): { status: number; body: { error: string; message: string; details?: unknown } } | null {
+  if (err instanceof UserError) return { status: err.status, body: { error: err.code, message: err.message, ...(err.details === undefined ? {} : { details: err.details }) } };
   if (err instanceof ZodError) return { status: 400, body: { error: 'VALIDATION', message: err.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ') } };
   if (err instanceof RangeError) return { status: 400, body: { error: 'BAD_VALUE', message: err.message } };
   return null;
@@ -51,7 +54,9 @@ export function registerApi(app: Router, db: Db, deviceId: string): void {
   registerMasters(app, db, deviceId);
   registerSalesOps(app, db, deviceId);
   registerPurchases(app, db, deviceId);
+  registerQuotes(app, db, deviceId);
   registerExcel(app, db, deviceId);
+  registerRecycle(app, db, deviceId);
   registerReports(app, db, deviceId);
 
   // ---------- Settings ----------
@@ -70,32 +75,10 @@ export function registerApi(app: Router, db: Db, deviceId: string): void {
 
   app.put('/api/settings', async (req) => {
     const body = z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).parse(req.body);
-    const clean: Record<string, string> = {};
-    for (const [k, v] of Object.entries(body)) clean[k] = validateSetting(k, v);
-    const merged = withDefaults({ ...(await getSettings(db)), ...clean });
-    const issues = checkSettingsConsistency(merged);
-    if (issues.length) throw new UserError(issues.join('; '), 'INCONSISTENT');
-
-    const tx = await db.transaction('write');
-    try {
-      // Numbering settings shape the current year's invoice series. GST requires that series to be
-      // consecutive, so they can only change before the first invoice of the financial year.
-      const numbering = ['invoice.prefix', 'invoice.number_format', 'invoice.seq_digits', 'invoice.start_number'] as const;
-      const current = withDefaults(await getSettings(tx));
-      const changing = numbering.filter((k) => clean[k] !== undefined && clean[k] !== current[k]);
-      if (changing.length) await applyNumberingSettings(tx, deviceId, merged, changing);
-      for (const [k, v] of Object.entries(clean)) {
-        if (!isSettingKey(k)) continue;
-        await setSetting(tx, deviceId, k, v);
-      }
-      await insert(tx, 'audit_log', deviceId, { at: nowIso(), user_id: req.user!.id, entity: 'settings', entity_id: Object.keys(clean).join(','), action: 'update', after_json: clean });
-      await tx.commit();
-    } catch (e) {
-      if (!tx.closed) await tx.rollback();
-      throw e;
-    }
+    // saves what can be saved; `refused` says which changes were not, and why (settings-save.ts)
+    const { saved, refused } = await saveSettings(db, deviceId, req.user!.id, body);
     const s = await settings();
-    return { values: s, missingForBilling: missingForBilling(s), issues: checkSettingsConsistency(s) };
+    return { values: s, missingForBilling: missingForBilling(s), issues: checkSettingsConsistency(s), saved, refused };
   });
 
   // ---------- Catalog and parties ----------

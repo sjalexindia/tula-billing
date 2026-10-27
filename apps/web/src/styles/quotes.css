@@ -1,0 +1,14 @@
+/* Quotations: list states, the "make bill" sheet */
+.state { display: inline-block; font-size: 13px; font-weight: 600; padding: 1px 8px; border-radius: 10px; background: var(--paper); color: var(--ink-soft); }
+.state.open { background: var(--mark-soft); color: var(--ink); }
+.state.converted { background: var(--ok-soft, #e3f3e8); color: var(--ok); }
+.state.cancelled { text-decoration: line-through; }
+td.changed { font-weight: 700; color: var(--danger); }
+.big-total { font-size: 17px; margin: 10px 0; }
+.quote-note { margin-bottom: 10px; }
+/* a grid child grows to its table's width unless allowed to shrink: the rate table scrolls inside the sheet instead */
+.sheet > .scroll-x { min-width: 0; }
+.sheet-backdrop { grid-template-columns: minmax(0, 1fr); }
+.sheet { min-width: 0; justify-self: center; }
+/* the printed view has one more button for a quotation (Make bill): let them wrap on a phone */
+.invoice-actions { flex-wrap: wrap; gap: 6px; }

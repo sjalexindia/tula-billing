@@ -7,6 +7,7 @@ import {
   type ExpensePreview, type ExpenseRow,
 } from '../api/purchases';
 import { useApp } from '../App';
+import { DeleteButton } from '../components/DeleteButton';
 import { nameIn } from '../i18n';
 import type { ScreenProps } from '../nav';
 import { CancelDialog, DateRange, Num } from './Purchases';
@@ -266,7 +267,10 @@ function Heads() {
                 <tr key={h.id} className={`pu-head-row${h.dirty ? ' changed' : ''}`}>
                   <td><input aria-label={t('purchases.exp.headEn')} value={h.name_en} disabled={!isOwner} maxLength={60} onChange={(e) => edit(h.id, { name_en: e.target.value })} /></td>
                   <td><input aria-label={t('purchases.exp.headTa')} lang="ta" value={h.name_ta ?? ''} disabled={!isOwner} maxLength={60} onChange={(e) => edit(h.id, { name_ta: e.target.value })} /></td>
-                  <td className="r">{isOwner && h.dirty && <button type="button" className="btn small primary" onClick={() => void saveOne(h)}>{t('purchases.exp.saveHead')}</button>}</td>
+                  <td className="r">
+                    {isOwner && h.dirty && <button type="button" className="btn small primary" onClick={() => void saveOne(h)}>{t('purchases.exp.saveHead')}</button>}
+                    {isOwner && !h.dirty && <DeleteButton small kind="expense_heads" id={h.id} name={h.name_en} onDone={() => void load()} />}
+                  </td>
                 </tr>
               ))}
             </tbody>

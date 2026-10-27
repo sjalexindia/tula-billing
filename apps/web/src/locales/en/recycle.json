@@ -1,0 +1,26 @@
+{
+  "nav": { "recycle": "Recycle bin" },
+  "recycle": {
+    "locale": "en-IN",
+    "title": "Recycle bin",
+    "lead": "Items, customers, suppliers, categories and expense heads deleted by mistake can be put back here. Only things never used can be deleted; anything with bills, stock or a balance is marked inactive instead, so no history is ever lost.",
+    "empty": "The recycle bin is empty.",
+    "what": "Name",
+    "kind": "Type",
+    "deleted": "Deleted",
+    "by": "by {{name}}",
+    "restore": "Restore",
+    "restored": "{{name}} is back.",
+    "delete": "Delete",
+    "confirm": "Delete \"{{name}}\"? It goes to the recycle bin (Settings → Recycle bin) and can be restored from there.",
+    "kinds": {
+      "products": "Item",
+      "parties": "Customer / supplier",
+      "categories": "Category",
+      "expense_heads": "Expense head"
+    },
+    "emptyCategories": "Categories with no items",
+    "emptyCategoriesHelp": "A category with no items left can be deleted.",
+    "noEmptyCategories": "Every category has items."
+  }
+}

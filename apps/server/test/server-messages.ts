@@ -33,16 +33,34 @@ export function placeholder(expr: string): string {
   return ids[ids.length - 1] ?? 'x';
 }
 
+const EXPR = /\$\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g;
+
+/** Two values with the same short name ("Quotation ${q.doc_no} is already bill ${b.doc_no}") get the full expression: q_doc_no, b_doc_no. */
 export function toTemplate(literal: string): string {
-  return literal.replace(/\$\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, (_m, e: string) => `{{${placeholder(e)}}}`);
+  const names = [...literal.matchAll(EXPR)].map((m) => placeholder(m[1]!));
+  const repeated = new Set(names.filter((n, i) => names.indexOf(n) !== i));
+  return literal.replace(EXPR, (_m, e: string) => {
+    const n = placeholder(e);
+    return `{{${repeated.has(n) ? e.trim().replace(/[^A-Za-z0-9_]+/g, '_') : n}}}`;
+  });
 }
+
+/** Strings the patterns catch that are not shown to people as messages (file names, paths, internal labels). */
+const NOT_MESSAGES = new Set(['{{letter}}:\\My Drive', '{{name}} - {{title}} - {{span}}.xlsx', 'file {{pop}}', 'invalid address']);
 
 const PATTERNS = [
   new RegExp(String.raw`new (?:UserError|RangeError|SyncError)\(\s*(?:'[A-Z_]+',\s*)?${LIT}`, 'g'),
   new RegExp(String.raw`\bmessage: ${LIT}`, 'g'),
   new RegExp(String.raw`\bissues\.push\(${LIT}`, 'g'),
   new RegExp(String.raw`\b(?:narration|nature|detail|desc|description): ${LIT}`, 'g'),
+  // settings consistency issues: add(message, …keys)
+  new RegExp(String.raw`\badd\(${LIT},`, 'g'),
+  // reasons returned as text (e.g. why something cannot be deleted)
+  new RegExp(String.raw`\breturn ${LIT};`, 'g'),
+  new RegExp(String.raw`\? ${LIT} : null`, 'g'),
 ];
+/** names put into messages as values ("No such {{kind}}"): every string in a `const LABEL = {…}` map */
+const LABEL_LINE = /^const LABEL\b/;
 /** validation messages: the string argument closing a zod check */
 const ZOD_LINE = /\.(?:refine|regex|min|max|length|int|positive|nonnegative)\(/;
 const ZOD_MSG = new RegExp(String.raw`[,(]\s*${LIT}\s*\)`, 'g');
@@ -71,10 +89,10 @@ export const ZOD_MESSAGES = [
 
 export function serverMessages(): Map<string, string> {
   const out = new Map<string, string>();
-  const add = (lit: string, f: string) => {
+  const add = (lit: string, f: string, word = false) => {
     const body = lit.slice(1, -1).replace(/\\'/g, "'").replace(/\\\\/g, '\\');
     const t = toTemplate(body);
-    if (!sentence(t)) return;
+    if (!(word ? /[a-z]/.test(t) : sentence(t)) || NOT_MESSAGES.has(t)) return;
     if (!out.has(t)) out.set(t, f.slice(f.lastIndexOf('src')));
   };
   for (const f of [...files(SRC), ...files(CORE)]) {
@@ -82,6 +100,7 @@ export function serverMessages(): Map<string, string> {
     for (const re of PATTERNS) for (const m of src.matchAll(re)) add(m[1]!, f);
     for (const line of src.split('\n')) {
       if (ZOD_LINE.test(line)) for (const m of line.matchAll(ZOD_MSG)) add(m[1]!, f);
+      if (LABEL_LINE.test(line)) for (const m of line.matchAll(new RegExp(String.raw`: ${LIT}`, 'g'))) add(m[1]!, f, true);
     }
   }
   return out;

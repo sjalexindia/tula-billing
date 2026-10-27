@@ -20,12 +20,20 @@ export interface MachineInfo {
   disk: { freeBytes: number; totalBytes: number } | null; port: number; lanUrls: string[]; supervised: boolean;
 }
 
+/** Google Drive for desktop folders found on the shop computer (apps/server/src/ops/drive.ts). */
+export interface DriveInfo {
+  folders: Array<{ root: string; suggested: string; kind: 'mirror' | 'stream'; user: string | null }>;
+  /** null: can't be told */
+  appRunning: boolean | null;
+}
+
 export const opsApi = {
   status: () => req<BackupStatus>('GET', '/api/ops/backup'),
   saveConfig: (c: { folder?: string; time?: string; enabled?: boolean }) => req<BackupStatus>('PUT', '/api/ops/backup', c),
   runNow: () => req<{ file: string; sizeBytes: number; createdAt: string; warningFolder: string | null }>('POST', '/api/ops/backup/run', {}),
   restore: (file: string, pin: string) => req<{ restarting: boolean; safety: string }>('POST', '/api/ops/restore', { file, pin }),
   info: () => req<MachineInfo>('GET', '/api/ops/info'),
+  drive: () => req<DriveInfo>('GET', '/api/ops/drive'),
   downloadUrl: (file: string) => `/api/ops/backup/${encodeURIComponent(file)}/download`,
   /** true when the server answers (used while it restarts after a restore) */
   alive: async () => {

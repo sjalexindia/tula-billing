@@ -25,10 +25,8 @@ Phase 1 covers everything a building-materials shop does in a day, on the shop c
 - The automated tests also pass on Windows (October 2026). Running them there found that backups left temp files and restore could not replace the database, because the libSQL client keeps a file open after close() until garbage collection; backup files are now checked in memory (`ops/dbfile.ts`) and `closeDb()` lets go of a file at once.
 
 ## Known gaps (Phase 2 backlog)
-- Stock "≈ in larger unit" rounds down.
-- Saving settings is all-or-nothing when one change is refused.
 - Return screen item names follow the bill's language.
-- Per-device sync tokens (a lost phone can't be cut off without changing the shared token).
+- A lost phone can't be cut off at once without changing every device's token: Turso can't revoke one token. Each phone gets its own token that expires (30 days suggested), and Devices & sync warns before it runs out (docs/07 §2).
 
 ## Before go-live
 See the questions list kept with the business profile (not in this repo). Install on the shop PC, enter opening stock and balances, set the next bill number, run alongside paper bills for a trial period.

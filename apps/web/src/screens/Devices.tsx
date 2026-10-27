@@ -138,6 +138,22 @@ function fmtTime(iso: string | null, t: T): string {
   return new Date(iso).toLocaleString(t('sync.locale'), { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 }
 
+const fmtDate = (iso: string, t: T) => new Date(iso).toLocaleDateString(t('sync.locale'), { day: 'numeric', month: 'short', year: 'numeric' });
+
+/** Turso can't revoke one token, so each phone gets one that runs out (docs/07); warn a week ahead. */
+function TokenWarning({ expiresAt }: { expiresAt: string | null }) {
+  const { t } = useTranslation();
+  if (!expiresAt) return null;
+  const left = new Date(expiresAt).getTime() - Date.now();
+  if (left > 7 * 86_400_000) return null;
+  return (
+    <p className={left <= 0 ? 'field-error' : 'notice'} role="alert">
+      {t(left <= 0 ? 'tokens.expired' : 'tokens.soon', { date: fmtDate(expiresAt, t) })}{' '}
+      {t(runsLocally ? 'tokens.hintPhone' : 'tokens.hintComputer')}
+    </p>
+  );
+}
+
 function StatusCard({ status, busy, onSyncNow }: { status: SyncStatus; busy: boolean; onSyncNow: () => void }) {
   const { t } = useTranslation();
   const state = !status.configured ? 'off' : status.lastError ? 'problem' : status.lastPushAt ? 'ok' : 'starting';
@@ -163,9 +179,11 @@ function StatusCard({ status, busy, onSyncNow }: { status: SyncStatus; busy: boo
           <div><dt>{t('sync.lastSent')}</dt><dd>{fmtTime(status.lastPushAt, t)}</dd></div>
           <div><dt>{t('sync.lastReceived')}</dt><dd>{fmtTime(status.lastPullAt, t)}</dd></div>
           <div><dt>{t('sync.waiting')}</dt><dd>{status.pending}</dd></div>
+          <div><dt>{t('tokens.expires')}</dt><dd>{status.tokenExpiresAt ? fmtDate(status.tokenExpiresAt, t) : t('tokens.never')}</dd></div>
         </dl>
       )}
-      {status.rejected > 0 && <p className="notice">{t('sync.rejected', { count: status.rejected })}</p>}
+      <TokenWarning expiresAt={status.tokenExpiresAt} />
+      {status.rejected > 0 &&<p className="notice">{t('sync.rejected', { count: status.rejected })}</p>}
       {status.configured && (
         <button type="button" className="btn primary" disabled={busy || !status.running} onClick={onSyncNow}>
           {busy ? t('sync.syncing') : t('sync.syncNow')}

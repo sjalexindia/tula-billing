@@ -223,7 +223,14 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
   .invoice-page { padding: 12px 6px 32px; }
   .invoice { padding: 5mm; min-height: 0; }
   .inv-lines { min-width: 560px; }
+  /* tax summary and totals one above the other, so the totals never widen the page */
+  .inv-foot { grid-template-columns: minmax(0, 1fr); }
+  .inv-foot > * { min-width: 0; }
+  .inv-head { flex-wrap: wrap; }
 }
+/* the picture made by Share keeps the paper layout, side by side */
+.capturing .inv-foot { grid-template-columns: 1.3fr 1fr; }
+.capturing .inv-head { flex-wrap: nowrap; }
 
 @media print {
   body { background: #fff; }

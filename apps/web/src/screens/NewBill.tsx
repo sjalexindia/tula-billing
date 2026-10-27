@@ -2,6 +2,7 @@ import { amountInWords, formatQty, formatRs, toPaise } from '@tula/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api, ApiError, type BillInput, type CatalogItem, type Party, type Preview, type Warning } from '../api';
+import { quotesApi, type QuoteInput } from '../api/quotes';
 import { useApp } from '../App';
 import { nameIn } from '../i18n';
 import { warningText } from '../server-text';
@@ -31,8 +32,11 @@ function entryFor(l: LineState, p: CatalogItem): Record<string, string> {
   return e;
 }
 
-export function NewBill({ ratesVersion }: { ratesVersion: number }) {
+/** The bill screen; `mode="quote"` makes a quotation instead (no payment, no stock or accounts effect). */
+export function NewBill({ ratesVersion, mode = 'bill' }: { ratesVersion: number; mode?: 'bill' | 'quote' }) {
+  const isQuote = mode === 'quote';
   const { t, i18n } = useTranslation();
+  const [validUntil, setValidUntil] = useState('');
   const { settings, langs } = useApp();
   const ui = i18n.language;
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
@@ -77,16 +81,18 @@ export function NewBill({ ratesVersion }: { ratesVersion: number }) {
     ? {
       partyId: party.id, site: site || undefined, vehicleNo: vehicleNo || undefined, lang: billLang ?? undefined,
       lines: validLines.map(({ l, p }) => ({ productId: p.id, entry: entryFor(l, p), rate: l.rate || undefined, discount: l.discount || undefined })),
-      payment: paid.trim() ? { mode: payMode, amount: paid.trim() } : undefined,
+      payment: !isQuote && paid.trim() ? { mode: payMode, amount: paid.trim() } : undefined,
     }
     : null;
+  const quoteInput = ({ payment: _paid, confirmWarnings: _confirm, vehicleNo: _vehicle, ...rest }: BillInput): QuoteInput => ({ ...rest, validUntil: validUntil || undefined });
   const inputKey = JSON.stringify(input);
 
   useEffect(() => {
     setHeld(null);
     if (!input) { setPreview(null); return; }
     const h = setTimeout(() => {
-      api.preview(input).then((p) => { setPreview(p); setError(''); }).catch((e) => { setPreview(null); setError((e as Error).message); });
+      (isQuote ? quotesApi.preview(quoteInput(input)) : api.preview(input))
+        .then((p) => { setPreview(p); setError(''); }).catch((e) => { setPreview(null); setError((e as Error).message); });
     }, 200);
     return () => clearTimeout(h);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -102,10 +108,10 @@ export function NewBill({ ratesVersion }: { ratesVersion: number }) {
     if (!input) return;
     setSaving(true);
     try {
-      const r = await api.saveBill({ ...input, confirmWarnings: confirm });
+      const r = isQuote ? await quotesApi.save(quoteInput(input)) : await api.saveBill({ ...input, confirmWarnings: confirm });
       if (!r.saved) { setHeld({ warnings: r.warnings, blocked: !!r.blocked }); return; }
       setSaved({ id: r.id!, docNo: r.docNo! });
-      setLines([emptyLine()]); setPaid(''); setSite(''); setVehicleNo(''); setCustomerText(''); setPreview(null); setHeld(null); setBillLang(null);
+      setLines([emptyLine()]); setPaid(''); setSite(''); setVehicleNo(''); setCustomerText(''); setPreview(null); setHeld(null); setBillLang(null); setValidUntil('');
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -124,11 +130,12 @@ export function NewBill({ ratesVersion }: { ratesVersion: number }) {
   return (
     <form className="bill" onSubmit={(e) => { e.preventDefault(); void save(false); }}
       onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); void save(!!held && !held.blocked); } }}>
+      {isQuote && <p className="notice quote-note">{t('quotes.newHelp')}</p>}
       {saved && (
         <div className="saved-banner" role="status">
-          <strong>{t('bill.saved', { no: saved.docNo })}</strong>
-          <a className="btn primary" href={`#/print/${saved.id}`}>{t('bill.print')}</a>
-          <button type="button" className="btn" onClick={() => { setSaved(null); firstItemRef.current?.focus(); }}>{t('bill.newBill')}</button>
+          <strong>{isQuote ? t('quotes.saved', { no: saved.docNo }) : t('bill.saved', { no: saved.docNo })}</strong>
+          <a className="btn primary" href={`#/print/${saved.id}`}>{isQuote ? t('quotes.open') : t('bill.print')}</a>
+          <button type="button" className="btn" onClick={() => { setSaved(null); firstItemRef.current?.focus(); }}>{isQuote ? t('quotes.another') : t('bill.newBill')}</button>
         </div>
       )}
 
@@ -152,11 +159,20 @@ export function NewBill({ ratesVersion }: { ratesVersion: number }) {
           <label htmlFor="site">{t('bill.site')}</label>
           <input id="site" value={site} placeholder={t('bill.sitePlaceholder')} onChange={(e) => setSite(e.target.value)} />
         </div>
-        <div className="field vehicle">
-          <label htmlFor="vehicle">{t('bill.vehicle')}</label>
-          <input id="vehicle" value={vehicleNo} placeholder={t('bill.vehiclePlaceholder')} autoComplete="off"
-            onChange={(e) => setVehicleNo(e.target.value.toUpperCase())} />
-        </div>
+        {isQuote
+          ? (
+            <div className="field vehicle">
+              <label htmlFor="valid-until">{t('quotes.validUntil')}</label>
+              <input id="valid-until" type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
+            </div>
+          )
+          : (
+            <div className="field vehicle">
+              <label htmlFor="vehicle">{t('bill.vehicle')}</label>
+              <input id="vehicle" value={vehicleNo} placeholder={t('bill.vehiclePlaceholder')} autoComplete="off"
+                onChange={(e) => setVehicleNo(e.target.value.toUpperCase())} />
+            </div>
+          )}
         {langs.length > 1 && (
           <div className="field">
             <span className="label" id="bill-lang">{t('bill.billLanguage')}</span>
@@ -246,18 +262,20 @@ export function NewBill({ ratesVersion }: { ratesVersion: number }) {
             <span className="grand-value">{totals ? formatRs(totals.total) : '₹0.00'}</span>
             {totals && <span className="grand-words">{amountInWords(totals.total, ui === 'ta' ? 'ta' : 'en')}</span>}
           </div>
-          <div className="pay">
-            <Num id="paid" label={`${t('bill.paidNow')} ₹`} value={paid} onChange={setPaid} />
-            <div className="field">
-              <span className="label" id="pay-mode">{t('bill.mode')}</span>
-              <div className="seg" role="group" aria-labelledby="pay-mode">
-                {(['cash', 'upi', 'bank', 'cheque'] as const).map((m) => (
-                  <button key={m} type="button" aria-pressed={payMode === m} onClick={() => setPayMode(m)}>{t(`bill.modes.${m}`)}</button>
-                ))}
+          {!isQuote && (
+            <div className="pay">
+              <Num id="paid" label={`${t('bill.paidNow')} ₹`} value={paid} onChange={setPaid} />
+              <div className="field">
+                <span className="label" id="pay-mode">{t('bill.mode')}</span>
+                <div className="seg" role="group" aria-labelledby="pay-mode">
+                  {(['cash', 'upi', 'bank', 'cheque'] as const).map((m) => (
+                    <button key={m} type="button" aria-pressed={payMode === m} onClick={() => setPayMode(m)}>{t(`bill.modes.${m}`)}</button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-          {owesAfter != null && party && !party.is_walk_in && (
+          )}
+          {!isQuote && owesAfter != null && party && !party.is_walk_in && (
             <p className="hint owes">{t('bill.balanceAfter')}: <b>{formatRs(owesAfter)}</b></p>
           )}
           {error && !setupNeeded && <p className="field-error" role="alert">{error}</p>}
@@ -270,7 +288,7 @@ export function NewBill({ ratesVersion }: { ratesVersion: number }) {
           )}
           {held && !held.blocked
             ? <button type="button" className="btn primary big" disabled={saving} onClick={() => void save(true)}>{saving ? t('bill.saving') : t('bill.saveAnyway')}</button>
-            : <button type="submit" className="btn primary big" disabled={!input || saving || setupNeeded || !!held?.blocked}>{saving ? t('bill.saving') : t('bill.save')}</button>}
+            : <button type="submit" className="btn primary big" disabled={!input || saving || setupNeeded || !!held?.blocked}>{saving ? t('bill.saving') : isQuote ? t('quotes.save') : t('bill.save')}</button>}
         </aside>
       </div>
     </form>

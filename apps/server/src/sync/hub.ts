@@ -37,6 +37,23 @@ export function hubLabel(url: string): string {
   }
 }
 
+/**
+ * When a Turso access token stops working: the `exp` claim of the JWT (read, not verified), or null
+ * for a token without one (`--expiration never`) or one that can't be read. Turso can't revoke a
+ * single token, so a phone gets its own token with an expiry (docs/07); this lets the Devices
+ * screen warn before it runs out. Only the date leaves this function, never the token.
+ */
+export function tokenExpiry(token: string | undefined): string | null {
+  const payload = token?.split('.')[1];
+  if (!payload) return null;
+  try {
+    const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(payload.length / 4) * 4, '='))) as { exp?: unknown };
+    return typeof json.exp === 'number' ? new Date(json.exp * 1000).toISOString() : null;
+  } catch {
+    return null;
+  }
+}
+
 export const HUB_SCHEMA = [
   `CREATE TABLE IF NOT EXISTS sync_log (
      seq          INTEGER PRIMARY KEY AUTOINCREMENT,

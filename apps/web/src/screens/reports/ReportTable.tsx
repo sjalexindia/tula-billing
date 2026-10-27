@@ -1,4 +1,4 @@
-import { formatQty, formatRs } from '@tula/core';
+import { formatQty, formatRs, largerUnitText } from '@tula/core';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Cell, Col, Row, Table } from '../../api/reports';
@@ -6,6 +6,9 @@ import { nameIn } from '../../i18n';
 import { serverText } from '../../server-text';
 
 const NUMERIC = new Set(['money', 'qty', 'int', 'pct', 'rate']);
+
+/** Stock in the largest larger unit (apps/server/src/reports/stock.ts). */
+interface AltValue { qtyMilli: number; factorMilli: number; theoretical: boolean; en: string; ta: string | null; baseEn: string; baseTa: string | null }
 
 export const showDate = (iso: string) => (/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso.slice(8, 10)}-${iso.slice(5, 7)}-${iso.slice(0, 4)}` : iso);
 
@@ -29,8 +32,8 @@ export function useCellText() {
         return o.code ? t(`reports.lines.${o.code}`, { defaultValue: t(`reports.values.${o.code}`, { defaultValue: o.en ?? o.code }) }) : nameIn(lang, o.en ?? '', o.ta);
       }
       case 'alt': {
-        const a = v as { whole: number; en: string; ta: string | null };
-        return `${a.whole.toLocaleString('en-IN')} ${nameIn(lang, a.en, a.ta)}`;
+        const a = v as AltValue;
+        return largerUnitText(a.qtyMilli, a.factorMilli, nameIn(lang, a.en, a.ta), nameIn(lang, a.baseEn, a.baseTa), a.theoretical);
       }
       default:
         if (c.type === 'code' && /^\d{4}-\d{2}$/.test(String(v))) {

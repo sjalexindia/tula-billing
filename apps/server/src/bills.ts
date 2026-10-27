@@ -175,7 +175,8 @@ export async function priceBill(ex: Exec, raw: BillInput) {
   return { input, date, lang, party, placeOfSupply, supply, docKind: charge ? 'tax_invoice' : 'bill_of_supply', lines, totals, balanceBefore, paid, warnings, blocked, settings };
 }
 
-export async function createBill(db: Db, ctx: Ctx, raw: BillInput) {
+/** `fromQuote`: the quotation this bill is made from; it is marked converted in the same transaction (quotes.ts). */
+export async function createBill(db: Db, ctx: Ctx, raw: BillInput, opts: { fromQuote?: string } = {}) {
   const tx = await db.transaction('write');
   try {
     const priced = await priceBill(tx, raw);
@@ -249,9 +250,10 @@ export async function createBill(db: Db, ctx: Ctx, raw: BillInput) {
       });
     }
 
+    if (opts.fromQuote) await markQuoteConverted(tx, dev, opts.fromQuote, docId, party.id);
     await insert(tx, 'audit_log', dev, {
       at: new Date().toISOString(), user_id: ctx.userId, entity: 'sales_docs', entity_id: docId, action: 'create',
-      after_json: { docNo, total: totals.total, warningsAccepted: warnings.map((w) => w.code) },
+      after_json: { docNo, total: totals.total, warningsAccepted: warnings.map((w) => w.code), ...(opts.fromQuote ? { fromQuote: opts.fromQuote } : {}) },
     });
     await tx.commit();
     return { saved: true as const, id: docId, docNo, receiptNo, total: totals.total, warnings };
@@ -259,6 +261,20 @@ export async function createBill(db: Db, ctx: Ctx, raw: BillInput) {
     if (!tx.closed) await tx.rollback();
     throw e;
   }
+}
+
+/** A quotation can become one bill; again only if that bill was cancelled. */
+export async function markQuoteConverted(tx: Exec, dev: string, quoteId: string, billId: string, partyId: string) {
+  const q = await one<{ id: string; doc_no: string; status: string; party_id: string; converted_bill_id: string | null }>(tx,
+    "SELECT id, doc_no, status, party_id, converted_bill_id FROM sales_docs WHERE id = ? AND doc_type = 'QT' AND deleted = 0", [quoteId]);
+  if (!q) throw new UserError('Quotation not found', 'NOT_FOUND', 404);
+  if (q.status === 'cancelled') throw new UserError(`Quotation ${q.doc_no} is cancelled`, 'QUOTE_CANCELLED', 409);
+  if (q.party_id !== partyId) throw new UserError('A quotation becomes a bill for the same customer', 'QUOTE_PARTY');
+  if (q.converted_bill_id) {
+    const b = await one<{ doc_no: string; status: string }>(tx, 'SELECT doc_no, status FROM sales_docs WHERE id = ?', [q.converted_bill_id]);
+    if (b && b.status !== 'cancelled') throw new UserError(`Quotation ${q.doc_no} is already bill ${b.doc_no}`, 'QUOTE_CONVERTED', 409);
+  }
+  await update(tx, 'sales_docs', dev, quoteId, { converted_bill_id: billId });
 }
 
 /** Full invoice for printing / PDF. */

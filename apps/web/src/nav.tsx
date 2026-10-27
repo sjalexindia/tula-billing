@@ -12,7 +12,9 @@ import { NewBill } from './screens/NewBill';
 import { OpeningStock } from './screens/OpeningStock';
 import { Outstanding } from './screens/Outstanding';
 import { Purchases } from './screens/Purchases';
+import { NewQuote, Quotes } from './screens/Quotes';
 import { Receipts } from './screens/Receipts';
+import { RecycleBin } from './screens/RecycleBin';
 import { Reports } from './screens/Reports';
 import { SettingsScreen } from './screens/Settings';
 import { Statement } from './screens/Statement';
@@ -47,6 +49,8 @@ const OWNER: Role[] = ['owner'];
 export const NAV: NavItem[] = [
   { route: '', label: 'nav.newBill', group: 'billing', roles: STAFF, screen: NewBill },
   { route: 'bills', label: 'nav.bills', group: 'billing', roles: ALL, screen: Bills },
+  { route: 'quotes', label: 'nav.quotes', group: 'billing', roles: ALL, screen: Quotes },
+  { route: 'quote', label: 'nav.newQuote', group: 'billing', roles: STAFF, screen: NewQuote, hidden: true },
   { route: 'receipts', label: 'nav.receipts', group: 'billing', roles: ALL, screen: Receipts },
   { route: 'outstanding', label: 'nav.outstanding', group: 'billing', roles: ALL, screen: Outstanding },
   { route: 'statement', label: 'nav.statement', group: 'billing', roles: ALL, screen: Statement, hidden: true },
@@ -68,6 +72,7 @@ export const NAV: NavItem[] = [
   { route: 'settings', label: 'nav.settings', group: 'settings', roles: OWNER, screen: SettingsScreen },
   { route: 'backup', label: 'nav.backup', group: 'settings', roles: OWNER, screen: Backup, computerOnly: true },
   { route: 'devices', label: 'nav.devices', group: 'settings', roles: OWNER, screen: Devices },
+  { route: 'recycle', label: 'nav.recycle', group: 'settings', roles: OWNER, screen: RecycleBin },
 ];
 
 export const GROUP_ORDER: NavItem['group'][] = ['billing', 'purchases', 'stock', 'reports', 'masters', 'settings'];

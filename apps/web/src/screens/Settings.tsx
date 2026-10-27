@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api, ApiError, type SettingsSchema } from '../api';
 import { useApp } from '../App';
 import { UsersPanel } from './Users';
 import { serverText } from '../server-text';
+import '../styles/settings-save.css';
 
 /** Generated from the settings registry, so new settings appear without new screen code. */
 export function SettingsScreen() {
@@ -13,9 +14,15 @@ export function SettingsScreen() {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  // changes the server did not save, with the reason; their typed values stay in the form to fix
+  const [refused, setRefused] = useState<Record<string, string>>({});
+  const keep = useRef<Record<string, string>>({});
 
   useEffect(() => { api.settingsSchema().then(setSchema).catch((e) => setMessage({ kind: 'error', text: (e as Error).message })); }, []);
-  useEffect(() => { if (settings) setDraft(settings.values); }, [settings]);
+  useEffect(() => {
+    if (settings) setDraft({ ...settings.values, ...keep.current });
+    keep.current = {};
+  }, [settings]);
   if (!schema || !settings) return null;
 
   const label = (key: string) => (i18n.exists(`settings.keys.${key}`) ? t(`settings.keys.${key}`) : key);
@@ -31,18 +38,29 @@ export function SettingsScreen() {
     return !m || !schema.languages.includes(m[1]!) || m[1] === 'en' || enabled.includes(m[1]!);
   };
 
+  // Numbering is locked once the year's first bill exists: said with the field's name as it reads on screen.
+  const NUMBERING = ['invoice.prefix', 'invoice.number_format', 'invoice.seq_digits', 'invoice.start_number'];
+  const reason = (key: string, text: string) => (NUMBERING.includes(key) && /financial year/i.test(text) ? t('settings.numberingLocked', { fields: label(key) }) : serverText(text));
+
   const save = async () => {
     setSaving(true);
+    setRefused({});
     try {
-      await api.saveSettings(changed);
+      const r = await api.saveSettings(changed);
+      const notSaved = r.refused ?? {};
+      keep.current = Object.fromEntries(Object.keys(notSaved).map((k) => [k, changed[k]!]));
+      setRefused(notSaved);
       await reloadSettings();
-      setMessage({ kind: 'ok', text: t('settings.saved') });
+      const n = Object.keys(notSaved).length;
+      setMessage(n ? { kind: 'error', text: t('settingsSave.partly', { saved: r.saved.length, count: n }) } : { kind: 'ok', text: t('settings.saved') });
     } catch (e) {
-      // Numbering is locked once the year's first bill exists: name the fields as they read on screen.
-      const locked = e instanceof ApiError && e.code === 'NUMBERING_IN_USE'
-        ? Object.keys(changed).filter((k) => k.startsWith('invoice.') && ['prefix', 'number_format', 'seq_digits', 'start_number'].includes(k.slice(8)))
-        : [];
-      setMessage({ kind: 'error', text: locked.length ? t('settings.numberingLocked', { fields: locked.map(label).join(', ') }) : (e as Error).message });
+      const notSaved = e instanceof ApiError ? (e.details as { refused?: Record<string, string> } | undefined)?.refused : undefined;
+      if (notSaved) {
+        setRefused(notSaved);
+        setMessage({ kind: 'error', text: t('settingsSave.none', { count: Object.keys(notSaved).length }) });
+      } else {
+        setMessage({ kind: 'error', text: (e as Error).message });
+      }
     } finally {
       setSaving(false);
     }
@@ -91,10 +109,11 @@ export function SettingsScreen() {
               control = <input id={id} value={value} maxLength={s.kind.type === 'text' ? s.kind.max : undefined} onChange={(e) => set(e.target.value)} />;
             }
             return (
-              <div className={`field setting${missing.has(s.key) ? ' missing' : ''}`} key={s.key}>
+              <div className={`field setting${missing.has(s.key) ? ' missing' : ''}${refused[s.key] ? ' refused' : ''}`} key={s.key}>
                 <label htmlFor={id}>{label(s.key)}</label>
                 {control}
                 {missing.has(s.key) && <span className="hint">{t('settings.required')}</span>}
+                {refused[s.key] && <span className="field-error" role="alert">{reason(s.key, refused[s.key]!)}</span>}
               </div>
             );
           })}
