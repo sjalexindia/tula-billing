@@ -13,6 +13,7 @@ Runs on the shop's own computer without internet, syncs to phones, backs up to G
 
 | Doc | What it covers |
 |---|---|
+| [docs/USER-GUIDE.md](docs/USER-GUIDE.md) | **User guide** for the owner and counter staff: every task, step by step |
 | [docs/01-release-1-spec.md](docs/01-release-1-spec.md) | Goals, roles, use cases, business rules, architecture, screens, release plan |
 | [docs/02-milestone-0.md](docs/02-milestone-0.md) | What M0 delivered, decisions, what's next |
 | [docs/03-configuration.md](docs/03-configuration.md) | Settings, presets, business profiles, environment variables, adding a language |
