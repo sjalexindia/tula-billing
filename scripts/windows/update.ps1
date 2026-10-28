@@ -111,7 +111,7 @@ if ($GitPull) {
         if (Test-Path $previous) { Remove-Item $previous -Recurse -Force }
         Move-Item $AppDir $previous
         New-Item -ItemType Directory -Force -Path $AppDir | Out-Null
-        & robocopy $newSource $AppDir /MIR /XD node_modules .git data dist android profiles /XF *.db *.db-wal *.db-shm tula.env *.profile.json /NFL /NDL /NJH /NJS /NP | Out-Null
+        & robocopy $newSource $AppDir /MIR /XD node_modules .git data dist android profiles /XF *.db *.db-wal *.db-shm tula.env *.profile.json /R:2 /W:2 /NFL /NDL /NJH /NJS /NP | Out-Null
         if ($LASTEXITCODE -ge 8) { Restore-Previous "Copying the new files failed (robocopy code $LASTEXITCODE)." }
     } | Out-Null
 }

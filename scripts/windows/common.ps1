@@ -144,6 +144,18 @@ function Start-Tula {
     Invoke-Step "Start scheduled task '$script:TaskName'" { Start-ScheduledTask -TaskName $script:TaskName } | Out-Null
 }
 
+# Gives a folder exactly these grants and makes everything inside inherit them.
+# The grants carry (OI)(CI) flags, which icacls refuses on files, so they are set on the folder only;
+# applying them with /T after /inheritance:r would leave every file with an empty ACL (no access at all).
+function Set-FolderAcl([string]$path, [string[]]$grants) {
+    & icacls $path /inheritance:r /grant:r @grants /C /Q | Out-Null
+    if ($LASTEXITCODE -ne 0) { Fail "Setting permissions on $path failed (icacls code $LASTEXITCODE)." }
+    if (Get-ChildItem -LiteralPath $path -Force | Select-Object -First 1) {
+        & icacls (Join-Path $path '*') /reset /T /C /Q | Out-Null
+        if ($LASTEXITCODE -ne 0) { Fail "Resetting permissions inside $path failed (icacls code $LASTEXITCODE)." }
+    }
+}
+
 # Version of the Tula app in a folder, or 'unknown'.
 function Get-AppVersion([string]$appDir) {
     try {

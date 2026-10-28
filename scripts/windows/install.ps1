@@ -101,13 +101,13 @@ if ($sameFolder) {
 } else {
     Invoke-Step "Copy $source -> $AppDir (keeps node_modules; never copies databases or tula.env)" {
         New-Item -ItemType Directory -Force -Path $AppDir | Out-Null
-        & robocopy $source $AppDir /MIR /XD node_modules .git data dist android profiles /XF *.db *.db-wal *.db-shm tula.env *.profile.json /NFL /NDL /NJH /NJS /NP | Out-Null
+        & robocopy $source $AppDir /MIR /XD node_modules .git data dist android profiles /XF *.db *.db-wal *.db-shm tula.env *.profile.json /R:2 /W:2 /NFL /NDL /NJH /NJS /NP | Out-Null
         if ($LASTEXITCODE -ge 8) { Fail "Copying the app files failed (robocopy code $LASTEXITCODE)." }
     } | Out-Null
     Ok "App files in $AppDir"
 }
 Invoke-Step 'Let ordinary users read but not change the app folder' {
-    & icacls (Split-Path $AppDir -Parent) /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' /T /C /Q | Out-Null
+    Set-FolderAcl (Split-Path $AppDir -Parent) @('*S-1-5-18:(OI)(CI)F', '*S-1-5-32-544:(OI)(CI)F', '*S-1-5-32-545:(OI)(CI)RX')
 } | Out-Null
 
 Step 'Packages and web app (a few minutes, needs internet)'
@@ -126,7 +126,7 @@ Ok 'Packages installed and web app built'
 Step 'Data folder'
 Invoke-Step "Create $DataDir (backups, logs) for Administrators and SYSTEM only" {
     foreach ($d in @($DataDir, (Join-Path $DataDir 'backups'), (Join-Path $DataDir 'logs'))) { New-Item -ItemType Directory -Force -Path $d | Out-Null }
-    & icacls $DataDir /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' /T /C /Q | Out-Null
+    Set-FolderAcl $DataDir @('*S-1-5-18:(OI)(CI)F', '*S-1-5-32-544:(OI)(CI)F')
 } | Out-Null
 Ok "$DataDir ready"
 
@@ -169,7 +169,8 @@ if (Test-Path $envFile) {
 # ---------------------------------------------------------------- 5. Scheduled task
 Step 'Auto-start (scheduled task "Tula")'
 Invoke-Step "Register task '$script:TaskName': at startup + every 5 minutes if not running, as SYSTEM" {
-    $action = New-ScheduledTaskAction -Execute "$env:SystemRoot\System32\cmd.exe" -Argument "/c `"$runCmd`" `"$envFile`"" -WorkingDirectory $AppDir
+    # cmd /c strips the first and last quote of the command line, so the whole command gets an extra pair.
+    $action = New-ScheduledTaskAction -Execute "$env:SystemRoot\System32\cmd.exe" -Argument "/d /s /c `"`"$runCmd`" `"$envFile`"`"" -WorkingDirectory $AppDir
     $atStart = New-ScheduledTaskTrigger -AtStartup
     # Belt and braces: if the supervisor ever stops, this starts it again within 5 minutes.
     # (MultipleInstances IgnoreNew: nothing happens while it is running.)
