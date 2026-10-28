@@ -73,6 +73,10 @@ export function SignIn({ onSignedIn, networkError }: { onSignedIn: (u: Me) => vo
             </div>
             {error && <p className="field-error" role="alert">{error}</p>}
             <button type="submit" className="btn primary big" disabled={busy || pin.length < 4}>{t('auth.signIn')}</button>
+            <details className="hint">
+              <summary>{t('auth.forgot')}</summary>
+              <p>{t('auth.forgotHelp')}</p>
+            </details>
           </form>
         )}
         {!userId && error && <p className="field-error" role="alert">{error}</p>}

@@ -9,7 +9,7 @@ import type { Runner } from './schema';
  *   sync.cursor          highest hub sync_log.seq already applied here
  *   sync.last_push_at    sync.last_pull_at    sync.pending    sync.joined_at / sync.join_mode
  *   sync.last_error      plain-English message of the last failure ('' when fine)
- *   sync.last_error_code OFFLINE | AUTH | BAD_URL | UPDATE_APP | REVOKED | OTHER
+ *   sync.last_error_code OFFLINE | AUTH | BAD_URL | UPDATE_APP | REVOKED | EMPTY_HUB | REPLACED | OTHER
  *   sync.last_error_at
  */
 export async function getState(ex: Runner, key: string): Promise<string | null> {
@@ -29,7 +29,7 @@ export async function setState(ex: Runner, key: string, value: InValue): Promise
   });
 }
 
-export type SyncErrorCode = 'OFFLINE' | 'AUTH' | 'BAD_URL' | 'UPDATE_APP' | 'REVOKED' | 'EMPTY_HUB' | 'OTHER';
+export type SyncErrorCode = 'OFFLINE' | 'AUTH' | 'BAD_URL' | 'UPDATE_APP' | 'REVOKED' | 'EMPTY_HUB' | 'REPLACED' | 'OTHER';
 
 /** An error whose message is already written for the shop owner. */
 export class SyncError extends Error {

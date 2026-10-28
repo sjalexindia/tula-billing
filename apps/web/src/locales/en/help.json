@@ -159,7 +159,8 @@
         "id": "pin", "group": "safe", "title": "Forgot the owner PIN",
         "blocks": [
           { "p": "Another owner can reset it in [Settings], under **People who use Tula** ({Reset PIN}). With no other owner: on the shop computer, run the `reset-pin` tool as administrator. It sets the temporary PIN 1234, and the owner chooses a new one at sign-in." },
-          { "p": "Other people's PINs: the owner resets them the same way." }
+          { "p": "Other people's PINs: the owner resets them the same way." },
+          { "p": "A PIN reset on the shop computer reaches the phones with the rest of the data, within about a minute. On a phone that is offline, the old PIN works until it has internet again." }
         ]
       },
       {
@@ -177,6 +178,7 @@
             "Open Tula **from the home screen** (not from a Safari tab) and set it up once with the cloud address and access token, as on Android.",
             "Always open it from the home screen: Safari may clear the data of a website used in a tab after 7 days without use; a home-screen app keeps it."
           ] },
+          { "p": "The cloud address and access token are asked **once**, when a phone is set up. After that, everyone opens Tula and signs in with their PIN only." },
           { "p": "On the phone, {Share} and {Share as PDF} replace Print." },
           { "note": "Each phone's access token can have an end date. [Settings > Devices & sync] warns a week before it runs out; make a new one before then." },
           { "warn": "Uninstalling the app or clearing its storage deletes the phone's copy, including bills that never reached the cloud. Check that *Changes waiting to send* is 0 first." }
@@ -186,6 +188,23 @@
         "id": "cloud", "group": "safe", "title": "Cloud copy and other computers",
         "blocks": [
           { "p": "[Settings > Devices & sync] shows whether the cloud copy is up to date, the changes waiting to send, and which computers and phones share the data." },
+          { "h": "How soon other devices see a change" },
+          { "table": { "head": ["Step", "When"], "rows": [
+            ["Sent to the cloud copy", "About 3 seconds after saving, when that device has internet"],
+            ["Shop computers receive it", "Within 30 seconds"],
+            ["Phones receive it", "Within 30 seconds while Tula is open, and at once when Tula is brought to the front"]
+          ] } },
+          { "p": "A device with no internet keeps working; its changes go up as soon as the internet is back." },
+          { "h": "Bill numbers on several devices" },
+          { "table": { "head": ["Device", "Bill numbers"], "rows": [
+            ["Main shop computer", "RE/26-27/0001, 0002…"],
+            ["Second computer", "RE/26-27/C20001, C20002…"],
+            ["First phone", "RE/26-27/M10001, M10002…"],
+            ["Next phone", "RE/26-27/M20001…"]
+          ] } },
+          { "p": "Each device numbers its own bills, so two devices never make the same number, even offline. Each series runs without gaps (allowed under GST), and all restart at 1 on 1 April. The Bills list and reports show every device's bills together. Quotations, receipts and credit notes work the same way." },
+          { "note": "Two devices selling the last stock within those seconds (or while one is offline) can take stock below zero; Tula shows a warning so it can be corrected. If the same item or customer is edited on two devices at once, the later change is kept. Set the day's rates on one device." },
+          { "p": "If the cloud copy is ever started afresh (for example a demo replaced by the real books), phones notice it, show *Getting the latest data* and copy the new business by themselves. A shop computer stops syncing and shows a warning instead, so the two businesses are never mixed." },
           { "p": "For a stolen computer or phone: {Mark as lost} on another device, then make a new access token and enter it on every device." }
         ]
       },

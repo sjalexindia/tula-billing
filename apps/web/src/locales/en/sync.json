@@ -24,7 +24,8 @@
       "BAD_URL": "The cloud address in TULA_SYNC_URL is not correct. Check it, then restart Tula.",
       "UPDATE_APP": "Another computer has a newer version of Tula. Update Tula on this computer to receive its changes.",
       "REVOKED": "This computer was marked as lost, so it no longer sends or receives data.",
-      "EMPTY_HUB": "The cloud copy is empty."
+      "EMPTY_HUB": "The cloud copy is empty.",
+      "REPLACED": "The cloud copy now holds a different business (it was started afresh). This computer stopped sending and receiving so the two are not mixed. Use the database that matches the cloud copy, or empty the cloud copy and restart Tula."
     },
     "hub": "Cloud copy",
     "lastSent": "Last sent",

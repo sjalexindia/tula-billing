@@ -6,9 +6,9 @@ import { App } from '../App';
 import { Field } from '../components/Field';
 import { setLang } from '../i18n';
 import '../styles/sync.css';
-import { getMode, joinFromCloud, openPhoneDb, phoneIsJoined, setMode, startOnPhone } from './phone';
+import { getMode, joinFromCloud, needsRefresh, openPhoneDb, phoneIsJoined, refreshFromCloud, setMode, startOnPhone } from './phone';
 
-type Step = 'loading' | 'choose' | 'setup' | 'ready' | { error: string };
+type Step = 'loading' | 'choose' | 'setup' | 'refreshing' | 'ready' | { error: string };
 
 const SETUP_ERRORS = ['OFFLINE', 'AUTH', 'BAD_URL', 'EMPTY_HUB'];
 
@@ -26,6 +26,17 @@ export function PhoneStart() {
     } catch (e) {
       setStep({ error: `${t('phone.errors.noStorage')} (${(e as Error).message})` });
       return;
+    }
+    if (await needsRefresh()) {
+      // the cloud copy was started afresh (a different business): copy it again before opening
+      setStep('refreshing');
+      try {
+        await refreshFromCloud();
+      } catch (e) {
+        const d = describeError(e);
+        setStep({ error: t('phone.refresh.failed', { detail: SETUP_ERRORS.includes(d.code) ? t(`phone.errors.${d.code}`) : d.message }) });
+        return;
+      }
     }
     if (!(await phoneIsJoined())) { setStep('setup'); return; }
     await startOnPhone();
@@ -51,6 +62,7 @@ export function PhoneStart() {
 
   if (step === 'ready') return <App />;
   if (step === 'loading') return <Card><p>{t('phone.loading')}</p></Card>;
+  if (step === 'refreshing') return <Card><h1>{t('phone.refresh.title')}</h1><p>{t('phone.refresh.lead')}</p></Card>;
   if (typeof step === 'object') return <Card><p className="field-error" role="alert">{step.error}</p></Card>;
   if (step === 'setup') return <Setup onBack={Capacitor.isNativePlatform() ? () => setStep('choose') : undefined} onDone={async () => { await startOnPhone(); setStep('ready'); }} />;
 

@@ -195,10 +195,27 @@ export async function isRevoked(db: Db, deviceId: string): Promise<boolean> {
   return Number(r.rows[0]?.[0] ?? 0) === 1;
 }
 
+/**
+ * True when the cloud copy now holds a different business: it has devices, and not one of them is
+ * a device this database knows. That happens when the cloud copy was emptied and filled again from
+ * a fresh start (a demo replaced by real books, say). Pushing or pulling then would mix the two
+ * businesses. A device that joined but never got its own row up still knows the others, so it is
+ * not mistaken for this.
+ */
+export async function businessReplaced(db: Db, hub: Hub): Promise<boolean> {
+  const ids = (await rows(hub.client, 'SELECT id FROM devices WHERE deleted = 0')).map((r) => String(r.id));
+  if (!ids.length) return false;
+  const known = await db.execute({ sql: `SELECT COUNT(*) FROM devices WHERE id IN (${ids.map(() => '?').join(',')})`, args: ids });
+  return Number(known.rows[0]?.[0] ?? 0) === 0;
+}
+
 /** One full round: push, then pull. Throws on failure (the worker records it). */
 export async function syncOnce(db: Db, hub: Hub, deviceId: string) {
   if (await isRevoked(db, deviceId)) {
     throw new SyncError('REVOKED', 'This computer was marked as lost on the Devices screen, so it no longer copies data to or from the cloud.');
+  }
+  if (await businessReplaced(db, hub)) {
+    throw new SyncError('REPLACED', 'The cloud copy now holds a different business (it was started afresh). Nothing was sent or received, so the two are not mixed.');
   }
   const p = await push(db, hub, deviceId);
   const l = await pull(db, hub, deviceId);

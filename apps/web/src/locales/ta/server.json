@@ -188,6 +188,7 @@
     "Give a reason": "காரணம் சொல்லுங்கள்",
     "Another computer is on a newer version of Tula. Update Tula on this computer to receive its changes.": "வேறு கணினியில் Tula-வின் புதிய பதிப்பு உள்ளது. அதன் மாற்றங்களைப் பெற இந்தக் கணினியிலும் Tula-வைப் புதுப்பியுங்கள்.",
     "This computer was marked as lost on the Devices screen, so it no longer copies data to or from the cloud.": "சாதனங்கள் திரையில் இந்தக் கணினி தொலைந்ததாகக் குறிக்கப்பட்டுள்ளது, அதனால் கிளவுடுடன் தரவை அனுப்பவோ பெறவோ செய்யாது.",
+    "The cloud copy now holds a different business (it was started afresh). Nothing was sent or received, so the two are not mixed.": "கிளவுட் நகலில் இப்போது வேறு வணிகம் உள்ளது (புதிதாகத் தொடங்கப்பட்டது). இரண்டும் கலக்காமல் இருக்க, எதுவும் அனுப்பப்படவோ பெறப்படவோ இல்லை.",
     "No free series code left for another {{what}}": "இன்னொரு {{what}}-க்கு வரிசைக் குறியீடு மீதம் இல்லை",
     "This computer is already set up; joining is only for a new, empty database.": "இந்தக் கணினி ஏற்கனவே அமைக்கப்பட்டுள்ளது; இணைவது புதிய, காலியான தரவுத்தளத்துக்கு மட்டுமே.",
     "The cloud copy has no business in it yet. Start the main computer with sync turned on first, then join.": "கிளவுட் நகலில் இன்னும் வணிகம் இல்லை. முதலில் ஒத்திசைவுடன் முதன்மைக் கணினியைத் தொடங்கி, பிறகு இணையுங்கள்.",

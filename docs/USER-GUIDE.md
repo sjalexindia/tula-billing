@@ -90,7 +90,7 @@ Tula makes a checked backup every night (time set on the **Backup** screen) and 
 Restore: **Backup** → pick a backup → **Restore** → owner PIN. Tula first saves a safety copy of today's data, then restarts with the backup.
 
 ## 14. Forgot the owner PIN
-On the shop computer, run the `reset-pin` tool as described in [06-install-and-run.md](06-install-and-run.md). Other people's PINs: the owner resets them in **Settings → People**.
+On the shop computer, run the `reset-pin` tool as described in [06-install-and-run.md](06-install-and-run.md). Other people's PINs: the owner resets them in **Settings → People**; they then sign in with 1234 and choose a new PIN. The sign-in screen has a **Forgot your PIN?** note saying the same. A reset reaches phones with the rest of the data within about a minute.
 
 ## 15. Phones
 Two ways ([07-sync-and-phones.md](07-sync-and-phones.md)):
@@ -101,7 +101,13 @@ Two ways ([07-sync-and-phones.md](07-sync-and-phones.md)):
 On the phone, **Share** and **Share as PDF** replace Print. Each phone's access token can have an end date; **Devices & sync** warns a week before it runs out (make a new one as in [07-sync-and-phones.md](07-sync-and-phones.md)). **Settings → Devices & sync** shows whether the cloud copy is up to date and the changes waiting to send.
 
 ## 16. Cloud copy and other computers
-**Settings → Devices & sync**: is the cloud copy up to date, which computers and phones share the data, and **Mark as lost** for a stolen device (then make a new access token). Setting up: [07-sync-and-phones.md](07-sync-and-phones.md).
+**Settings → Devices & sync**: is the cloud copy up to date, which computers and phones share the data, and **Mark as lost** for a stolen device (then make a new access token). Setting up: [07-sync-and-phones.md](07-sync-and-phones.md). The cloud address and token are asked once per phone; after that everyone signs in with their PIN only.
+
+**How soon other devices see a change:** sent to the cloud about 3 seconds after saving (when there is internet); shop computers and open phones receive it within 30 seconds, and a phone at once when Tula is brought to the front. A device with no internet keeps working and sends its changes when the internet is back.
+
+**Bill numbers on several devices:** each device numbers its own bills: main computer RE/26-27/0001…, second computer RE/26-27/C20001…, first phone RE/26-27/M10001…, next phone M2…. No two devices make the same number, even offline; each series runs without gaps (allowed under GST) and restarts at 1 on 1 April. Bill lists and reports show all devices together. Two devices selling the last stock at the same moment can take stock below zero (Tula warns); the later edit of the same item or customer wins; set the day's rates on one device.
+
+**Cloud copy started afresh** (for example a demo replaced by the real books): phones notice, show *Getting the latest data* and copy the new business themselves; a shop computer stops syncing and warns, so the two businesses never mix.
 
 ## 17. Recycle bin
 Items, customers and suppliers, categories and expense heads that were **never used** can be deleted (Delete on their screen; owner). Anything already on a bill, purchase, stock or balance can't be deleted: mark it inactive instead. Deleted things wait in **Settings → Recycle bin**, with who deleted them and when; **Restore** puts them back as they were (refused, with the reason, if it would clash with something added since). More: [11-recycle-bin.md](11-recycle-bin.md).

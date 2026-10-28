@@ -3,7 +3,7 @@ import { createClient } from '@libsql/client/web';
 import type { Db, Migration } from '@tula/db';
 import { openHub, type HubConfig, type HubDriver } from '@tula/server/sync/hub';
 import { setRunsLocally, setTransport } from '../platform';
-import { isJoined, joinBusiness, prepareDb, startRuntime, type PhoneRuntime } from './runtime';
+import { isJoined, joinBusiness, prepareDb, refreshFromHub, startRuntime, type PhoneRuntime } from './runtime';
 import { createSqliteClient } from '@tula/db/wasm';
 import { openWorkerBackend } from './sqlite-worker';
 
@@ -28,6 +28,8 @@ const MODE = 'tula.mode';
 const HUB_URL = 'tula.hub.url';
 const HUB_TOKEN = 'tula.hub.token';
 const SESSION = 'tula.session';
+/** set when the cloud copy was found to hold a different business; cleared once the fresh copy is in */
+const REFRESH = 'tula.refresh';
 
 const get = async (key: string) => (await Preferences.get({ key })).value;
 const put = (key: string, value: string | null) => (value === null ? Preferences.remove({ key }) : Preferences.set({ key, value }));
@@ -70,6 +72,19 @@ export async function joinFromCloud(cfg: HubConfig, name?: string) {
   return r;
 }
 
+/** True when this phone must copy the business again (the cloud copy was started afresh). */
+export const needsRefresh = async () => (await get(REFRESH)) === '1';
+
+/** Empty this phone and copy the business from the cloud copy again. Throws (and keeps the flag) when offline. */
+export async function refreshFromCloud() {
+  const cfg = await getHub();
+  if (!cfg) throw new Error('No cloud address saved on this phone');
+  const r = await refreshFromHub(await openPhoneDb(), cfg, webHubDriver);
+  await put(SESSION, null);
+  await put(REFRESH, null);
+  return r;
+}
+
 /** A new access token (after it was rotated): check it reaches the cloud copy, save it, restart. */
 export async function changeHub(cfg: HubConfig) {
   (await openHub(cfg, webHubDriver)).close();
@@ -90,7 +105,16 @@ let runtime: PhoneRuntime | null = null;
 export async function startOnPhone(): Promise<PhoneRuntime> {
   if (runtime) return runtime;
   const d = await openPhoneDb();
-  runtime = await startRuntime(d, { hub: await getHub(), driver: webHubDriver });
+  runtime = await startRuntime(d, {
+    hub: await getHub(),
+    driver: webHubDriver,
+    // the cloud copy holds a different business now: start again, and copy it fresh before anything else
+    onReplaced: () => void (async () => {
+      await put(REFRESH, '1');
+      await put(SESSION, null);
+      location.reload();
+    })(),
+  });
   const router = runtime.router;
   let token = (await get(SESSION)) ?? '';
 

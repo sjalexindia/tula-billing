@@ -248,6 +248,8 @@
     "pinChanged": "PIN changed",
     "savePin": "Save PIN",
     "firstRun": "First time? The owner's starting PIN is 1234.",
+    "forgot": "Forgot your PIN?",
+    "forgotHelp": "Ask the owner to reset it in Settings, under People who use Tula; you then sign in with 1234 and choose a new PIN. Owner with no other owner: on the shop computer, run the reset-pin tool (Help, part 14).",
     "roles": {
       "owner": "Owner",
       "billing": "Billing",

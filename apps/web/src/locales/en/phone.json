@@ -1,6 +1,11 @@
 {
   "phone": {
     "loading": "Opening Tula…",
+    "refresh": {
+      "title": "Getting the latest data",
+      "lead": "The business in the cloud copy was started afresh on the shop computer. This phone is copying it again; keep Tula open.",
+      "failed": "This phone could not copy the latest data yet: {{detail}} Open Tula again when there is internet."
+    },
     "choose": {
       "title": "How will this phone use Tula?",
       "anywhere": "Work on this phone",

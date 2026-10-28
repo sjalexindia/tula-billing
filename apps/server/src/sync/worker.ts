@@ -1,7 +1,7 @@
 import type { Db } from '@tula/db';
 import { openHub, type Hub, type HubConfig, type HubDriver } from './hub';
 import { pendingCount, syncOnce } from './engine';
-import { getState, recordError, setState } from './state';
+import { getState, recordError, setState, SyncError } from './state';
 
 export interface WorkerOptions {
   /** full round (push + pull) every … ms; default 30 s */
@@ -15,6 +15,8 @@ export interface WorkerOptions {
   /** longest wait between retries; default 5 min */
   maxBackoffMs?: number;
   log?: (msg: string) => void;
+  /** the cloud copy now holds a different business (see businessReplaced); the worker has stopped */
+  onReplaced?: () => void;
 }
 
 export interface RunResult { ok: boolean; pushed?: number; pulled?: number; rejected?: number; error?: string }
@@ -34,7 +36,7 @@ export class SyncWorker {
   private activityAt = 0;
   private lastPending = -1;
   private lastLogged = '';
-  private readonly o: Required<Omit<WorkerOptions, 'log'>> & { log: (m: string) => void };
+  private readonly o: Required<Omit<WorkerOptions, 'log' | 'onReplaced'>> & Pick<WorkerOptions, 'onReplaced'> & { log: (m: string) => void };
 
   constructor(private db: Db, cfg: HubConfig, private driver: HubDriver, opts: WorkerOptions = {}) {
     this.cfg = cfg;
@@ -45,6 +47,7 @@ export class SyncWorker {
       backoffStartMs: opts.backoffStartMs ?? 5_000,
       maxBackoffMs: opts.maxBackoffMs ?? 300_000,
       log: opts.log ?? ((m) => console.log(m)),
+      onReplaced: opts.onReplaced,
     };
   }
 
@@ -107,6 +110,10 @@ export class SyncWorker {
         await setState(this.db, 'sync.pending', await pendingCount(this.db));
         message = d.message;
       } catch { /* database closing */ }
+      if (e instanceof SyncError && e.code === 'REPLACED' && this.o.onReplaced) {
+        this.stop();
+        this.o.onReplaced();
+      }
       if (message !== this.lastLogged) {
         this.o.log(`sync: ${message} Next try in ${Math.round(wait / 1000)} s.`);
         this.lastLogged = message;

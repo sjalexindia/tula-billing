@@ -121,3 +121,25 @@ export async function joinFromHub(db: Db, hub: Hub, opts: JoinOptions): Promise<
     : `sync: this computer REPLACED device "${name}" (${deviceId}${seriesCode ? `, series ${seriesCode}` : ', main series'}) from ${hub.label}; copied ${copied} rows. Do not switch the old computer back on.`);
   return { deviceId, seriesCode, name, mode: opts.mode, rows: copied, cursor };
 }
+
+/**
+ * The cloud copy was started afresh with a different business (businessReplaced): empty this
+ * database and join again as a new device, keeping this device's name. Only for phones, whose data
+ * lives in the cloud copy anyway; changes not yet sent belonged to the old business and are dropped.
+ */
+export async function rejoinFromHub(db: Db, hub: Hub, opts: Omit<JoinOptions, 'mode' | 'replaceDeviceId'>): Promise<JoinResult> {
+  const me = await getState(db, 'device_id');
+  const own = me ? await db.execute({ sql: 'SELECT name FROM devices WHERE id = ?', args: [me] }) : null;
+  const name = opts.name ?? (own?.rows[0] ? String(own.rows[0][0]) : undefined);
+  const tables = await rows(db, "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name <> 'schema_migrations'");
+  const tx = await db.transaction('write');
+  try {
+    await tx.execute('PRAGMA defer_foreign_keys = ON');
+    for (const t of tables) await tx.execute(`DELETE FROM "${String(t.name)}"`);
+    await tx.commit();
+  } catch (e) {
+    if (!tx.closed) await tx.rollback();
+    throw e;
+  }
+  return joinFromHub(db, hub, { ...opts, mode: 'new', name });
+}

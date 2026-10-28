@@ -2,7 +2,7 @@ import { migrate, type Db, type Migration } from '@tula/db';
 import { registerApi } from '@tula/server/api';
 import { localDeviceId } from '@tula/server/context';
 import { openHub, type HubConfig, type HubDriver } from '@tula/server/sync/hub';
-import { joinFromHub, type JoinResult } from '@tula/server/sync/join';
+import { joinFromHub, rejoinFromHub, type JoinResult } from '@tula/server/sync/join';
 import { registerSyncRoutes } from '@tula/server/sync/routes';
 import { getState } from '@tula/server/sync/state';
 import { SyncWorker, type WorkerOptions } from '@tula/server/sync/worker';
@@ -43,11 +43,24 @@ export async function joinBusiness(db: Db, cfg: HubConfig, driver: HubDriver, na
   }
 }
 
-export async function startRuntime(db: Db, opts: { hub: HubConfig | null; driver: HubDriver; worker?: WorkerOptions }): Promise<PhoneRuntime> {
+/**
+ * The cloud copy now holds a different business: empty this phone and copy the business again,
+ * as a new phone (same name). Needs internet; until it works, the phone keeps its old data.
+ */
+export async function refreshFromHub(db: Db, cfg: HubConfig, driver: HubDriver, log?: (m: string) => void): Promise<JoinResult> {
+  const hub = await openHub(cfg, driver);
+  try {
+    return await rejoinFromHub(db, hub, { kind: 'phone', log });
+  } finally {
+    hub.close();
+  }
+}
+
+export async function startRuntime(db: Db, opts: { hub: HubConfig | null; driver: HubDriver; worker?: WorkerOptions; onReplaced?: () => void }): Promise<PhoneRuntime> {
   const deviceId = await localDeviceId(db);
   const router = new LocalRouter();
   registerApi(router, db, deviceId);
-  const worker = opts.hub ? new SyncWorker(db, opts.hub, opts.driver, opts.worker).start() : null;
+  const worker = opts.hub ? new SyncWorker(db, opts.hub, opts.driver, { ...opts.worker, onReplaced: opts.onReplaced }).start() : null;
   registerSyncRoutes(router, db, deviceId, () => worker ?? undefined);
   return { router, deviceId, worker, stop: () => worker?.stop() };
 }

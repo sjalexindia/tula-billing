@@ -9,7 +9,7 @@ import { runsLocally } from '../platform';
 import '../styles/sync.css';
 import { serverText } from '../server-text';
 
-const ERROR_CODES = ['OFFLINE', 'AUTH', 'BAD_URL', 'UPDATE_APP', 'REVOKED', 'EMPTY_HUB'];
+const ERROR_CODES = ['OFFLINE', 'AUTH', 'BAD_URL', 'UPDATE_APP', 'REVOKED', 'EMPTY_HUB', 'REPLACED'];
 const PHONE_ERROR_CODES = ['OFFLINE', 'AUTH', 'BAD_URL', 'REVOKED'];
 
 /** Owner screen: is the cloud copy working, which computers share the data, and how to open Tula on a phone. */

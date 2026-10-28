@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { LocalRouter } from '../../web/src/local/router';
-import { isJoined, joinBusiness, prepareDb, startRuntime, type PhoneRuntime } from '../../web/src/local/runtime';
+import { isJoined, joinBusiness, prepareDb, refreshFromHub, startRuntime, type PhoneRuntime } from '../../web/src/local/runtime';
 import { buildApp } from '../src/app';
 import { hashPin, useScrypt, verifyPin } from '../src/auth';
 import { setup } from '../src/setup';
@@ -18,6 +18,7 @@ import { syncOnce } from '../src/sync/engine';
 import { openHub, type Hub } from '../src/sync/hub';
 import { nextPhoneCode } from '../src/sync/join';
 import { nodeHubDriver } from '../src/sync/node-hub';
+import { SyncWorker } from '../src/sync/worker';
 import { callAs, type Call } from './helpers';
 
 /**
@@ -221,5 +222,47 @@ describe('ids', () => {
     expect([...ids].sort()).toEqual(ids);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids[0]).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  });
+});
+
+describe('the cloud copy started afresh with a different business', () => {
+  let newPc: Db;
+  let newPcDevice: string;
+
+  beforeAll(async () => {
+    // what the owner does to swap a demo for real books: empty the cloud copy, start a new business on the shop computer
+    const tables = [...hub.tables.keys(), 'sync_log'];
+    await hub.client.batch(['PRAGMA defer_foreign_keys = ON', ...tables.map((t) => `DELETE FROM "${t}"`)], 'write');
+    newPc = await openDb(`file:${join(dir, 'pc-new.db')}`);
+    await setup(newPc, { preset: 'blank' });
+    newPcDevice = (await one<{ value: string }>(newPc, "SELECT value FROM sync_state WHERE key = 'device_id'"))!.value;
+    await syncOnce(newPc, hub, newPcDevice);
+  });
+  afterAll(() => newPc?.close());
+
+  it('the phone and the old computer stop instead of mixing the two businesses', async () => {
+    await expect(syncOnce(phoneDb, hub, phone.deviceId)).rejects.toMatchObject({ code: 'REPLACED' });
+    await expect(syncOnce(pcDb, hub, pcDevice)).rejects.toMatchObject({ code: 'REPLACED' });
+    // nothing of the old business reached the cloud copy
+    expect(Number((await hub.client.execute({ sql: 'SELECT COUNT(*) FROM devices WHERE id IN (?, ?)', args: [pcDevice, phone.deviceId] })).rows[0]![0])).toBe(0);
+  });
+
+  it('the sync worker tells the phone, which then copies the new business fresh and keeps its name', async () => {
+    let told = false;
+    const worker = new SyncWorker(phoneDb, { url: hubUrl }, nodeHubDriver, { log: quiet, onReplaced: () => { told = true; } });
+    expect((await worker.runNow()).ok).toBe(false);
+    expect(told).toBe(true);
+
+    const r = await refreshFromHub(phoneDb, { url: hubUrl }, nodeHubDriver, quiet);
+    expect(r).toMatchObject({ seriesCode: 'M1', name: 'Phone 1' });
+    const count = async (db: Db, sql: string) => Number((await db.execute(sql)).rows[0]![0]);
+    expect(await count(phoneDb, 'SELECT COUNT(*) FROM sales_docs')).toBe(0);
+    expect(await count(phoneDb, 'SELECT COUNT(*) FROM products')).toBe(await count(newPc, 'SELECT COUNT(*) FROM products'));
+    expect(await count(phoneDb, 'SELECT COUNT(*) FROM sessions')).toBe(0);
+
+    // and syncs with the new business from then on
+    await expect(syncOnce(phoneDb, hub, r.deviceId)).resolves.toBeTruthy();
+    await syncOnce(newPc, hub, newPcDevice);
+    expect(await count(newPc, `SELECT COUNT(*) FROM devices WHERE series_code = 'M1'`)).toBe(1);
   });
 });
